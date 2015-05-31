@@ -1,9 +1,8 @@
-
 module ExtractSpikes
 
 using DSP
 
-export filterSignal, initFilter, detectSpikes, runningStd
+export filterSignal, initFilter, detectSpikes, runningStd, getThres
 
 #Hd is an array of transfer function coefficients to filter the signal (default is 300 3000 band pass)
 
@@ -61,7 +60,7 @@ function detectSpikes(rawSignal::Array{Float64,1},k::Int64,thres::Float64)
     
 end
 
-function getThres(rawSignal::Array{Float64,1},method="POWER")
+function getThres(rawSignal::Array{Float64,1},method::String)
 
     if method=="POWER"
 

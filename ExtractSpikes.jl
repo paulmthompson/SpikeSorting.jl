@@ -9,7 +9,7 @@ export filterSignal, initFilter, detectSpikes, runningStd, getThres
 #I think the hardware already does/can do all of the filtering before it gets here
 
 #This runs first and calls detect spikes
-function extractSpikes(rawSignal::Array{Float64,1}, Hd::Array{Float64,2},detectionMethod::String)
+function extractSpikes(rawSignal::Array{Int32,1}, Hd::Array{Float64,2},detectionMethod::String)
 
     #Set default params
   
@@ -21,14 +21,17 @@ function extractSpikes(rawSignal::Array{Float64,1}, Hd::Array{Float64,2},detecti
     
 end
 
-function detectSpikes(rawSignal::Array{Float64,1},k::Int64,thres::Float64)
+function detectSpikes(rawSignal::Array{Int32,1},k::Int64,thres::Float64)
 
     inds=zeros(Int64,1)
-
-    rstd=std(rawSignal)
+    index=0
+    new=0
+    
     #power setup
-    a = 0.0
-    b = 0.0
+    a = 0
+    b = 0
+
+    p_temp=zeros(Float64,50)
     
     for i=1:k
         a += rawSignal[i]
@@ -42,31 +45,61 @@ function detectSpikes(rawSignal::Array{Float64,1},k::Int64,thres::Float64)
         
         a += rawSignal[i] - c
         b += rawSignal[i]^2 - d
-
-        p = sqrt((b - a^2/k)/k)
-
+      
+        # p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
+        # =sqrt(1/n*(f(t-1)-f_bar(t))^2 ... + (f(t-n)-f_bar(t))^2)
+        # =sqrt(1/n*(f(t-1)^2-2*f(t-1)*f_bar(t)+f_bar(t)^2 ... + f(t-n)-2*f(t-n)*f_bar(t)+f_bar(t)^2))
+        # =sqrt(1/n*((f(t-1)^2 ... +f(t-n)^2) - 2*f_bar(t)*(f(t-1) ... +f(t-n)) + n*f_bar(t)^2))
+        # a = f(t-1) ... + f(t-n)
+        # b = f(t-1)^2 ... + f(t-n)^2
+        # =sqrt(1/n*(b - 2*f_bar(t)*a + n*f_bar(t)^2))
+        # f_bar(t) = a/n
+        # =sqrt(1/n*(b - 2*a^2/n + n*(a^2/n^2)))
+        # =sqrt((b-2*a^2/n + a^2/n)/n)
+        p=sqrt((b - a^2/k)/k) #This is an implicit int32 to float64 conversion. probably need to fix this       
         c=rawSignal[i-k+1]
         d=rawSignal[i-k+1]^2
 
         if p > thres
-            push!(inds,i)
+            if new==0
+                new=1
+                index=50
+            end
+            
         end
 
-        println(p)
-        
+        if index>0
+            p_temp[50-index+1]=p
+            index+=-1
+            
+            if index==0
+                new=0
+                j=indmax(p_temp)
+                push!(inds,i-50+j)
+            end
+       
+        end
+                
     end
     
     return inds
     
 end
 
-function getThres(rawSignal::Array{Float64,1},method::String)
+function getThres(rawSignal::Array{Int32,1},method::String)
 
     if method=="POWER"
 
+        p=runningPower(rawSignal,20)
+        
         #threshold should be 5 * std(power)
-        threshold=1.0
+        threshold=mean(p)+5*std(p)
+        
     elseif method=="SIGNAL"
+
+    elseif method=="TEST"
+
+        threshold=1.0
 
     end
     
@@ -74,9 +107,7 @@ function getThres(rawSignal::Array{Float64,1},method::String)
     
 end
 
-
-function runningStd(rawSignal::Array{Float64,1},k::Int64)
-
+function runningStd(rawSignal::Array{Int32,1},k::Int64)
 
     #running std of fixed width
     rstd=Array(Float64,length(rawSignal)-k)
@@ -104,18 +135,31 @@ function runningStd(rawSignal::Array{Float64,1},k::Int64)
     
 end
 
-
-
-function runningAverage(rawSignal, windowSize, mode=1)
-       
-    if mode==1
-        runMean = [mean(rawSignal[1:i]) for i=1:length(rawSignal)]
-    else
-        runMean = filtfilt(ones(Float64,windowSize)./windowSize,1,rawSignal)
+function runningPower(rawSignal::Array{Int32,1},k::Int64)
+    
+    #running power
+    p=Array(Float64,length(rawSignal)-k)
+    a = 0.0
+    b = 0.0
+    for i=1:k
+        a += rawSignal[i]
+        b += rawSignal[i]^2
     end
 
-    return runMean
-                    
+    c=rawSignal[1]
+    d=rawSignal[1]^2
+    
+    for i=(k+1):length(rawSignal)
+        
+        a += rawSignal[i] - c
+        b += rawSignal[i]^2 - d
+        p[i-k]=sqrt((b - a^2/k)/k)
+        c=rawSignal[i-k+1]
+        d=rawSignal[i-k+1]^2
+        
+    end
+
+    return p
 end
 
 function filterSignal(rawSignal::Array{Float64,1}, Hd::Array{Float64,2})
@@ -138,40 +182,7 @@ function initFilter(Fs=20000,passband=[300, 3000])
     Hd=hcat(b,a)
     
     return Hd
-    
 
-end
-
-function MTEO(rawSignal, ks)
-
-    tmp=zeros(Float64,length(ks),lenght(rawSignal))
-
-    for i=1:length(ks)
-        tmp[i,:] = runningTEO(rawSignal, ks[i])
-        v = var(tmp[i,:])
-
-        #apply the window
-        #win = hamming( 4*ks(i)+1, 'symmetric')
-        tmp[i,:] = filter( win,1,tmp[i,:]) ./ v
-
-    end
-
-    return sum(tmp)
-
-end
-
-
-
-function runningTEO(rawSignal,k=1)
-
-    out=similar(rawSignal)
-    for i=1:length(rawSignal)
-        #out = rawSignal[i]^2 - [rawSignal(1+k:end) repmat(0,1,k)].*[repmat(0,1,k) rawSignal(1:end-k)]
-        out[i] = rawSignal[i]^2 - rawSignal[i-1]*rawSignal[i+1]
-    end
-    
-    return out
-    
 end
 
 end

@@ -22,15 +22,13 @@ function extractSpikes(rawSignal::Array{Int32,1}, Hd::Array{Float64,2},detection
 end
 
 function detectSpikes(rawSignal::Array{Int32,1},k::Int64,thres::Float64)
-
+    
+    #could make the threshold input a starting point and continuously update with a running std (can also be calculated from a and b in loop
+    
     inds=zeros(Int64,1)
     index=0
-    new=0
-    
-    #power setup
     a = 0
     b = 0
-
     p_temp=zeros(Float64,50)
     
     for i=1:k
@@ -41,45 +39,39 @@ function detectSpikes(rawSignal::Array{Int32,1},k::Int64,thres::Float64)
     c=rawSignal[1]
     d=rawSignal[1]^2
 
+    #probably don't want to actually go all the way to the end since things may be cut off
     for i=(k+1):length(rawSignal)
         
         a += rawSignal[i] - c
         b += rawSignal[i]^2 - d
       
-        # p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-        # =sqrt(1/n*(f(t-1)-f_bar(t))^2 ... + (f(t-n)-f_bar(t))^2)
-        # =sqrt(1/n*(f(t-1)^2-2*f(t-1)*f_bar(t)+f_bar(t)^2 ... + f(t-n)-2*f(t-n)*f_bar(t)+f_bar(t)^2))
-        # =sqrt(1/n*((f(t-1)^2 ... +f(t-n)^2) - 2*f_bar(t)*(f(t-1) ... +f(t-n)) + n*f_bar(t)^2))
-        # a = f(t-1) ... + f(t-n)
-        # b = f(t-1)^2 ... + f(t-n)^2
-        # =sqrt(1/n*(b - 2*f_bar(t)*a + n*f_bar(t)^2))
-        # f_bar(t) = a/n
-        # =sqrt(1/n*(b - 2*a^2/n + n*(a^2/n^2)))
-        # =sqrt((b-2*a^2/n + a^2/n)/n)
+        # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
         p=sqrt((b - a^2/k)/k) #This is an implicit int32 to float64 conversion. probably need to fix this       
         c=rawSignal[i-k+1]
         d=rawSignal[i-k+1]^2
 
-        if p > thres
-            if new==0
-                new=1
-                index=50
-            end
-            
-        end
-
         if index>0
+            
             p_temp[50-index+1]=p
             index+=-1
             
             if index==0
-                new=0
+
+                #If no clear peak is found, assign to noise
+                
                 j=indmax(p_temp)
+
+                #Add peak to index list
                 push!(inds,i-50+j)
             end
        
-        end
+        elseif p>thres
                 
+            p_temp[1]=p
+            index=49
+ 
+        end
+                   
     end
     
     return inds

@@ -22,9 +22,7 @@ function onlineCal(rawSignal::Array{Int32,2},method="POWER")
 end
 
 function onlineSort(timeends::Array{Int32,1},rawSignal::Array{Int32,2},thresholds::Array{Float64,1})
-
-    
-    
+ 
     for i=1:size(rawSignal,2)
         
         #detect spikes using power threshold crossing

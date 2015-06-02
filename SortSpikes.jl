@@ -6,18 +6,22 @@ export onlineCal, onlineSort, offlineSort
 
 function onlineCal(rawSignal::Array{Int32,2},method="POWER")
     #Before running, collect a few seconds worth of data to find the noise of each channel
+    
     #Use these measurements to determine threshold for spike detection
+    #Also determine threshold for cluster merging
 
     #rawSignal should have a column of voltage for each electrode
     
     thresholds=Array(Int32, size(rawSignal,2))
+    Tsm=Array(Float64,size(rawSignal,2))
     
     #find the threshold for each channel, depending on method
     for i=1:size(rawSignal,2)
         thresholds[i]=getThres(rawSignal[:,i],method)
+        Tsm[i]=size(rawSignal,1)*std(rawSignal[:,i])
     end
     
-    return thresholds
+    return (thresholds,Tsm)
     
 end
 

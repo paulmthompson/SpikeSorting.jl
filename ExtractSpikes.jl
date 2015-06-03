@@ -174,7 +174,7 @@ function findMerge!(clusters::Array{Float64,2},Tsm::Float64)
                 dist=norm(clusters[:,i]-clusters[:,j])
                 if dist<Tsm
                     
-                    
+                end
             end
         end
     end

@@ -40,7 +40,6 @@ function onlineSort(timeends::Array{Int32,1},rawSignal::Array{Int32,2},threshold
 
     end
     
-
 end
 
 function offlineSort()

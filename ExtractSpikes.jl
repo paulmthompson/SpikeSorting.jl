@@ -1,7 +1,5 @@
 module ExtractSpikes
 
-using DSP
-
 export detectSpikes, getThres, SpikeDetection, prepareDetection, Cluster
 
 type SpikeDetection
@@ -13,14 +11,15 @@ type SpikeDetection
     index::Int64
     sigend::Array{Int64,1}
     p_temp::Array{Float64,1}
+    thres::Float64
 end
 
 function SpikeDetection()
-    return SpikeDetection(0,0,0,0,zeros(Int64,20),zeros(Float64,50))
+    return SpikeDetection(0,0,0,0,zeros(Int64,20),zeros(Float64,50),1.0)
 end
 
 function SpikeDetection(n::Int64,k::Int64)
-    return SpikeDetection(0,0,0,0,zeros(Int64,k),zeros(Float64,n))
+    return SpikeDetection(0,0,0,0,zeros(Int64,k),zeros(Float64,n),1.0)
 end
 
 type Cluster
@@ -28,14 +27,18 @@ type Cluster
     clusters::Array{Float64,2}
     clusterWeight::Array{Int64,1}
     numClusters::Int64
+    Tsm::Float64
 end
 
 function Cluster()
-    return Cluster(zeros(Float64,50,5),zeros(Int64,5),0)
+    
+    return Cluster(hcat(rand(Float64,50,1),zeros(Float64,50,4)),zeros(Int64,5),1,1.0)
+    
 end
 
 function Cluster(n::Int64)
-    return Cluster(zeros(Float64,n,5),zeros(Int64,5),0)
+    Cluster(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
+    return 
 end
 
 function prepareDetection(s::SpikeDetection,rawSignal::Array{Int64,1},k=20)
@@ -51,12 +54,10 @@ function prepareDetection(s::SpikeDetection,rawSignal::Array{Int64,1},k=20)
       
 end
 
-function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},thres::Float64,Tsm::Float64,k=20)
+function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},k=20)
 
     spikes=zeros(Int64,1)
     inds=zeros(Int64,1)
-
-    #put last k samples from last iteration that is needed for sliding window in front of this one
     
     for i=1:length(rawSignal)
         
@@ -85,12 +86,18 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},
                     #alignment (power based)
                     j=indmax(s.p_temp)
 
-                    x=assignSpike!(rawSignal[i-j-25:1:i-j+24],clus,Tsm)
-            
+                    #50 time stamp (2.5 ms) window
+                    x=assignSpike!(rawSignal[i-j-25:1:i-j+24],clus)
+                    
                     #Spike time stamp
+                    #Maybe preallocation of a large array is better here?
                     push!(spikes,x)
                     push!(inds,i-j)
 
+                    if clus.numClusters>1
+                        merged=findMerge!(clus)
+                    end
+                    
                 else
                     #If no clear peak, assign to noise
                     
@@ -98,7 +105,7 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},
                   
             end
        
-        elseif p>thres
+        elseif p>s.thres
                 
             s.p_temp[50]=p
             s.index=49
@@ -113,10 +120,10 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},
        
 end
 
-function assignSpike!(signal::Array{Int64,1},clus::Cluster,Tsm::Float64)
+function assignSpike!(signal::Array{Int64,1},clus::Cluster)
 
     #Will return cluster for assignment or 0 indicating did not cross threshold
-    x=getDist(signal,clus,Tsm)
+    x=getDist(signal,clus)
 
     #add new cluster or assign to old
     if x==0
@@ -171,7 +178,7 @@ function getThres(rawSignal::Array{Int64,1},method::String)
     
 end
 
-function getDist(signal::Array{Int64,1},clus::Cluster,Tsm::Float64)
+function getDist(signal::Array{Int64,1},clus::Cluster)
 
     dist=Array(Float64,clus.numClusters)
     for i=1:clus.numClusters
@@ -181,7 +188,7 @@ function getDist(signal::Array{Int64,1},clus::Cluster,Tsm::Float64)
     #Need to account for no clusters at beginning
     ind=indmin(dist)
 
-    if dist[ind]<Tsm
+    if dist[ind]<clus.Tsm
         return ind
     else
         return 0
@@ -189,19 +196,39 @@ function getDist(signal::Array{Int64,1},clus::Cluster,Tsm::Float64)
     
 end
 
-function findMerge!(clusters::Array{Float64,2},Tsm::Float64)
-    #if two clusters are close to each other, merge them together and assign spikes from both to one new cluster
+function findMerge!(clus::Cluster)
+    #if two clusters are below threshold distance away, merge them
 
-    for i=1:size(clusters,2)
-        for j=i:size(clusters,2)
-            if j!=i
-                dist=norm(clusters[:,i]-clusters[:,j])
-                if dist<Tsm
-                    
+    skip=0
+    merger=0
+
+    for i=1:clus.numClusters-1
+        
+        if i==skip
+            continue
+        end
+        
+        for j=(i+1):clus.numClusters
+                dist=norm(clus.clusters[:,i]-clus.clusters[:,j])
+            if dist<clus.Tsm
+                for k=1:size(clusters[:,i],1)
+                    clus.clusters[k,i]=(clus.clusters[k,i]+clusters[k,j])/2
                 end
+                clus.numClusters-=1
+                skip=j
+                merger=i
             end
         end
     end
+
+    if skip!=0
+
+        for i=skip:clus.numClusters+1
+            clus.clusters[:,i]=clus.clusters[:,i+1]
+        end
+    end
+
+    return [skip,merger]
     
 end
 
@@ -260,29 +287,6 @@ function runningPower(rawSignal::Array{Int32,1},k::Int64)
     end
 
     return p
-end
-
-function filterSignal(rawSignal::Array{Float64,1}, Hd::Array{Float64,2})
-
-    filtered=filtfilt(Hd[:,1],Hd[:,2],rawSignal)
-    return filtered
-    
-end
-
-function initFilter(Fs=20000,passband=[300, 3000])
-
-    response_type = Bandpass(passband[1], passband[2]; fs=Fs)
-    proto_type = Butterworth(4)
-
-    myfilter=convert(PolynomialRatio,digitalfilter(response_type,proto_type))
-
-    b=coefb(myfilter)
-    a=coefa(myfilter)
-
-    Hd=hcat(b,a)
-    
-    return Hd
-
 end
 
 end

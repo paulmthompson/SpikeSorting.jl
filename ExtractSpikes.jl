@@ -10,20 +10,17 @@ type SpikeDetection
     a::Int64
     b::Int64
     c::Int64
-    d::Int64
     index::Int64
     sigend::Array{Int64,1}
     p_temp::Array{Float64,1}
 end
 
 function SpikeDetection()
-    a=0
-    return SpikeDetection(a,a,a,a,0,zeros(Int64,20),zeros(Float64,50))
+    return SpikeDetection(0,0,0,0,zeros(Int64,20),zeros(Float64,50))
 end
 
 function SpikeDetection(n::Int64,k::Int64)
-    a=0
-    return SpikeDetection(a,a,a,a,0,zeros(Int64,k),zeros(Float64,n))
+    return SpikeDetection(0,0,0,0,zeros(Int64,k),zeros(Float64,n))
 end
 
 type Cluster
@@ -49,7 +46,6 @@ function prepareDetection(s::SpikeDetection,rawSignal::Array{Int64,1},k=20)
     end
 
     s.c=rawSignal[1]
-    s.d=rawSignal[1]^2
     
     s.sigend=rawSignal[1:20]
       
@@ -62,20 +58,18 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},
 
     #put last k samples from last iteration that is needed for sliding window in front of this one
     
-    for i=(k+1):length(rawSignal)
+    for i=1:length(rawSignal)
         
         s.a += rawSignal[i] - s.c
-        s.b += rawSignal[i]^2 - s.d       
+        s.b += rawSignal[i]^2 - s.c^2   
 
         # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
         p=sqrt((s.b - s.a^2/k)/k) #This is an implicit int64 to float64 conversion. probably need to fix this
 
         if i>20
             s.c=rawSignal[i-k+1]
-            s.d=rawSignal[i-k+1]^2
         else
             s.c=s.sigend[i]
-            s.d=c^2
         end
         
         if s.index>0
@@ -184,6 +178,7 @@ function getDist(signal::Array{Int64,1},clus::Cluster,Tsm::Float64)
         dist[i]=norm(signal-clus.clusters[:,i])
     end
 
+    #Need to account for no clusters at beginning
     ind=indmin(dist)
 
     if dist[ind]<Tsm

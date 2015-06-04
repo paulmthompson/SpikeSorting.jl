@@ -15,22 +15,19 @@ Voltages from multi-electrode arrays are read from the Intan to computer in bloc
 
 # Current Functionality
 
-* Calibration method can calculate thresholds for spike detection (power) and clustering
+* Calibration method calculates thresholds for detection and clustering, and also finds spike templates for that block of data
 * Spikes are detected with a running local energy window that compares to the power threshold
 * Candidate spikes are then compared to with existing clusters
 * If the distance between the spike and an existing cluster is less than threshold from calibration, the spike is assigned to that cluster, and the cluster shape is updated with a weighted average (95% existing, 5% new spike).
 * If the distance is greater than threshold, the spike is assigned to a new cluster
+* After each new spike is found, the clusters are compared to one another to see if any are below threshold distance away from one another. If they are, the clusters are merged.
 * List of spike timestamps and corresponding cluster index is returned
 
 # TO DO
 
 ## Calibration
 
-When data first starts being acquired, there is going to be a lot of action since the waveforms are not defined to start with. I think the adaptive Osort algorithm is great if there is some templates to start with, but might be pretty chaotic if it comes up with all of the waveforms itself. 
-
-Might be good during the calibration period to determine the expected clusters for each channel, and not necessarily with osort methods since this is not "online" collection quite yet.
-
-Also, there should be periodic "recalibration" where the thresholds are recalculated.
+Need to add a periodic "recalibration" where the thresholds are recalculated (probably at the end of each analysis block).
 
 ## Detection
 
@@ -46,10 +43,15 @@ Right now alignment is done with a simple indmax. Need to add a few important st
 ## Sorting
 
 Algorithm runs, but lots of stuff needs to be added.
-* The clusters need to be compared with one another and if they are below a threshold, they should be merged together. Spikes that were assigned to one of the clusters (which would now be the same as another cluster) should be re-labeled
 * The paper discusses how the success of the algorithm is based on accurate alignment, and that methods that are invariant to translation could provide improvements. Need to look into this.
 * The paper also discusses how synchronous spikes were be categorized as unique clusters, rather than linear combinations of 2 already known clusters. This could be addressed (but maybe not in real time).
 
 ## User Interface
-* The GUI for something like this is difficult because it needs to be super fast to provide real-time updating of plots while not slowing down the data that will be continuously streaming in. I don't know what the best solution Julia has for this at the moment.
+* PyCall with Matplotlib seems to be pretty fast with the appropriate adjustments. Not sure if this is the best, but might give it a try.
 * Whatever the UI looks like, it needs to have a pipeline that allows for supervised sorting. If the unsupervised algorithm does a crappy job, there needs to be a way to either have control over changing the mean waveform, or doing some totally supervised spike sorting, and essentially turning the automated algorithm off on that channel.
+
+## Parallel Processing
+* Each block for processing contains x channels of data. Should try to take advantage of Julia's parallel processing here.
+
+## Offline analysis
+* All of the online methods can be adapted to run on offline data. This would be very useful for testing purposes.

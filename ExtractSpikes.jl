@@ -1,6 +1,6 @@
 module ExtractSpikes
 
-export detectSpikes, getThres, SpikeDetection, prepareDetection, Cluster
+export detectSpikes, getThres, SpikeDetection, prepareCal, Cluster
 
 type SpikeDetection
     #These are needed to so that when the next chunk of real time data is to be processed, it preserved all of the processing information collected from the last chunk
@@ -11,15 +11,16 @@ type SpikeDetection
     index::Int64
     sigend::Array{Int64,1}
     p_temp::Array{Float64,1}
+    s_temp::Array{Int64,1}
     thres::Float64
 end
 
 function SpikeDetection()
-    return SpikeDetection(0,0,0,0,zeros(Int64,20),zeros(Float64,50),1.0)
+    return SpikeDetection(0,0,0,0,zeros(Int64,75),zeros(Float64,50),zeros(Int64,1),1.0)
 end
 
 function SpikeDetection(n::Int64,k::Int64)
-    return SpikeDetection(0,0,0,0,zeros(Int64,k),zeros(Float64,n),1.0)
+    return SpikeDetection(0,0,0,0,zeros(Int64,k),zeros(Float64,n),zeros(Int64,1),1.0)
 end
 
 type Cluster
@@ -41,38 +42,38 @@ function Cluster(n::Int64)
     return 
 end
 
-function prepareDetection(s::SpikeDetection,rawSignal::Array{Int64,1},k=20)
+function prepareCal(s::SpikeDetection,rawSignal::Array{Int64,2},num,k=20)
 
     for i=1:k
-        s.a += rawSignal[i]
-        s.b += rawSignal[i]^2
+        s.a += rawSignal[i,num]
+        s.b += rawSignal[i,num]^2
     end
 
-    s.c=rawSignal[1]
+    s.c=rawSignal[1,num]
     
-    s.sigend=rawSignal[1:20]
+    s.sigend=rawSignal[1:20,num]
       
 end
 
-function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},k=20)
+function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,2},num::Int64,start=1,k=20)
 
     spikes=zeros(Int64,1)
     inds=zeros(Int64,1)
     
-    for i=1:length(rawSignal)
+    for i=start:size(rawSignal,1)
         
-        s.a += rawSignal[i] - s.c
-        s.b += rawSignal[i]^2 - s.c^2   
+        s.a += rawSignal[i,num] - s.c
+        s.b += rawSignal[i,num]^2 - s.c^2   
 
         # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
         p=sqrt((s.b - s.a^2/k)/k) #This is an implicit int64 to float64 conversion. probably need to fix this
 
         if i>20
-            s.c=rawSignal[i-k+1]
+            s.c=rawSignal[i-k+1,num]
         else
             s.c=s.sigend[i]
         end
-        
+
         if s.index>0
             
             s.p_temp[s.index]=p
@@ -87,8 +88,7 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},
                     j=indmax(s.p_temp)
 
                     #50 time stamp (2.5 ms) window
-                    x=assignSpike!(rawSignal[i-j-25:1:i-j+24],clus)
-                    
+                    x=assignSpike!(rawSignal,clus,s,num,i,j)
                     #Spike time stamp
                     #Maybe preallocation of a large array is better here?
                     push!(spikes,x)
@@ -102,6 +102,9 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},
                     #If no clear peak, assign to noise
                     
                 end
+
+                #reset temp matrix
+                s.p_temp=zeros(Float64,size(s.p_temp))
                   
             end
        
@@ -114,21 +117,32 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,1},
                    
     end
 
-    s.sigend=rawSignal[(end-k+1):end]
+    s.sigend=rawSignal[(end-(50+25)+1):end,num]
 
     return (spikes,inds)
        
 end
 
-function assignSpike!(signal::Array{Int64,1},clus::Cluster)
+function assignSpike!(rawSignal::Array{Int64,2},clus::Cluster,s::SpikeDetection,num::Int64,mytime::Int64,ind::Int64,window=25)
 
-    #Will return cluster for assignment or 0 indicating did not cross threshold
-    x=getDist(signal,clus)
-
+    #If a spike was still being analyzed from 
+    if mytime<window
+        if ind>mytime+window
+            signal=s.sigend[length(s.sigend)-ind-window:length(s.sigend)-ind+window-1]
+        else
+            signal=[s.sigend[length(s.sigend)-ind-window:end],rawSignal[1:window-(ind-mytime)-1,num]]
+        end   
+            x=getDist(signal,clus)
+    else        
+        #Will return cluster for assignment or 0 indicating did not cross threshold
+        myrange=mytime-ind-window:mytime-ind+window-1
+        x=getDist(rawSignal,clus,num,myrange)
+    end
+    
     #add new cluster or assign to old
     if x==0
 
-        clus.clusters[:,clus.numClusters+1]=signal
+        clus.clusters[:,clus.numClusters+1]=rawSignal[myrange,num]
         clus.clusterWeight[clus.numClusters+1]=1
 
         clus.numClusters+=1
@@ -140,11 +154,11 @@ function assignSpike!(signal::Array{Int64,1},clus::Cluster)
         #average with cluster waveform
         if clus.clusterWeight[x]<20
             clus.clusterWeight[x]+=1
-            clus.clusters[:,x]=(clus.clusterWeight[x]-1)/clus.clusterWeight[x]*clus.clusters[:,x]+1/clus.clusterWeight[x]*signal
+            clus.clusters[:,x]=(clus.clusterWeight[x]-1)/clus.clusterWeight[x]*clus.clusters[:,x]+1/clus.clusterWeight[x]*rawSignal[myrange,num]
             
         else
             
-           clus.clusters[:,x]=.95.*clus.clusters[:,x]+.05.*signal
+           clus.clusters[:,x]=.95.*clus.clusters[:,x]+.05.*rawSignal[myrange,num]
 
         end
 
@@ -157,16 +171,16 @@ function assignSpike!(signal::Array{Int64,1},clus::Cluster)
 end
 
 
-function getThres(rawSignal::Array{Int64,1},method::String)
+function getThres(rawSignal::Array{Int64,2},method::String,num::Int64)
 
     if method=="POWER"
-
-        p=runningPower(rawSignal,20)
         
         #threshold should be 5 * std(power)
-        threshold=mean(p)+5*std(p)
+        threshold=runningPower(rawSignal,20,num)
         
     elseif method=="SIGNAL"
+
+        threshold=1.0
 
     elseif method=="TEST"
 
@@ -178,11 +192,11 @@ function getThres(rawSignal::Array{Int64,1},method::String)
     
 end
 
-function getDist(signal::Array{Int64,1},clus::Cluster)
+function getDist(rawSignal::Array{Int64,2},clus::Cluster,num::Int64,range::UnitRange{Int64})
 
     dist=Array(Float64,clus.numClusters)
     for i=1:clus.numClusters
-        dist[i]=norm(signal-clus.clusters[:,i])
+        dist[i]=norm(rawSignal[range,num]-clus.clusters[:,i])
     end
 
     #Need to account for no clusters at beginning
@@ -195,6 +209,25 @@ function getDist(signal::Array{Int64,1},clus::Cluster)
     end
     
 end
+
+function getDist(rawSignal::Array{Int64,1},clus)
+    
+    dist=Array(Float64,clus.numClusters)
+    for i=1:clus.numClusters
+        dist[i]=norm(rawSignal-clus.clusters[:,i])
+    end
+
+    #Need to account for no clusters at beginning
+    ind=indmin(dist)
+
+    if dist[ind]<clus.Tsm
+        return ind
+    else
+        return 0
+    end
+    
+end
+
 
 function findMerge!(clus::Cluster)
     #if two clusters are below threshold distance away, merge them
@@ -211,8 +244,8 @@ function findMerge!(clus::Cluster)
         for j=(i+1):clus.numClusters
                 dist=norm(clus.clusters[:,i]-clus.clusters[:,j])
             if dist<clus.Tsm
-                for k=1:size(clusters[:,i],1)
-                    clus.clusters[k,i]=(clus.clusters[k,i]+clusters[k,j])/2
+                for k=1:size(clus.clusters[:,i],1)
+                    clus.clusters[k,i]=(clus.clusters[k,i]+clus.clusters[k,j])/2
                 end
                 clus.numClusters-=1
                 skip=j
@@ -262,31 +295,32 @@ function runningStd(rawSignal::Array{Int32,1},k::Int64)
     
 end
 
-function runningPower(rawSignal::Array{Int32,1},k::Int64)
+function runningPower(rawSignal::Array{Int64,2},k::Int64,num::Int64)
     
     #running power
-    p=Array(Float64,length(rawSignal)-k)
-    a = 0.0
-    b = 0.0
+    p=Array(Float64,size(rawSignal,1)-k)
+    a = 0
+    b = 0
     for i=1:k
-        a += rawSignal[i]
-        b += rawSignal[i]^2
+        a += rawSignal[i,num]
+        b += rawSignal[i,num]^2
     end
 
-    c=rawSignal[1]
-    d=rawSignal[1]^2
+    c = rawSignal[1,num]
     
-    for i=(k+1):length(rawSignal)
+    for i=(k+1):(size(rawSignal,1)-1)
         
-        a += rawSignal[i] - c
-        b += rawSignal[i]^2 - d
+        a += rawSignal[i,num] - c
+        b += rawSignal[i,num]^2 - c^2
         p[i-k]=sqrt((b - a^2/k)/k)
-        c=rawSignal[i-k+1]
-        d=rawSignal[i-k+1]^2
+        c = rawSignal[i-k+1,num]
         
     end
 
-    return p
+    thres=mean(p)+5*std(p)
+    
+    return thres
+
 end
 
 end

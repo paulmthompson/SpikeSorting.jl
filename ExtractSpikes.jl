@@ -51,7 +51,7 @@ function prepareCal(s::SpikeDetection,rawSignal::Array{Int64,2},num,k=20)
 
     s.c=rawSignal[1,num]
     
-    s.sigend=rawSignal[1:20,num]
+    s.sigend=rawSignal[1:75,num]
       
 end
 
@@ -71,7 +71,7 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,2},
         if i>20
             s.c=rawSignal[i-k+1,num]
         else
-            s.c=s.sigend[i]
+            s.c=s.sigend[i+55]
         end
 
         if s.index>0

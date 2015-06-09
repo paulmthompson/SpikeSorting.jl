@@ -73,7 +73,7 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,2},
         else
             s.c=s.sigend[i+55]
         end
-
+        
         if s.index>0
             
             s.p_temp[s.index]=p

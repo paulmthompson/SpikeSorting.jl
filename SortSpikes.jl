@@ -29,7 +29,11 @@ function onlineCal(rawSignal::Array{Int64,2},clus::Array{Any,1},s::Array{Any,1},
         if clus[i].numClusters>1
             for j=2:clus[i].numClusters
                 clus[i].clusters[:,j-1]=clus[i].clusters[:,j]
+                clus[i].clusters[:,j]=zeros(Float64,size(clus[i].clusters[:,j]))
+                clus[i].clusterWeight[j-1]=clus[i].clusterWeight[j]
+                clus[i].clusterWeight[j]=0
             end
+            clus[i].numClusters-=1
         end
 
         

@@ -25,7 +25,7 @@ function onlineCal(rawSignal::Array{Int64,2},clus::Array{Any,1},s::Array{Any,1},
         detectSpikes(s[i],clus[i],rawSignal,i,21)
 
         #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
-
+        #might want to change this later
         if clus[i].numClusters>1
             for j=2:clus[i].numClusters
                 clus[i].clusters[:,j-1]=clus[i].clusters[:,j]
@@ -34,16 +34,13 @@ function onlineCal(rawSignal::Array{Int64,2},clus::Array{Any,1},s::Array{Any,1},
                 clus[i].clusterWeight[j]=0
             end
             clus[i].numClusters-=1
-        end
-
-        
+        end 
          
     end
 
-    
 end
 
-function onlineSort(timeends::Array{Int,1},rawSignal::Array{Int64,2},clus::Array{Any,1},s::Array{Any,1},electrode::Dict{Int64,Array{Int64,1}},neuronnum::Dict{Int64,Array{Int64,1}},method="POWER")
+function onlineSort(timeends::Array{Int,1},rawSignal::Array{Int64,2},clus::Array{Any,1},s::Array{Any,1},electrode::Array{Any,1},neuronnum::Array{Any,1},method="POWER")
  
     for i=1:size(rawSignal,2)
 
@@ -64,7 +61,6 @@ end
 
 function offlineSort()
 
-    
     
 end
 

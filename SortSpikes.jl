@@ -4,7 +4,7 @@ using ExtractSpikes
 
 export onlineCal, onlineSort, offlineSort
 
-function onlineCal(rawSignal::Array{Int64,2},clus::Dict{Int64,Cluster},s::Dict{Int64,SpikeDetection},method="POWER")
+function onlineCal(rawSignal::Array{Int64,2},clus::Array{Any,1},s::Array{Any,1},method="POWER")
     #The first data collected will be fundamentally different in several ways. Need to determine:
     #Threshold for spike detection
     #Threshold for cluster assignment and merger
@@ -39,7 +39,7 @@ function onlineCal(rawSignal::Array{Int64,2},clus::Dict{Int64,Cluster},s::Dict{I
     
 end
 
-function onlineSort(timeends::Array{Int32,1},rawSignal::Array{Int64,2},clus::Dict{Int64,Cluster},s::Dict{Int64,SpikeDetection},electrode::Dict{Int64,Array{Int64,1}},neuronnum::Dict{Int64,Array{Int64,1}},method="POWER")
+function onlineSort(timeends::Array{Int,1},rawSignal::Array{Int64,2},clus::Array{Any,1},s::Array{Any,1},electrode::Dict{Int64,Array{Int64,1}},neuronnum::Dict{Int64,Array{Int64,1}},method="POWER")
  
     for i=1:size(rawSignal,2)
 

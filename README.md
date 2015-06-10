@@ -47,11 +47,12 @@ Algorithm runs, but lots of stuff needs to be added.
 * The paper also discusses how synchronous spikes were be categorized as unique clusters, rather than linear combinations of 2 already known clusters. This could be addressed (but maybe not in real time).
 
 ## User Interface
-* PyCall with Matplotlib seems to be pretty fast with the appropriate adjustments. Not sure if this is the best, but might give it a try.
+* I tried matplotlib, and it was just okay. Would like to try PyCall to pyqtgraph now to see if it is indeed faster.
 * Whatever the UI looks like, it needs to have a pipeline that allows for supervised sorting. If the unsupervised algorithm does a crappy job, there needs to be a way to either have control over changing the mean waveform, or doing some totally supervised spike sorting, and essentially turning the automated algorithm off on that channel.
 
 ## Parallel Processing
-* Each block for processing contains x channels of data. Should try to take advantage of Julia's parallel processing here.
+* I was able to make a parallel method for the calibration step where basically every core was doing its own thing with a portion of the data. This seemed to work. It would be nicer to somehow use a distributed array (which I didn't have success with) to easily bring the data together when necessary and otherwise have a method perform an algorithm on just its section of the distributed array.
+* For now, I'm happy saying that the proof of concept worked, and with it taking ~.5 ms to sort each channel right now, it isn't a high priority to get the parallel working for the normal setup.
 
 ## Offline analysis
 * All of the online methods can be adapted to run on offline data. This would be very useful for testing purposes.

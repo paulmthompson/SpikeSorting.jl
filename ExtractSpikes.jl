@@ -171,7 +171,7 @@ function assignSpike!(rawSignal::Array{Int64,2},clus::Cluster,s::SpikeDetection,
 end
 
 
-function getThres(rawSignal::Array{Int64,2},method::String,num::Int64)
+function getThres(rawSignal::Array{Int64,2},method::ASCIIString,num::Int64)
 
     if method=="POWER"
         

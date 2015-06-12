@@ -23,8 +23,8 @@ Voltages from multi-electrode arrays are read from the Intan to computer in bloc
 
 - [x] thresholds for power detection
 - [x] templates from rawsignal waveforms
-- [ ] thresholds for raw signal detection
-- [ ] threshold for NEO
+- [x] thresholds for raw signal detection
+- [x] threshold for NEO
 - [ ] template for wavelet coefficients
 - [ ] Need to add a periodic "recalibration" where the thresholds are recalculated (probably at the end of each analysis block).
 

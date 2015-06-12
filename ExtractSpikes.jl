@@ -188,7 +188,12 @@ function getThres(sort::Sorting,method::ASCIIString)
         
     elseif method=="SIGNAL"
 
-        threshold=1.0
+        #from Quian Quiroga et al 2004
+        threshold=median(abs(sort.rawSignal))/.6745
+
+    elseif method=="NEO"
+
+        threshold=runningNEO(sort)
 
     elseif method=="TEST"
 
@@ -330,5 +335,20 @@ function runningPower(sort::Sorting,k::Int64)
     return thres
 
 end
+
+function runningNEO(sort::Sorting)
+
+    psi=zeros(Int,length(sort.rawSignal)-1)
+    
+    for i=2:length(sort.rawSignal)-1
+        psi[i]=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
+    end
+
+    thres=3*mean(psi)
+
+    return thres
+    
+end
+
 
 end

@@ -4,39 +4,36 @@ using ExtractSpikes
 
 export onlineCal, onlineSort, offlineSort, onlineCal_par
 
-function onlineCal(rawSignal::Array{Int64,2},clus::Array{Any,1},s::Array{Any,1},method="POWER")
+function onlineCal(sort::Sorting,method="POWER")
     #The first data collected will be fundamentally different in several ways. Need to determine:
     #Threshold for spike detection
     #Threshold for cluster assignment and merger
     #Cluster templates
 
     #find the thresholds for each channel
-    for i=1:size(rawSignal,2)
-        s[i].thres=getThres(rawSignal,method,i)
+
+        sort.s.thres=getThres(sort,method)
         
         #Threshold is supposed to be the average standard deviation of all of the spiking events. Don't have any of those to start
-        clus[i].Tsm=50*var(rawSignal[:,i]) 
-    end
+        sort.c.Tsm=50*var(sort.rawSignal) 
+
 
     #Run a second of data to refine cluster templates, and not caring about recording spikes
     #Also, should be able to load clusters from the end of previous session
-    for i=1:size(rawSignal,2)
-        prepareCal(s[i],rawSignal,i)
-        detectSpikes(s[i],clus[i],rawSignal,i,21)
+        prepareCal(sort)
+        detectSpikes(sort,21)
 
         #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
         #might want to change this later
-        if clus[i].numClusters>1
-            for j=2:clus[i].numClusters
-                clus[i].clusters[:,j-1]=clus[i].clusters[:,j]
-                clus[i].clusters[:,j]=zeros(Float64,size(clus[i].clusters[:,j]))
-                clus[i].clusterWeight[j-1]=clus[i].clusterWeight[j]
-                clus[i].clusterWeight[j]=0
+        if sort.c.numClusters>1
+            for j=2:sort.c.numClusters
+                sort.c.clusters[:,j-1]=sort.c.clusters[:,j]
+                sort.c.clusters[:,j]=zeros(Float64,size(sort.c.clusters[:,j]))
+                sort.c.clusterWeight[j-1]=sort.c.clusterWeight[j]
+                sort.c.clusterWeight[j]=0
             end
-            clus[i].numClusters-=1
+            sort.c.numClusters-=1
         end 
-         
-    end
 
 end
 

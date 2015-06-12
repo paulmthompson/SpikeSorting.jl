@@ -1,6 +1,6 @@
 module ExtractSpikes
 
-export detectSpikes, getThres, SpikeDetection, prepareCal, Cluster
+export detectSpikes, getThres, SpikeDetection, prepareCal, Cluster, Sorting
 
 type SpikeDetection
     #These are needed to so that when the next chunk of real time data is to be processed, it preserved all of the processing information collected from the last chunk
@@ -42,60 +42,73 @@ function Cluster(n::Int64)
     return 
 end
 
-function prepareCal(s::SpikeDetection,rawSignal::Array{Int64,2},num,k=20)
+#type Sorting{T,R}
+#    s::T
+#    c::R
+#    rawSignal::Array{Int,1}
+#end
+
+type Sorting
+    s::SpikeDetection
+    c::Cluster
+    rawSignal::Array{Int,1}
+end
+
+
+function prepareCal(sort::Sorting,k=20)
 
     for i=1:k
-        s.a += rawSignal[i,num]
-        s.b += rawSignal[i,num]^2
+        sort.s.a += sort.rawSignal[i]
+        sort.s.b += sort.rawSignal[i]^2
     end
 
-    s.c=rawSignal[1,num]
+    sort.s.c=sort.rawSignal[1]
     
-    s.sigend=rawSignal[1:75,num]
+    sort.s.sigend=sort.rawSignal[1:75]
       
 end
 
-function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,2},num::Int64,start=1,k=20)
+function detectSpikes(sort::Sorting,start=1,k=20)
 
     spikes=zeros(Int64,1)
     inds=zeros(Int64,1)
-    
-    for i=start:size(rawSignal,1)
+   
+    for i=start:1:length(sort.rawSignal)
         
-        s.a += rawSignal[i,num] - s.c
-        s.b += rawSignal[i,num]^2 - s.c^2   
+        sort.s.a += sort.rawSignal[i] - sort.s.c
+        sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
 
         # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-        p=sqrt((s.b - s.a^2/k)/k) #This is an implicit int64 to float64 conversion. probably need to fix this
+        p=sqrt((sort.s.b - (sort.s.a^2/k))/k) #This is an implicit int64 to float64 conversion. probably need to fix this
 
         if i>20
-            s.c=rawSignal[i-k+1,num]
+            sort.s.c=sort.rawSignal[i-k+1]
         else
-            s.c=s.sigend[i+55]
+            sort.s.c=sort.s.sigend[i+55]
         end
         
-        if s.index>0
+        if sort.s.index>0
             
-            s.p_temp[s.index]=p
-            s.index-=1
+            sort.s.p_temp[sort.s.index]=p
+            sort.s.index-=1
             
-            if s.index==0
+            if sort.s.index==0
 
                 #If clear peak is found
                 if true
 
                     #alignment (power based)
-                    j=indmax(s.p_temp)
+                    j=indmax(sort.s.p_temp)
 
                     #50 time stamp (2.5 ms) window
-                    x=assignSpike!(rawSignal,clus,s,num,i,j)
+                    x=assignSpike!(sort,i,j)
                     #Spike time stamp
                     #Maybe preallocation of a large array is better here?
                     push!(spikes,x)
                     push!(inds,i-j)
 
-                    if clus.numClusters>1
-                        merged=findMerge!(clus)
+                    if sort.c.numClusters>1
+                        merged=findMerge!(sort)
                     end
                     
                 else
@@ -104,61 +117,61 @@ function detectSpikes(s::SpikeDetection,clus::Cluster,rawSignal::Array{Int64,2},
                 end
 
                 #reset temp matrix
-                s.p_temp=zeros(Float64,size(s.p_temp))
+                sort.s.p_temp=zeros(Float64,size(sort.s.p_temp))
                   
             end
        
-        elseif p>s.thres
+        elseif p>sort.s.thres
                 
-            s.p_temp[50]=p
-            s.index=49
+            sort.s.p_temp[50]=p
+            sort.s.index=49
  
         end
                    
     end
 
-    s.sigend=rawSignal[(end-(50+25)+1):end,num]
+    sort.s.sigend=sort.rawSignal[(end-(50+25)+1):end]
 
     return (spikes,inds)
        
 end
 
-function assignSpike!(rawSignal::Array{Int64,2},clus::Cluster,s::SpikeDetection,num::Int64,mytime::Int64,ind::Int64,window=25)
+function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
 
     #If a spike was still being analyzed from 
     if mytime<window
         if ind>mytime+window
-            signal=s.sigend[length(s.sigend)-ind-window:length(s.sigend)-ind+window-1]
+            signal=sort.s.sigend[length(sort.s.sigend)-ind-window:length(sort.s.sigend)-ind+window-1]
         else
-            signal=[s.sigend[length(s.sigend)-ind-window:end],rawSignal[1:window-(ind-mytime)-1,num]]
+            signal=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
         end   
-            x=getDist(signal,clus)
+            x=getDist(signal,sort)
     else        
         #Will return cluster for assignment or 0 indicating did not cross threshold
         myrange=mytime-ind-window:mytime-ind+window-1
-        x=getDist(rawSignal,clus,num,myrange)
+        x=getDist(sort,myrange)
     end
     
     #add new cluster or assign to old
     if x==0
 
-        clus.clusters[:,clus.numClusters+1]=rawSignal[myrange,num]
-        clus.clusterWeight[clus.numClusters+1]=1
+        sort.c.clusters[:,sort.c.numClusters+1]=sort.rawSignal[myrange]
+        sort.c.clusterWeight[sort.c.numClusters+1]=1
 
-        clus.numClusters+=1
+        sort.c.numClusters+=1
         #Assign to new cluster
-        out=clus.numClusters
+        out=sort.c.numClusters
 
     else
         
         #average with cluster waveform
-        if clus.clusterWeight[x]<20
-            clus.clusterWeight[x]+=1
-            clus.clusters[:,x]=(clus.clusterWeight[x]-1)/clus.clusterWeight[x]*clus.clusters[:,x]+1/clus.clusterWeight[x]*rawSignal[myrange,num]
+        if sort.c.clusterWeight[x]<20
+            sort.c.clusterWeight[x]+=1
+            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*sort.rawSignal[myrange]
             
         else
             
-           clus.clusters[:,x]=.95.*clus.clusters[:,x]+.05.*rawSignal[myrange,num]
+           sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*sort.rawSignal[myrange]
 
         end
 
@@ -171,12 +184,12 @@ function assignSpike!(rawSignal::Array{Int64,2},clus::Cluster,s::SpikeDetection,
 end
 
 
-function getThres(rawSignal::Array{Int64,2},method::ASCIIString,num::Int64)
+function getThres(sort::Sorting,method::ASCIIString)
 
     if method=="POWER"
         
         #threshold should be 5 * std(power)
-        threshold=runningPower(rawSignal,20,num)
+        threshold=runningPower(sort,20)
         
     elseif method=="SIGNAL"
 
@@ -192,17 +205,17 @@ function getThres(rawSignal::Array{Int64,2},method::ASCIIString,num::Int64)
     
 end
 
-function getDist(rawSignal::Array{Int64,2},clus::Cluster,num::Int64,range::UnitRange{Int64})
+function getDist(sort::Sorting,range::UnitRange{Int64})
 
-    dist=Array(Float64,clus.numClusters)
-    for i=1:clus.numClusters
-        dist[i]=norm(rawSignal[range,num]-clus.clusters[:,i])
+    dist=Array(Float64,sort.c.numClusters)
+    for i=1:sort.c.numClusters
+        dist[i]=norm(sort.rawSignal[range]-sort.c.clusters[:,i])
     end
 
     #Need to account for no clusters at beginning
     ind=indmin(dist)
 
-    if dist[ind]<clus.Tsm
+    if dist[ind]<sort.c.Tsm
         return ind
     else
         return 0
@@ -210,17 +223,17 @@ function getDist(rawSignal::Array{Int64,2},clus::Cluster,num::Int64,range::UnitR
     
 end
 
-function getDist(rawSignal::Array{Int64,1},clus)
+function getDist(sort::Sorting)
     
-    dist=Array(Float64,clus.numClusters)
-    for i=1:clus.numClusters
-        dist[i]=norm(rawSignal-clus.clusters[:,i])
+    dist=Array(Float64,sort.c.numClusters)
+    for i=1:sort.c.numClusters
+        dist[i]=norm(sort.rawSignal-sort.c.clusters[:,i])
     end
 
     #Need to account for no clusters at beginning
     ind=indmin(dist)
 
-    if dist[ind]<clus.Tsm
+    if dist[ind]<sort.c.Tsm
         return ind
     else
         return 0
@@ -229,25 +242,25 @@ function getDist(rawSignal::Array{Int64,1},clus)
 end
 
 
-function findMerge!(clus::Cluster)
+function findMerge!(sort::Sorting)
     #if two clusters are below threshold distance away, merge them
 
     skip=0
     merger=0
 
-    for i=1:clus.numClusters-1
+    for i=1:sort.c.numClusters-1
         
         if i==skip
             continue
         end
         
-        for j=(i+1):clus.numClusters
-                dist=norm(clus.clusters[:,i]-clus.clusters[:,j])
-            if dist<clus.Tsm
-                for k=1:size(clus.clusters[:,i],1)
-                    clus.clusters[k,i]=(clus.clusters[k,i]+clus.clusters[k,j])/2
+        for j=(i+1):sort.c.numClusters
+                dist=norm(sort.c.clusters[:,i]-sort.c.clusters[:,j])
+            if dist<sort.c.Tsm
+                for k=1:size(sort.c.clusters[:,i],1)
+                    sort.c.clusters[k,i]=(sort.c.clusters[k,i]+sort.c.clusters[k,j])/2
                 end
-                clus.numClusters-=1
+                sort.c.numClusters-=1
                 skip=j
                 merger=i
             end
@@ -256,8 +269,8 @@ function findMerge!(clus::Cluster)
 
     if skip!=0
 
-        for i=skip:clus.numClusters+1
-            clus.clusters[:,i]=clus.clusters[:,i+1]
+        for i=skip:sort.c.numClusters+1
+            sort.c.clusters[:,i]=sort.c.clusters[:,i+1]
         end
     end
 
@@ -295,25 +308,25 @@ function runningStd(rawSignal::Array{Int32,1},k::Int64)
     
 end
 
-function runningPower(rawSignal::Array{Int64,2},k::Int64,num::Int64)
+function runningPower(sort::Sorting,k::Int64)
     
     #running power
-    p=Array(Float64,size(rawSignal,1)-k)
+    p=Array(Float64,size(sort.rawSignal,1)-k)
     a = 0
     b = 0
     for i=1:k
-        a += rawSignal[i,num]
-        b += rawSignal[i,num]^2
+        a += sort.rawSignal[i]
+        b += sort.rawSignal[i]^2
     end
 
-    c = rawSignal[1,num]
+    c = sort.rawSignal[1]
     
-    for i=(k+1):(size(rawSignal,1)-1)
+    for i=(k+1):(size(sort.rawSignal,1)-1)
         
-        a += rawSignal[i,num] - c
-        b += rawSignal[i,num]^2 - c^2
+        a += sort.rawSignal[i] - c
+        b += sort.rawSignal[i]^2 - c^2
         p[i-k]=sqrt((b - a^2/k)/k)
-        c = rawSignal[i-k+1,num]
+        c = sort.rawSignal[i-k+1]
         
     end
 

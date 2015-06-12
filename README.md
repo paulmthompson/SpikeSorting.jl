@@ -9,9 +9,13 @@ https://github.com/paulmthompson/Intan.jl
 
 Since Osort (http://www.urut.ch/new/serendipity/index.php?/pages/osort.html) was designed with algorithms for real time acquisition, we plan on adapting these methods first. We would like to eventually include other methods of sorting and greater flexibility for other data acquisition methods (and include offline analysis). We use planar arrays and don't have to worry about the same spikes on multiple electrodes, but we could one day add methods to account for this.
 
+# Required Modules
+
+* DistributedArrays - https://github.com/JuliaParallel/DistributedArrays.jl
+
 # Overview of (Intended) Implementation
 
-Voltages from multi-electrode arrays are read from the Intan to computer in blocks in real time. These blocks (of n samples collected at 20000 Hz) are then fed to the spike sorter. First, a training peroid needs to take place, where things like signal to noise on each electrode are calculated. Then spikes are detected, aligned and sorted according to methods described in the Osort paper: http://www.urut.ch/pdfs/Rutishauser_2006a.pdf
+Voltages from multi-electrode arrays are read from the Intan to computer in blocks in real time. These blocks (of n samples collected at ~20000 Hz) are then fed to the spike sorter. First, a training period needs to take place, where things like signal to noise on each electrode are calculated. Then spikes are detected, aligned and sorted according to one set of several optional methods, most of which are described in the Osort paper: http://www.urut.ch/pdfs/Rutishauser_2006a.pdf
 
 # Current Functionality and TODO
 
@@ -65,11 +69,8 @@ Notes:
 
 ## Parallel Processing
 
-- [ ] Update DistributedArrays to allow for easier parallel interface (ugh! I'm going to pray that somebody else gets to this first)
-
-Notes:
-* I was able to make a parallel method for the calibration step where basically every core was doing its own thing with a portion of the data. This seemed to work. It would be nicer to somehow use a distributed array (which I didn't have success with) to easily bring the data together when necessary and otherwise have a method perform an algorithm on just its section of the distributed array.
-* For now, I'm happy saying that the proof of concept worked, and with it taking ~.5 ms to sort each channel right now, it isn't a high priority to get the parallel working for the normal setup.
+- [x] Convert basic user type into Distributed Array for sorting across processors
+- [ ] Add option to push data to cloud for sorting
 
 ## Offline analysis
 

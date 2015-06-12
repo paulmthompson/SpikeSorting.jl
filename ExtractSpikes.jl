@@ -42,16 +42,13 @@ function Cluster(n::Int64)
     return 
 end
 
-#type Sorting{T,R}
-#    s::T
-#    c::R
-#    rawSignal::Array{Int,1}
-#end
-
 type Sorting
     s::SpikeDetection
     c::Cluster
     rawSignal::Array{Int,1}
+    electrode::Array{Int,1}
+    neuronnum::Array{Int,1}
+    numSpikes::Int
 end
 
 
@@ -103,9 +100,9 @@ function detectSpikes(sort::Sorting,start=1,k=20)
                     #50 time stamp (2.5 ms) window
                     x=assignSpike!(sort,i,j)
                     #Spike time stamp
-                    #Maybe preallocation of a large array is better here?
-                    push!(spikes,x)
-                    push!(inds,i-j)
+                    sort.electrode[sort.numSpikes]=i-j
+                    sort.neuronnum[sort.numSpikes]=x
+                    sort.numSpikes+=1
 
                     if sort.c.numClusters>1
                         merged=findMerge!(sort)
@@ -131,8 +128,6 @@ function detectSpikes(sort::Sorting,start=1,k=20)
     end
 
     sort.s.sigend=sort.rawSignal[(end-(50+25)+1):end]
-
-    return (spikes,inds)
        
 end
 

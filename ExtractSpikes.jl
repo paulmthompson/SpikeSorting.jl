@@ -51,7 +51,6 @@ type Sorting
     numSpikes::Int
 end
 
-
 function prepareCal(sort::Sorting,k=20)
 
     for i=1:k
@@ -66,29 +65,19 @@ function prepareCal(sort::Sorting,k=20)
 end
 
 function detectSpikes(sort::Sorting,start=1,k=20)
-
-    spikes=zeros(Int64,1)
-    inds=zeros(Int64,1)
    
     for i=start:1:length(sort.rawSignal)
-        
-        sort.s.a += sort.rawSignal[i] - sort.s.c
-        sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
 
-        # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-        p=sqrt((sort.s.b - (sort.s.a^2/k))/k) #This is an implicit int64 to float64 conversion. probably need to fix this
+        #Calculate theshold comparator
+        p=func(sort,i)
 
-        if i>20
-            sort.s.c=sort.rawSignal[i-k+1]
-        else
-            sort.s.c=sort.s.sigend[i+55]
-        end
-        
+        #continue collecting spike information if there was a recent spike
         if sort.s.index>0
             
             sort.s.p_temp[sort.s.index]=p
             sort.s.index-=1
-            
+
+            #If end of spike window is reached, continue spike detection
             if sort.s.index==0
 
                 #If clear peak is found
@@ -98,15 +87,7 @@ function detectSpikes(sort::Sorting,start=1,k=20)
                     j=indmax(sort.s.p_temp)
 
                     #50 time stamp (2.5 ms) window
-                    x=assignSpike!(sort,i,j)
-                    #Spike time stamp
-                    sort.electrode[sort.numSpikes]=i-j
-                    sort.neuronnum[sort.numSpikes]=x
-                    sort.numSpikes+=1
-
-                    if sort.c.numClusters>1
-                        merged=findMerge!(sort)
-                    end
+                    assignSpike!(sort,i,j)
                     
                 else
                     #If no clear peak, assign to noise
@@ -117,7 +98,8 @@ function detectSpikes(sort::Sorting,start=1,k=20)
                 sort.s.p_temp=zeros(Float64,size(sort.s.p_temp))
                   
             end
-       
+
+        #check if there was a threshold crossing
         elseif p>sort.s.thres
                 
             sort.s.p_temp[50]=p
@@ -127,54 +109,102 @@ function detectSpikes(sort::Sorting,start=1,k=20)
                    
     end
 
-    sort.s.sigend=sort.rawSignal[(end-(50+25)+1):end]
-       
+    sort.s.sigend=sort.rawSignal[(end-76):end]
+    
+end
+
+function PowerDetection(sort::Sorting, i::Int,k=20)
+    
+    sort.s.a += sort.rawSignal[i] - sort.s.c
+    sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
+
+    # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
+    p=sqrt((sort.s.b - (sort.s.a^2/k))/k)
+
+    if i>20
+        sort.s.c=sort.rawSignal[i-k+1]
+    else
+        sort.s.c=sort.s.sigend[i+55]
+    end
+
+    return p
+    
+end
+
+function SignalDetection(sort::Sorting,i::Int)
+
+    return sort.rawSignal[i]
+    
+end
+
+function NEODetection(sort::Sorting,i::Int)
+
+    if i==length(sort.rawSignal)
+        #GOTO onlineSort?
+        psi=0
+    elseif i>1
+        psi=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
+    else
+        psi=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.sigend[end]
+
+    end
+
+    return psi
+    
 end
 
 function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
 
+    signal=Array(Int,window*2)
+    
     #If a spike was still being analyzed from 
     if mytime<window
         if ind>mytime+window
-            signal=sort.s.sigend[length(sort.s.sigend)-ind-window:length(sort.s.sigend)-ind+window-1]
+            signal[:]=sort.s.sigend[length(sort.s.sigend)-ind-window:length(sort.s.sigend)-ind+window-1]
         else
-            signal=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
+            signal[:]=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
         end   
             x=getDist(signal,sort)
     else        
         #Will return cluster for assignment or 0 indicating did not cross threshold
-        myrange=mytime-ind-window:mytime-ind+window-1
-        x=getDist(sort,myrange)
+        signal[:]=sort.rawSignal[mytime-ind-window:mytime-ind+window-1]
+        x=getDist(signal,sort)
     end
     
     #add new cluster or assign to old
     if x==0
 
-        sort.c.clusters[:,sort.c.numClusters+1]=sort.rawSignal[myrange]
+        sort.c.clusters[:,sort.c.numClusters+1]=signal
         sort.c.clusterWeight[sort.c.numClusters+1]=1
 
         sort.c.numClusters+=1
         #Assign to new cluster
-        out=sort.c.numClusters
+        sort.neuronnum[sort.numSpikes]=sort.c.numClusters
 
     else
         
         #average with cluster waveform
         if sort.c.clusterWeight[x]<20
             sort.c.clusterWeight[x]+=1
-            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*sort.rawSignal[myrange]
+            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*signal
             
         else
             
-           sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*sort.rawSignal[myrange]
+           sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*signal
 
         end
 
-        out=x
+        sort.neuronnum[sort.numSpikes]=x
         
     end
 
-    return out
+    #Spike time stamp
+    sort.electrode[sort.numSpikes]=i-j
+    sort.numSpikes+=1
+
+    if sort.c.numClusters>1
+        merged=findMerge!(sort)
+    end
 
 end
 
@@ -205,25 +235,7 @@ function getThres(sort::Sorting,method::ASCIIString)
     
 end
 
-function getDist(sort::Sorting,range::UnitRange{Int64})
-
-    dist=Array(Float64,sort.c.numClusters)
-    for i=1:sort.c.numClusters
-        dist[i]=norm(sort.rawSignal[range]-sort.c.clusters[:,i])
-    end
-
-    #Need to account for no clusters at beginning
-    ind=indmin(dist)
-
-    if dist[ind]<sort.c.Tsm
-        return ind
-    else
-        return 0
-    end
-    
-end
-
-function getDist(sort::Sorting)
+function getDist(signal::Array{Int,1},sort::Sorting)
     
     dist=Array(Float64,sort.c.numClusters)
     for i=1:sort.c.numClusters
@@ -240,7 +252,6 @@ function getDist(sort::Sorting)
     end
     
 end
-
 
 function findMerge!(sort::Sorting)
     #if two clusters are below threshold distance away, merge them
@@ -277,8 +288,6 @@ function findMerge!(sort::Sorting)
     return [skip,merger]
     
 end
-
-
 
 function runningStd(rawSignal::Array{Int32,1},k::Int64)
 

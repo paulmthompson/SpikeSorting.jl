@@ -44,7 +44,20 @@ end
 function onlineSort(sort::Sorting,method="POWER")
  
     #Find spikes during this time block, labeled by neuron
-    detectSpikes(sort)
+
+    if method=="POWER"
+        
+        detectSpikes(sort, PowerDetection)       
+
+    elseif method=="SIGNAL"
+
+        detectSpikes(sort,SignalDetection)
+        
+    elseif method=="NEO"
+
+        detectSpikes(sort,NEODetection)
+
+    end
 
     #convert to absolute time stamps with the timeends variable
 

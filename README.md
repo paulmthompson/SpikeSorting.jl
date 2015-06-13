@@ -31,8 +31,8 @@ Voltages from multi-electrode arrays are read from the Intan to computer in bloc
 ## Detection
 
 - [x] Power Thresholding 
-- [ ] Raw Signal Threshold (as in Quiroga 2004)
-- [ ] Nonlinear Energy Operator
+- [x] Raw Signal Threshold (as in Quiroga 2004)
+- [x] Nonlinear Energy Operator
 - [ ] Continuous Wavelet Transform
 - [ ] Stationary Wavelet Transform
 

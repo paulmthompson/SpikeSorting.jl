@@ -49,6 +49,7 @@ type Sorting
     electrode::Array{Int,1}
     neuronnum::Array{Int,1}
     numSpikes::Int
+    waveforms::Array{Int,2}
 end
 
 function prepareCal(sort::Sorting,k=20)
@@ -69,6 +70,7 @@ function detectSpikes(sort::Sorting,func::Function,start=1,k=20)
     for i=start:1:length(sort.rawSignal)
 
         #Calculate theshold comparator
+        #This is WAY slower. thought the extra function call would add a little overhead, but not an order of magnitude. need to figure out why
         #p=func(sort,i)
 
         sort.s.a += sort.rawSignal[i] - sort.s.c
@@ -166,27 +168,25 @@ function NEODetection(sort::Sorting,i::Int)
 end
 
 function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
-
-    signal=Array(Int,window*2)
-    
+   
     #If a spike was still being analyzed from 
     if mytime<window
         if ind>mytime+window
-            signal[:]=sort.s.sigend[length(sort.s.sigend)-ind-window:length(sort.s.sigend)-ind+window-1]
+            sort.waveforms[:,sort.numSpikes]=sort.s.sigend[length(sort.s.sigend)-ind-window:length(sort.s.sigend)-ind+window-1]
         else
-            signal[:]=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
+            sort.waveforms[:,sort.numSpikes]=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
         end   
-            x=getDist(signal,sort)
+            x=getDist(sort)
     else        
         #Will return cluster for assignment or 0 indicating did not cross threshold
-        signal[:]=sort.rawSignal[mytime-ind-window:mytime-ind+window-1]
-        x=getDist(signal,sort)
+        sort.waveforms[:,sort.numSpikes]=sort.rawSignal[mytime-ind-window:mytime-ind+window-1]
+        x=getDist(sort)
     end
     
     #add new cluster or assign to old
     if x==0
 
-        sort.c.clusters[:,sort.c.numClusters+1]=signal
+        sort.c.clusters[:,sort.c.numClusters+1]=sort.waveforms[:,sort.numSpikes]
         sort.c.clusterWeight[sort.c.numClusters+1]=1
 
         sort.c.numClusters+=1
@@ -198,11 +198,11 @@ function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
         #average with cluster waveform
         if sort.c.clusterWeight[x]<20
             sort.c.clusterWeight[x]+=1
-            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*signal
+            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*sort.waveforms[:,sort.numSpikes]
             
         else
             
-           sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*signal
+           sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*sort.waveforms[:,sort.numSpikes]
 
         end
 
@@ -247,11 +247,11 @@ function getThres(sort::Sorting,method::ASCIIString)
     
 end
 
-function getDist(signal::Array{Int,1},sort::Sorting)
+function getDist(sort::Sorting)
     
     dist=Array(Float64,sort.c.numClusters)
     for i=1:sort.c.numClusters
-        dist[i]=norm(signal-sort.c.clusters[:,i])
+        dist[i]=norm(sort.waveforms[:,sort.numSpikes]-sort.c.clusters[:,i])
     end
 
     #Need to account for no clusters at beginning

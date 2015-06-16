@@ -1,6 +1,6 @@
 module ExtractSpikes
 
-export detectSpikes, getThres, SpikeDetection, prepareCal, Cluster, Sorting
+export detectSpikes, getThres, SpikeDetection, prepareCal, Cluster, Sorting, PowerDetection, SignalDetection, NEODetection
 
 type SpikeDetection
     #These are needed to so that when the next chunk of real time data is to be processed, it preserved all of the processing information collected from the last chunk
@@ -64,12 +64,24 @@ function prepareCal(sort::Sorting,k=20)
       
 end
 
-function detectSpikes(sort::Sorting,start=1,k=20)
+function detectSpikes(sort::Sorting,func::Function,start=1,k=20)
    
     for i=start:1:length(sort.rawSignal)
 
         #Calculate theshold comparator
-        p=func(sort,i)
+        #p=func(sort,i)
+
+        sort.s.a += sort.rawSignal[i] - sort.s.c
+        sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
+
+        # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
+        p=sqrt((sort.s.b - (sort.s.a^2/k))/k)
+
+        if i>20
+            sort.s.c=sort.rawSignal[i-k+1]
+        else
+            sort.s.c=sort.s.sigend[i+55]
+        end
 
         #continue collecting spike information if there was a recent spike
         if sort.s.index>0
@@ -199,7 +211,7 @@ function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
     end
 
     #Spike time stamp
-    sort.electrode[sort.numSpikes]=i-j
+    sort.electrode[sort.numSpikes]=mytime-ind
     sort.numSpikes+=1
 
     if sort.c.numClusters>1
@@ -239,7 +251,7 @@ function getDist(signal::Array{Int,1},sort::Sorting)
     
     dist=Array(Float64,sort.c.numClusters)
     for i=1:sort.c.numClusters
-        dist[i]=norm(sort.rawSignal-sort.c.clusters[:,i])
+        dist[i]=norm(signal-sort.c.clusters[:,i])
     end
 
     #Need to account for no clusters at beginning

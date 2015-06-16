@@ -10,17 +10,17 @@ function onlineCal(sort::Sorting,method="POWER")
     #Threshold for cluster assignment and merger
     #Cluster templates
 
-    #find the thresholds for each channel
-
-    sort.s.thres=getThres(sort,method)
+    if method=="POWER"
+        #find the thresholds for each channel
+        sort.s.thres=getThres(sort,method)
         
-    #Threshold is supposed to be the average standard deviation of all of the spiking events. Don't have any of those to start
-     sort.c.Tsm=50*var(sort.rawSignal) 
-
-    #Run a second of data to refine cluster templates, and not caring about recording spikes
-    #Also, should be able to load clusters from the end of previous session
-    prepareCal(sort)
-    detectSpikes(sort,21)
+        #Threshold is supposed to be the average standard deviation of all of the spiking events. Don't have any of those to start
+        sort.c.Tsm=50*var(sort.rawSignal) 
+        #Run a second of data to refine cluster templates, and not caring about recording spikes
+        #Also, should be able to load clusters from the end of previous session
+        prepareCal(sort)
+        detectSpikes(sort,PowerDetection, 21)
+    end
 
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
     #might want to change this later

@@ -60,6 +60,13 @@ function prepareCal(sort::Sorting,k=20)
     end
 
     sort.s.c=sort.rawSignal[1]
+
+    for i=(k+1):75
+        sort.s.a += sort.rawSignal[i] - sort.s.c
+        sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2
+        sort.s.c = sort.rawSignal[i-k+1]
+
+    end
     
     sort.s.sigend=sort.rawSignal[1:75]
       
@@ -67,7 +74,7 @@ end
 
 function detectSpikes(sort::Sorting,func::Function,start=1,k=20)
    
-    for i=start:1:length(sort.rawSignal)
+    for i=start:length(sort.rawSignal)
 
         #Calculate theshold comparator
         #This is WAY slower. thought the extra function call would add a little overhead, but not an order of magnitude. need to figure out why
@@ -77,7 +84,7 @@ function detectSpikes(sort::Sorting,func::Function,start=1,k=20)
         sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
 
         # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-        p=sqrt((sort.s.b - (sort.s.a^2/k))/k)
+        p=sqrt((sort.s.b - (sort.s.a^2)/k)/k)
 
         if i>20
             sort.s.c=sort.rawSignal[i-k+1]

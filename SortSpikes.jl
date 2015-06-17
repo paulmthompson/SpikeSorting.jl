@@ -4,6 +4,8 @@ using ExtractSpikes
 
 export onlineCal, onlineSort, offlineSort, onlineCal_par
 
+#Should define types here
+
 function onlineCal(sort::Sorting,method="POWER")
     #The first data collected will be different in several ways. Need to determine:
     #Threshold for spike detection
@@ -19,7 +21,7 @@ function onlineCal(sort::Sorting,method="POWER")
         #Run a second of data to refine cluster templates, and not caring about recording spikes
         #Also, should be able to load clusters from the end of previous session
         prepareCal(sort)
-        detectSpikes(sort,PowerDetection, 21)
+        detectSpikes(sort,PowerDetection, 76)
     end
 
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary

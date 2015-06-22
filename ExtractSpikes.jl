@@ -49,7 +49,7 @@ type Sorting
     electrode::Array{Int,1}
     neuronnum::Array{Int,1}
     numSpikes::Int
-    waveforms::Array{Int,2}
+    waveforms::Array{SharedArray,1}
 end
 
 function prepareCal(sort::Sorting,k=20,calWin=75)
@@ -133,7 +133,7 @@ function detectSpikes(sort::Sorting,func::Function,start=1,k=20)
                    
     end
 
-    sort.s.sigend=sort.rawSignal[(end-74):end]
+    sort.s.sigend[:]=sort.rawSignal[(end-74):end]
     
 end
 
@@ -182,14 +182,14 @@ function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
     #If a spike was still being analyzed from 
     if mytime<window
         if ind>mytime+window
-            sort.waveforms[:,sort.numSpikes]=sort.s.sigend[length(sort.s.sigend)-ind-window:length(sort.s.sigend)-ind+window-1]
+            sort.waveforms[sort.numSpikes][:]=sort.s.sigend[length(sort.s.sigend)-ind-window:length(sort.s.sigend)-ind+window-1]
         else
-            sort.waveforms[:,sort.numSpikes]=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
+            sort.waveforms[sort.numSpikes][:]=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
         end   
             x=getDist(sort)
     else        
         #Will return cluster for assignment or 0 indicating did not cross threshold
-        sort.waveforms[:,sort.numSpikes]=sort.rawSignal[mytime-ind-window:mytime-ind+window-1]
+        sort.waveforms[sort.numSpikes][:]=sort.rawSignal[mytime-ind-window:mytime-ind+window-1]
         x=getDist(sort)
     end
     
@@ -208,11 +208,11 @@ function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
         #average with cluster waveform
         if sort.c.clusterWeight[x]<20
             sort.c.clusterWeight[x]+=1
-            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*sort.waveforms[:,sort.numSpikes]
+            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*sort.waveforms[sort.numSpikes][:]
             
         else
             
-           sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*sort.waveforms[:,sort.numSpikes]
+           sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*sort.waveforms[sort.numSpikes][:]
 
         end
 
@@ -261,7 +261,7 @@ function getDist(sort::Sorting)
     
     dist=Array(Float64,sort.c.numClusters)
     for i=1:sort.c.numClusters
-        dist[i]=norm(sort.waveforms[:,sort.numSpikes]-sort.c.clusters[:,i])
+        dist[i]=norm(sort.waveforms[sort.numSpikes][:]-sort.c.clusters[:,i])
     end
 
     #Need to account for no clusters at beginning

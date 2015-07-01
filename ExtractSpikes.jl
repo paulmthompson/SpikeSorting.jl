@@ -222,7 +222,12 @@ function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
 
     #Spike time stamp
     sort.electrode[sort.numSpikes]=mytime-ind
+
+    #add spike cluster identifier to dummy first waveform shared array
+    sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]
+    
     sort.numSpikes+=1
+
 
     if sort.c.numClusters>1
         merged=findMerge!(sort)

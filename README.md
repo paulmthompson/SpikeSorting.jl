@@ -12,6 +12,8 @@ Since Osort (http://www.urut.ch/new/serendipity/index.php?/pages/osort.html) was
 # Required Modules
 
 * DistributedArrays - https://github.com/JuliaParallel/DistributedArrays.jl
+* Winston - https://github.com/nolta/Winston.jl
+* Gtk - https://github.com/JuliaLang/Gtk.jl
 
 # Overview of (Intended) Implementation
 
@@ -64,7 +66,7 @@ Clustering:
 - [ ] Supervised sorting interface (probably via window discriminators)
 
 Notes:
-* I tried matplotlib, and it was just okay. Would like to try PyCall to pyqtgraph now to see if it is indeed faster.
+* After trying several plotting options, I think I'm settled on Gtk + Winston for this. Keeping things in Julia and C seems to allow for pretty decent speed.
 * Whatever the UI looks like, it needs to have a pipeline that allows for supervised sorting. If the unsupervised algorithm does a crappy job, there needs to be a way to either have control over changing the mean waveform, or doing some totally supervised spike sorting, and essentially turning the automated algorithm off on that channel.
 
 ## Parallel Processing

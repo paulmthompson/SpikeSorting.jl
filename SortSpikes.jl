@@ -59,6 +59,10 @@ function onlineSort(sort::Sorting,method="POWER")
 
         detectSpikes(sort,NEODetection)
 
+    elseif method=="MANUAL"
+
+        detectSpikes(sort, ManualDetection)
+
     end
 
     #convert to absolute time stamps with the timeends variable

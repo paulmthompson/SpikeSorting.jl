@@ -35,7 +35,7 @@ Voltages from multi-electrode arrays are read from the Intan to computer in bloc
 - [x] Power Thresholding 
 - [x] Raw Signal Threshold (as in Quiroga 2004)
 - [x] Nonlinear Energy Operator (Choi et al 2006)
-- [ ] Continuous Wavelet Transform
+- [ ] Continuous Wavelet Transform (Nenadic et al 2005)
 - [ ] Stationary Wavelet Transform
 
 ## Alignment

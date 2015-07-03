@@ -1,6 +1,6 @@
 module ExtractSpikes
 
-export detectSpikes, getThres, SpikeDetection, prepareCal, Cluster, Sorting, PowerDetection, SignalDetection, NEODetection
+export detectSpikes, getThres, SpikeDetection, prepareCal, Cluster, Sorting, PowerDetection, SignalDetection, NEODetection, Detection
 
 type SpikeDetection
     #These are needed to so that when the next chunk of real time data is to be processed, it preserved all of the processing information collected from the last chunk
@@ -52,6 +52,12 @@ type Sorting
     waveforms::Array{SharedArray,1}
 end
 
+immutable Detection{Name} end
+
+@generated function call{fn}(::Detection{fn},x::Sorting,y::Int64)
+        :($fn(x,y))
+end
+
 function prepareCal(sort::Sorting,k=20,calWin=75)
 
     sort.s.a=0
@@ -74,27 +80,16 @@ function prepareCal(sort::Sorting,k=20,calWin=75)
       
 end
 
-function detectSpikes(sort::Sorting,func::Function,start=1,k=20)
-   
+function detectSpikes(sort::Sorting,func::Detection,start=1,k=20)
+
+    #Threshold comparator
+    p=0.0
+
     for i=start:length(sort.rawSignal)
 
         #Calculate theshold comparator
-        #This is WAY slower. thought the extra function call would add a little overhead, but not an order of magnitude. need to figure out why
-        #p=func(sort,i)
-
-        sort.s.a += sort.rawSignal[i] - sort.s.c
-        sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2
-                
-        # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-        p=sqrt((sort.s.b - (sort.s.a^2)/k)/k)
-
-        if i>19
-            sort.s.c=sort.rawSignal[i-k+1]
-        else
-            sort.s.c=sort.s.sigend[i+56]
-        end
+        p=func(sort,i)
         
-
         #continue collecting spike information if there was a recent spike
         if sort.s.index>0
             
@@ -119,7 +114,7 @@ function detectSpikes(sort::Sorting,func::Function,start=1,k=20)
                 end
 
                 #reset temp matrix
-                sort.s.p_temp=zeros(Float64,size(sort.s.p_temp))
+                sort.s.p_temp[:]=zeros(Float64,size(sort.s.p_temp))
                   
             end
 
@@ -137,13 +132,10 @@ function detectSpikes(sort::Sorting,func::Function,start=1,k=20)
     
 end
 
-function PowerDetection(sort::Sorting, i::Int,k=20)
+function PowerDetection(sort::Sorting, i::Int64, k=20)
     
     sort.s.a += sort.rawSignal[i] - sort.s.c
     sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
-
-    # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-    p=sqrt((sort.s.b - (sort.s.a^2/k))/k)
 
     if i>19
         sort.s.c=sort.rawSignal[i-k+1]
@@ -151,7 +143,8 @@ function PowerDetection(sort::Sorting, i::Int,k=20)
         sort.s.c=sort.s.sigend[i+56]
     end
 
-    return p
+    # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
+    sqrt((sort.s.b - (sort.s.a^2/k))/k)
     
 end
 

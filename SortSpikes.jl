@@ -21,7 +21,9 @@ function onlineCal(sort::Sorting,method="POWER")
         #Run a second of data to refine cluster templates, and not caring about recording spikes
         #Also, should be able to load clusters from the end of previous session
         prepareCal(sort)
-        detectSpikes(sort,PowerDetection, 76)
+        
+        PowerDetection1=Detection{:PowerDetection}()
+        detectSpikes(sort,PowerDetection1, 76)
     end
 
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
@@ -48,8 +50,9 @@ function onlineSort(sort::Sorting,method="POWER")
     #Find spikes during this time block, labeled by neuron
 
     if method=="POWER"
-        
-        detectSpikes(sort, PowerDetection)       
+             
+        PowerDetection1=Detection{:PowerDetection}()
+        detectSpikes(sort,PowerDetection1)       
 
     elseif method=="SIGNAL"
 

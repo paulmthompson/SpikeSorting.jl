@@ -145,10 +145,10 @@ function PowerDetection(sort::Sorting, i::Int,k=20)
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
     p=sqrt((sort.s.b - (sort.s.a^2/k))/k)
 
-    if i>20
+    if i>19
         sort.s.c=sort.rawSignal[i-k+1]
     else
-        sort.s.c=sort.s.sigend[i+55]
+        sort.s.c=sort.s.sigend[i+56]
     end
 
     return p

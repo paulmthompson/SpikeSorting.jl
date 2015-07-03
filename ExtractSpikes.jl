@@ -16,11 +16,11 @@ type SpikeDetection
 end
 
 function SpikeDetection()
-    return SpikeDetection(0,0,0,0,zeros(Int64,75),zeros(Float64,50),zeros(Int64,1),1.0)
+    SpikeDetection(0,0,0,0,zeros(Int64,75),zeros(Float64,50),zeros(Int64,1),1.0)
 end
 
 function SpikeDetection(n::Int64,k::Int64)
-    return SpikeDetection(0,0,0,0,zeros(Int64,k),zeros(Float64,n),zeros(Int64,1),1.0)
+    SpikeDetection(0,0,0,0,zeros(Int64,k),zeros(Float64,n),zeros(Int64,1),1.0)
 end
 
 type Cluster
@@ -31,15 +31,12 @@ type Cluster
     Tsm::Float64
 end
 
-function Cluster()
-    
-    return Cluster(hcat(rand(Float64,50,1),zeros(Float64,50,4)),zeros(Int64,5),1,1.0)
-    
+function Cluster()   
+    Cluster(hcat(rand(Float64,50,1),zeros(Float64,50,4)),zeros(Int64,5),1,1.0)  
 end
 
 function Cluster(n::Int64)
     Cluster(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
-    return 
 end
 
 type Sorting
@@ -76,7 +73,7 @@ function prepareCal(sort::Sorting,k=20,calWin=75)
         sort.s.c = sort.rawSignal[i-k+1]
     end
     
-    sort.s.sigend=sort.rawSignal[1:calWin]
+    sort.s.sigend[:]=sort.rawSignal[1:calWin]
       
 end
 
@@ -148,25 +145,34 @@ function PowerDetection(sort::Sorting, i::Int64, k=20)
     
 end
 
-function SignalDetection(sort::Sorting,i::Int)
+function SignalDetection(sort::Sorting,i::Int64)
 
-    return sort.rawSignal[i]
+    abs(sort.rawSignal[i])
     
 end
 
-function NEODetection(sort::Sorting,i::Int)
+function NEODetection(sort::Sorting,i::Int64)
 
     if i==length(sort.rawSignal)
-        #GOTO onlineSort?
+        #Will do spike detection next iteration due to edging
         psi=0
     elseif i>1
         psi=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
     else
-        psi=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.sigend[end]
+
+        #perform calculation for end of last step and this one, and return the larger
+        psi1=sort.sigend[end]^2 - sort.rawSignal[i] * sort.sigend[end-1]
+        psi2=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.sigend[end]
+
+        if psi1>psi2
+            return psi1
+        else
+            return psi2
+        end
 
     end
 
-    return psi
+    psi
     
 end
 
@@ -251,7 +257,7 @@ function getThres(sort::Sorting,method::ASCIIString)
 
     end
     
-    return threshold
+    threshold
     
 end
 
@@ -305,7 +311,7 @@ function findMerge!(sort::Sorting)
         end
     end
 
-    return [skip,merger]
+    [skip,merger]
     
 end
 
@@ -333,7 +339,7 @@ function runningStd(rawSignal::Array{Int32,1},k::Int64)
         
     end
 
-    return rstd
+    rstd
     
 end
 
@@ -359,9 +365,7 @@ function runningPower(sort::Sorting,k::Int64)
         
     end
 
-    thres=mean(p)+5*std(p)
-    
-    return thres
+    mean(p)+5*std(p)
 
 end
 
@@ -373,9 +377,7 @@ function runningNEO(sort::Sorting)
         psi[i]=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
     end
 
-    thres=3*mean(psi)
-
-    return thres
+    3*mean(psi)
     
 end
 

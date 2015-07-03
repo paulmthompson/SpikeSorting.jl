@@ -27,6 +27,8 @@ function onlinecal(sort::Sorting,method="POWER")
         
         sort.s.thres=getthres(sort,method)
         detectionmethod=detection{:detect_power}()
+
+        prepare_power(sort)
         
     elseif method=="SIGNAL"
 
@@ -40,8 +42,8 @@ function onlinecal(sort::Sorting,method="POWER")
         
     end
 
-    sort.c.Tsm=50*var(sort.rawSignal) 
-    preparecal(sort)
+    sort.c.Tsm=50*var(sort.rawSignal)
+    sort.s.sigend[:]=sort.rawSignal[1:75]
     detectspikes(sort,detectionmethod, 76)
     
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
@@ -69,16 +71,18 @@ function onlinesort(sort::Sorting,method="POWER")
 
     if method=="POWER"
              
-        powerdetection1=detection{:detect_power}()
-        detectspikes(sort,powerdetection1)       
+        detect_power1=detection{:detect_power}()
+        detectspikes(sort,detect_power1)       
 
     elseif method=="SIGNAL"
 
+        detect_signal1=detection{:detect_signal}()
         detectspikes(sort,detect_signal)
         
     elseif method=="NEO"
 
-        detectspikes(sort,detect_neo)
+        detect_neo1=detection{:detect_neo}()
+        detectspikes(sort,detect_neo1)
 
     elseif method=="MANUAL"
 

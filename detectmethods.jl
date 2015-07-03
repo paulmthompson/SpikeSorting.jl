@@ -3,6 +3,8 @@
 Detection methods. Each method needs
 1) function for  detection algorithm
 2) function for threshold calculation
+
+A method may also need a "prepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
 
 #=
@@ -37,7 +39,6 @@ end
 
 function threshold_power(sort::Sorting, k=20)
     
-    #running power
     p=Array(Float64,size(sort.rawSignal,1)-k)
     a = 0
     b = 0
@@ -61,6 +62,25 @@ function threshold_power(sort::Sorting, k=20)
 
 end
 
+function prepare_power(sort::Sorting,k=20)
+    
+    sort.s.a=0
+    sort.s.b=0
+    
+    for i=1:k
+        sort.s.a += sort.rawSignal[i]
+        sort.s.b += sort.rawSignal[i]^2
+    end
+
+    sort.s.c=sort.rawSignal[1]
+
+    for i=(k+1):75
+        sort.s.a += sort.rawSignal[i] - sort.s.c
+        sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2
+        sort.s.c = sort.rawSignal[i-k+1]
+    end
+end
+
 #=
 Raw Signal
 
@@ -77,7 +97,6 @@ function threshold_signal(sort::Sorting)
     median(abs(sort.rawSignal))/.6745
     
 end
-
 
 #=
 Nonlinear Energy Operator

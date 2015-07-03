@@ -1,27 +1,5 @@
 
 
-function preparecal(sort::Sorting,k=20,calWin=75)
-
-    sort.s.a=0
-    sort.s.b=0
-    
-    for i=1:k
-        sort.s.a += sort.rawSignal[i]
-        sort.s.b += sort.rawSignal[i]^2
-    end
-
-    sort.s.c=sort.rawSignal[1]
-
-    for i=(k+1):calWin
-        sort.s.a += sort.rawSignal[i] - sort.s.c
-        sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2
-        sort.s.c = sort.rawSignal[i-k+1]
-    end
-    
-    sort.s.sigend[:]=sort.rawSignal[1:calWin]
-      
-end
-
 function detectspikes(sort::Sorting,func::detection,start=1,k=20)
 
     #Threshold comparator
@@ -147,10 +125,6 @@ function getthres(sort::Sorting,method::ASCIIString)
     elseif method=="NEO"
 
         threshold=threshold_neo(sort)
-
-    elseif method=="TEST"
-
-        threshold=1.0
 
     end
     

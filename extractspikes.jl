@@ -1,61 +1,6 @@
-module ExtractSpikes
 
-export detectSpikes, getThres, SpikeDetection, prepareCal, Cluster, Sorting, PowerDetection, SignalDetection, NEODetection, Detection
 
-type SpikeDetection
-    #These are needed to so that when the next chunk of real time data is to be processed, it preserved all of the processing information collected from the last chunk
-    #If it was in the middle of capturing the shape of a spike, it will be able to faithfully continue
-    a::Int64
-    b::Int64
-    c::Int64
-    index::Int64
-    sigend::Array{Int64,1}
-    p_temp::Array{Float64,1}
-    s_temp::Array{Int64,1}
-    thres::Float64
-end
-
-function SpikeDetection()
-    SpikeDetection(0,0,0,0,zeros(Int64,75),zeros(Float64,50),zeros(Int64,1),1.0)
-end
-
-function SpikeDetection(n::Int64,k::Int64)
-    SpikeDetection(0,0,0,0,zeros(Int64,k),zeros(Float64,n),zeros(Int64,1),1.0)
-end
-
-type Cluster
-    #These fields represent data that needs to be stored over the experiment about waveforms that have been determined
-    clusters::Array{Float64,2}
-    clusterWeight::Array{Int64,1}
-    numClusters::Int64
-    Tsm::Float64
-end
-
-function Cluster()   
-    Cluster(hcat(rand(Float64,50,1),zeros(Float64,50,4)),zeros(Int64,5),1,1.0)  
-end
-
-function Cluster(n::Int64)
-    Cluster(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
-end
-
-type Sorting
-    s::SpikeDetection
-    c::Cluster
-    rawSignal::Array{Int,1}
-    electrode::Array{Int,1}
-    neuronnum::Array{Int,1}
-    numSpikes::Int
-    waveforms::Array{SharedArray,1}
-end
-
-immutable Detection{Name} end
-
-@generated function call{fn}(::Detection{fn},x::Sorting,y::Int64)
-        :($fn(x,y))
-end
-
-function prepareCal(sort::Sorting,k=20,calWin=75)
+function preparecal(sort::Sorting,k=20,calWin=75)
 
     sort.s.a=0
     sort.s.b=0
@@ -77,7 +22,7 @@ function prepareCal(sort::Sorting,k=20,calWin=75)
       
 end
 
-function detectSpikes(sort::Sorting,func::Detection,start=1,k=20)
+function detectspikes(sort::Sorting,func::detection,start=1,k=20)
 
     #Threshold comparator
     p=0.0
@@ -103,7 +48,7 @@ function detectSpikes(sort::Sorting,func::Detection,start=1,k=20)
                     j=indmax(sort.s.p_temp)
 
                     #50 time stamp (2.5 ms) window
-                    assignSpike!(sort,i,j)
+                    assignspike!(sort,i,j)
                     
                 else
                     #If no clear peak, assign to noise
@@ -129,54 +74,8 @@ function detectSpikes(sort::Sorting,func::Detection,start=1,k=20)
     
 end
 
-function PowerDetection(sort::Sorting, i::Int64, k=20)
-    
-    sort.s.a += sort.rawSignal[i] - sort.s.c
-    sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
 
-    if i>19
-        sort.s.c=sort.rawSignal[i-k+1]
-    else
-        sort.s.c=sort.s.sigend[i+56]
-    end
-
-    # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-    sqrt((sort.s.b - (sort.s.a^2/k))/k)
-    
-end
-
-function SignalDetection(sort::Sorting,i::Int64)
-
-    abs(sort.rawSignal[i])
-    
-end
-
-function NEODetection(sort::Sorting,i::Int64)
-
-    if i==length(sort.rawSignal)
-        #Will do spike detection next iteration due to edging
-        psi=0
-    elseif i>1
-        psi=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
-    else
-
-        #perform calculation for end of last step and this one, and return the larger
-        psi1=sort.sigend[end]^2 - sort.rawSignal[i] * sort.sigend[end-1]
-        psi2=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.sigend[end]
-
-        if psi1>psi2
-            return psi1
-        else
-            return psi2
-        end
-
-    end
-
-    psi
-    
-end
-
-function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
+function assignspike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
    
     #If a spike was still being analyzed from 
     if mytime<window
@@ -185,11 +84,11 @@ function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
         else
             sort.waveforms[sort.numSpikes][:]=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
         end   
-            x=getDist(sort)
+            x=getdist(sort)
     else        
         #Will return cluster for assignment or 0 indicating did not cross threshold
         sort.waveforms[sort.numSpikes][:]=sort.rawSignal[mytime-ind-window:mytime-ind+window-1]
-        x=getDist(sort)
+        x=getdist(sort)
     end
     
     #add new cluster or assign to old
@@ -229,27 +128,27 @@ function assignSpike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
 
 
     if sort.c.numClusters>1
-        merged=findMerge!(sort)
+        merged=findmerge!(sort)
     end
 
 end
 
 
-function getThres(sort::Sorting,method::ASCIIString)
+function getthres(sort::Sorting,method::ASCIIString)
 
+    #Change this to function call being passed
     if method=="POWER"
         
-        #threshold should be 5 * std(power)
-        threshold=runningPower(sort,20)
+        threshold=runningpower(sort,20)
         
     elseif method=="SIGNAL"
 
-        #from Quian Quiroga et al 2004
+        #make function call
         threshold=median(abs(sort.rawSignal))/.6745
 
     elseif method=="NEO"
 
-        threshold=runningNEO(sort)
+        threshold=runningneo(sort)
 
     elseif method=="TEST"
 
@@ -261,7 +160,7 @@ function getThres(sort::Sorting,method::ASCIIString)
     
 end
 
-function getDist(sort::Sorting)
+function getdist(sort::Sorting)
     
     dist=Array(Float64,sort.c.numClusters)
     for i=1:sort.c.numClusters
@@ -279,7 +178,7 @@ function getDist(sort::Sorting)
     
 end
 
-function findMerge!(sort::Sorting)
+function findmerge!(sort::Sorting)
     #if two clusters are below threshold distance away, merge them
 
     skip=0
@@ -315,71 +214,3 @@ function findMerge!(sort::Sorting)
     
 end
 
-function runningStd(rawSignal::Array{Int32,1},k::Int64)
-
-    #running std of fixed width
-    rstd=Array(Float64,length(rawSignal)-k)
-    a = 0.0
-    b = 0.0
-    for i=1:k
-        a += rawSignal[i]
-        b += rawSignal[i]^2
-    end
-
-    c=rawSignal[1]
-    d=rawSignal[1]^2
-    
-    for i=(k+1):length(rawSignal)
-        
-        a += rawSignal[i] - c
-        b += rawSignal[i]^2 - d
-        rstd[i-k]=sqrt(k*b - a^2)/k
-        c=rawSignal[i-k+1]
-        d=rawSignal[i-k+1]^2
-        
-    end
-
-    rstd
-    
-end
-
-function runningPower(sort::Sorting,k::Int64)
-    
-    #running power
-    p=Array(Float64,size(sort.rawSignal,1)-k)
-    a = 0
-    b = 0
-    for i=1:k
-        a += sort.rawSignal[i]
-        b += sort.rawSignal[i]^2
-    end
-
-    c = sort.rawSignal[1]
-    
-    for i=(k+1):(size(sort.rawSignal,1)-1)
-        
-        a += sort.rawSignal[i] - c
-        b += sort.rawSignal[i]^2 - c^2
-        p[i-k]=sqrt((b - a^2/k)/k)
-        c = sort.rawSignal[i-k+1]
-        
-    end
-
-    mean(p)+5*std(p)
-
-end
-
-function runningNEO(sort::Sorting)
-
-    psi=zeros(Int,length(sort.rawSignal)-1)
-    
-    for i=2:length(sort.rawSignal)-1
-        psi[i]=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
-    end
-
-    3*mean(psi)
-    
-end
-
-
-end

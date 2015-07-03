@@ -1,6 +1,6 @@
 
 #=
-Different detection methods. Each method needs
+Detection methods. Each method needs
 1) function for  detection algorithm
 2) function for threshold calculation
 =#
@@ -19,7 +19,7 @@ Power
 
 Rutishauser et al 2006
 =#
-function powerdetection(sort::Sorting, i::Int64, k=20)
+function detect_power(sort::Sorting, i::Int64, k=20)
     
     sort.s.a += sort.rawSignal[i] - sort.s.c
     sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
@@ -35,7 +35,7 @@ function powerdetection(sort::Sorting, i::Int64, k=20)
     
 end
 
-function runningpower(sort::Sorting, k=20)
+function threshold_power(sort::Sorting, k=20)
     
     #running power
     p=Array(Float64,size(sort.rawSignal,1)-k)
@@ -66,18 +66,25 @@ Raw Signal
 
 Quiroga et al 2004
 =#
-function signaldetection(sort::Sorting,i::Int64)
+function detect_signal(sort::Sorting,i::Int64)
 
     abs(sort.rawSignal[i])
     
 end
+
+function threshold_signal(sort::Sorting)
+
+    median(abs(sort.rawSignal))/.6745
+    
+end
+
 
 #=
 Nonlinear Energy Operator
 
 Choi et al 2006
 =#
-function neodetection(sort::Sorting,i::Int64)
+function detect_neo(sort::Sorting,i::Int64)
 
     if i==length(sort.rawSignal)
         #Will do spike detection next iteration due to edging
@@ -102,9 +109,9 @@ function neodetection(sort::Sorting,i::Int64)
     
 end
 
-function runningneo(sort::Sorting)
+function threshold_neo(sort::Sorting)
 
-    psi=zeros(Int,length(sort.rawSignal)-1)
+    psi=zeros(Int64,length(sort.rawSignal)-1)
     
     for i=2:length(sort.rawSignal)-1
         psi[i]=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]

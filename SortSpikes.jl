@@ -26,17 +26,24 @@ function onlinecal(sort::Sorting,method="POWER")
     if method=="POWER"
         
         sort.s.thres=getthres(sort,method)
+        detectionmethod=detection{:detect_power}()
         
-        #Threshold is supposed to be the average standard deviation of all of the spiking events. Don't have any of those to start
-        sort.c.Tsm=50*var(sort.rawSignal) 
-        #Run a second of data to refine cluster templates, and not caring about recording spikes
-        #Also, should be able to load clusters from the end of previous session
-        preparecal(sort)
+    elseif method=="SIGNAL"
+
+        sort.s.thres=getthres(sort,method)
+        detectionmethod=detection{:detect_signal}()
         
-        powerdetection1=detection{:powerdetection}()
-        detectspikes(sort,powerdetection1, 76)
+    elseif method=="NEO"
+
+        sort.s.thres=getthres(sort,method)
+        detectionmethod=detection{:detect_neo}()
+        
     end
 
+    sort.c.Tsm=50*var(sort.rawSignal) 
+    preparecal(sort)
+    detectspikes(sort,detectionmethod, 76)
+    
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
     #might want to change this later
     if sort.c.numClusters>1
@@ -62,16 +69,16 @@ function onlinesort(sort::Sorting,method="POWER")
 
     if method=="POWER"
              
-        powerdetection1=detection{:powerdetection}()
+        powerdetection1=detection{:detect_power}()
         detectspikes(sort,powerdetection1)       
 
     elseif method=="SIGNAL"
 
-        detectspikes(sort,signaldetection)
+        detectspikes(sort,detect_signal)
         
     elseif method=="NEO"
 
-        detectspikes(sort,neodetection)
+        detectspikes(sort,detect_neo)
 
     elseif method=="MANUAL"
 

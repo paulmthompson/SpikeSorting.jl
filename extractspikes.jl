@@ -60,7 +60,6 @@ function detectspikes(sort::Sorting,func::detection,start=1,k=20)
                   
             end
 
-        #check if there was a threshold crossing
         elseif p>sort.s.thres
                 
             sort.s.p_temp[50]=p
@@ -139,16 +138,15 @@ function getthres(sort::Sorting,method::ASCIIString)
     #Change this to function call being passed
     if method=="POWER"
         
-        threshold=runningpower(sort,20)
+        threshold=threshold_power(sort)
         
     elseif method=="SIGNAL"
 
-        #make function call
-        threshold=median(abs(sort.rawSignal))/.6745
+        threshold=threshold_signal(sort)
 
     elseif method=="NEO"
 
-        threshold=runningneo(sort)
+        threshold=threshold_neo(sort)
 
     elseif method=="TEST"
 

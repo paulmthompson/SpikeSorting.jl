@@ -1,4 +1,6 @@
-
+#=
+Main processing loop for length of raw signal
+=#
 
 function detectspikes(sort::Sorting,func::detection,start=1,k=20)
 
@@ -25,6 +27,8 @@ function detectspikes(sort::Sorting,func::detection,start=1,k=20)
                     #alignment (power based)
                     j=indmax(sort.s.p_temp)
 
+                    #overlap detection
+                    
                     #50 time stamp (2.5 ms) window
                     assignspike!(sort,i,j)
                     

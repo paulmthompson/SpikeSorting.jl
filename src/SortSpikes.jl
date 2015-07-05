@@ -1,6 +1,8 @@
 module SortSpikes
 
-include("detecttypes.jl")
+
+abstract SpikeDetection
+
 include("clustertypes.jl")
 
 type Sorting{S<:SpikeDetection}

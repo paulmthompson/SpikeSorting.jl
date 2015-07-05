@@ -1,8 +1,9 @@
 
 #=
 Detection methods. Each method needs
-1) function for  detection algorithm
-2) function for threshold calculation
+1) Type with fields necessary for algorithm
+2) function defining detection algorithm
+3) function for threshold calculation
 
 A method may also need a "prepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
@@ -10,6 +11,9 @@ A method may also need a "prepare" function to use in its first iteration if the
 #=
 Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
 =#
+
+export DetectPower
+
 immutable detection{Name} end
 
 @generated function call{fn}(::detection{fn},x::Sorting,y::Int64)
@@ -21,6 +25,22 @@ Power
 
 Rutishauser et al 2006
 =#
+type DetectPower <: SpikeDetection
+    a::Int64
+    b::Int64
+    c::Int64
+    p_temp::Array{Float64,1}
+    thres::Float64
+end
+
+function DetectPower()
+    DetectPower(0,0,0,zeros(Float64,50),1.0)
+end
+
+function DetectPower(n::Int64)
+    DetectPower(0,0,0,zeros(Float64,n),1.0)
+end
+
 function detect_power(sort::Sorting, i::Int64, k=20)
     
     sort.s.a += sort.rawSignal[i] - sort.s.c

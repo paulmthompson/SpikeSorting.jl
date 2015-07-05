@@ -13,13 +13,13 @@ function detectspikes(sort::Sorting,func::detection,start=1,k=20)
         p=func(sort,i)
         
         #continue collecting spike information if there was a recent spike
-        if sort.s.index>0
+        if sort.index>0
             
-            sort.s.p_temp[sort.s.index]=p
-            sort.s.index-=1
+            sort.s.p_temp[sort.index]=p
+            sort.index-=1
 
             #If end of spike window is reached, continue spike detection
-            if sort.s.index==0
+            if sort.index==0
 
                 #If clear peak is found
                 if true
@@ -45,13 +45,13 @@ function detectspikes(sort::Sorting,func::detection,start=1,k=20)
         elseif p>sort.s.thres
                 
             sort.s.p_temp[50]=p
-            sort.s.index=49
+            sort.index=49
  
         end
                    
     end
 
-    sort.s.sigend[:]=sort.rawSignal[(end-74):end]
+    sort.sigend[:]=sort.rawSignal[(end-74):end]
     
 end
 
@@ -61,9 +61,9 @@ function assignspike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
     #If a spike was still being analyzed from 
     if mytime<window
         if ind>mytime+window
-            sort.waveforms[sort.numSpikes][:]=sort.s.sigend[length(sort.s.sigend)-ind-window:length(sort.s.sigend)-ind+window-1]
+            sort.waveforms[sort.numSpikes][:]=sort.s.sigend[length(sort.sigend)-ind-window:length(sort.sigend)-ind+window-1]
         else
-            sort.waveforms[sort.numSpikes][:]=[sort.s.sigend[length(sort.s.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
+            sort.waveforms[sort.numSpikes][:]=[sort.s.sigend[length(sort.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
         end   
             x=getdist(sort)
     else        

@@ -29,7 +29,7 @@ function detect_power(sort::Sorting, i::Int64, k=20)
     if i>19
         sort.s.c=sort.rawSignal[i-k+1]
     else
-        sort.s.c=sort.s.sigend[i+56]
+        sort.s.c=sort.sigend[i+56]
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
@@ -79,6 +79,7 @@ function prepare_power(sort::Sorting,k=20)
         sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2
         sort.s.c = sort.rawSignal[i-k+1]
     end
+
 end
 
 #=
@@ -194,6 +195,7 @@ function detect_mcwc(sort::Sorting, i::Int64)
     
 end
 
+#=
 constant wave_a=collect(0.5:.1:1.5);
 
 constant psi=[0.00021208083980379827
@@ -228,3 +230,4 @@ constant psi=[0.00021208083980379827
 -9.517657273819165e-08
 ];
 
+=#

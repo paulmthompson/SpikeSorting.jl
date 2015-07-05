@@ -3,14 +3,16 @@ module SortSpikes
 include("detecttypes.jl")
 include("clustertypes.jl")
 
-type Sorting
-    s::SpikeDetection
+type Sorting{S<:SpikeDetection}
+    s::S
     c::Cluster
     rawSignal::Array{Int,1}
     electrode::Array{Int,1}
     neuronnum::Array{Int,1}
     numSpikes::Int
     waveforms::Array{SharedArray,1}
+    sigend::Array{Int64,1}
+    index::Int64
 end
 
 include("detectmethods.jl")
@@ -43,7 +45,7 @@ function onlinecal(sort::Sorting,method="POWER")
     end
 
     sort.c.Tsm=50*var(sort.rawSignal)
-    sort.s.sigend[:]=sort.rawSignal[1:75]
+    sort.sigend[:]=sort.rawSignal[1:75]
     detectspikes(sort,detectionmethod, 76)
     
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary

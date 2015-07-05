@@ -18,6 +18,7 @@ type Sorting{S<:SpikeDetection, C<:Cluster, A<:Alignment}
     index::Int64
 end
 
+include("constants.jl")
 include("detect.jl")
 include("align.jl")
 include("cluster.jl")
@@ -117,7 +118,7 @@ Main processing loop for length of raw signal
 
 function detectspikes(sort::Sorting,func::detection,start=1,k=20)
 
-    #Threshold comparator
+    #Threshold comparator, should be same type as threshold
     p=0.0
 
     for i=start:length(sort.rawSignal)

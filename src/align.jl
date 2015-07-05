@@ -22,7 +22,7 @@ end
 
 
 #= 
-Maximum index
+Maximum signal
 =#
 type AlignMax
 
@@ -30,7 +30,21 @@ end
 
 function align_max(sort::Sorting, i::Int64)
 
+    
+    
 end
+
+#=
+Maximum power
+=#
+type AlignPower
+
+end
+
+function align_power(sort::Sorting, i::Int64)
+
+end
+
 
 
 #=
@@ -63,6 +77,8 @@ function align_fft(sort::Sorting, i::Int64)
     ifft!(sort.a.x_int)
     sort.a.upsamp[:]=sort.a.M.*real(sort.a.x_int)
 
+
+    
 end
 
 

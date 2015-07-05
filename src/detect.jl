@@ -8,11 +8,11 @@ Detection methods. Each method needs
 A method may also need a "prepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
 
+export DetectPower
+
 #=
 Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
 =#
-
-export DetectPower
 
 immutable detection{Name} end
 
@@ -78,7 +78,7 @@ function threshold_power(sort::Sorting, k=20)
         
     end
 
-    mean(p)+5*std(p)
+    sort.s.thres=mean(p)+5*std(p)
 
 end
 
@@ -115,7 +115,7 @@ end
 
 function threshold_signal(sort::Sorting)
 
-    median(abs(sort.rawSignal))/.6745
+    sort.s.thres=median(abs(sort.rawSignal))/.6745
     
 end
 
@@ -157,7 +157,7 @@ function threshold_neo(sort::Sorting)
         psi[i]=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
     end
 
-    3*mean(psi)
+    sort.s.thres=3*mean(psi)
     
 end
 

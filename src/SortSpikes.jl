@@ -32,19 +32,18 @@ function onlinecal(sort::Sorting,method="POWER")
     
     if method=="POWER"
         
-        sort.s.thres=getthres(sort,method)
+        threshold_power(sort)
         detectionmethod=detection{:detect_power}()
-
         prepare_power(sort)
         
     elseif method=="SIGNAL"
 
-        sort.s.thres=getthres(sort,method)
+        threshold_signal(sort)
         detectionmethod=detection{:detect_signal}()
         
     elseif method=="NEO"
 
-        sort.s.thres=getthres(sort,method)
+        threshold_neo(sort)
         detectionmethod=detection{:detect_neo}()
         
     end
@@ -109,6 +108,63 @@ end
 
 function offlinesort()
 
+    
+end
+
+#=
+Main processing loop for length of raw signal
+=#
+
+function detectspikes(sort::Sorting,func::detection,start=1,k=20)
+
+    #Threshold comparator
+    p=0.0
+
+    for i=start:length(sort.rawSignal)
+
+        #Calculate theshold comparator
+        p=func(sort,i)
+        
+        #continue collecting spike information if there was a recent spike
+        if sort.index>0
+            
+            sort.s.p_temp[sort.index]=p
+            sort.index-=1
+
+            #If end of spike window is reached, continue spike detection
+            if sort.index==0
+
+                #If clear peak is found
+                if true
+
+                    #alignment (power based)
+                    j=indmax(sort.s.p_temp)
+
+                    #overlap detection
+                    
+                    #50 time stamp (2.5 ms) window
+                    assignspike!(sort,i,j)
+                    
+                else
+                    #If no clear peak, assign to noise
+                    
+                end
+
+                #reset temp matrix
+                sort.s.p_temp[:]=zeros(Float64,size(sort.s.p_temp))
+                  
+            end
+
+        elseif p>sort.s.thres
+                
+            sort.s.p_temp[50]=p
+            sort.index=49
+ 
+        end
+                   
+    end
+
+    sort.sigend[:]=sort.rawSignal[(end-74):end]
     
 end
 

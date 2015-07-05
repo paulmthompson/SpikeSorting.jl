@@ -1,11 +1,17 @@
 
 #=
-Alignment methods. Each method should take a length of signal and return the center
+Alignment methods. Each method needs
+1) Type with fields necessary for algorithm
+2) function defining detection algorithm
+
 =#
 
 #=
 Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
 =#
+
+export AlignFFT
+
 immutable alignment{Name} end
 
 @generated function call{fn}(::alignment{fn},x::Sorting,y::Int64)
@@ -16,6 +22,9 @@ end
 #= 
 Maximum index
 =#
+type AlignMax
+
+end
 
 function align_max(sort::Sorting, i::Int64)
 
@@ -26,24 +35,31 @@ end
 FFT upsampling
 =#
 
+type AlignFFT <: Alignment
+    N::Int64
+    Nhalf::Int64
+    M::Int64
+    x_int::Array{Complex{Float64},1}
+    fout::Array{Complex{Float64},1}
+    upsamp::Array{Float64,1}
+end
+
+function AlignFFT(M::Int64,N::Int64)
+    AlignFFT(N,div(N,2),M,zeros(Complex{Float64},M*N),zeros(Complex{Float64},N),zeros(Float64,M*N))
+end
+
 function align_fft(sort::Sorting, i::Int64)
 
-    #provide input a, x_int and output c as arguments
-    a=rand(100)
-    M=2
-    N=length(a)
-    x_int=zeros(Complex{Float64},M*N)
+    sort.a.fout[:]=fft(sort.p_temp) #change input
 
-    b=fft(a)
-
-    x_int[1:50]=b[1:50]
-    x_int[51]=b[51]/2
-    x_int[52:150]=zeros(Complex{Float64},99)
-    x_int[151]=b[51]/2    
-    x_int[152:200]=b[52:100]
+    sort.a.x_int[1:sort.a.Nhalf]=sort.a.fout[1:sort.a.Nhalf]
+    sort.a.x_int[sort.a.Nhalf+1]=sort.a.fout[sort.a.Nhalf+1]/2
+    sort.a.x_int[(sort.a.Nhalf+2):(sort.a.M*sort.a.N-sort.a.Nhalf)]=zeros(Complex{Float64},sort.a.N-1)
+    sort.a.x_int[sort.a.M*sort.a.N-sort.a.Nhalf+1]=sort.a.fout[sort.a.Nhalf+1]/2    
+    sort.a.x_int[(M*N-Nhalf+2):end]=sort.a.fout[(sort.a.Nhalf+2):end]
     
-    ifft!(x_int)
-    c[:]=M.*real(x_int)
+    ifft!(sort.a.x_int)
+    sort.a.upsamp[:]=sort.a.M.*real(sort.a.x_int)
 
 end
 

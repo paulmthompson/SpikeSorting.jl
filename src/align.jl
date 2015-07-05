@@ -6,11 +6,13 @@ Alignment methods. Each method needs
 
 =#
 
+
+export AlignFFT
+
+
 #=
 Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
 =#
-
-export AlignFFT
 
 immutable alignment{Name} end
 

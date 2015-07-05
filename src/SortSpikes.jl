@@ -3,12 +3,11 @@ module SortSpikes
 
 abstract SpikeDetection
 abstract Alignment
+abstract Cluster
 
-include("clustertypes.jl")
-
-type Sorting{S<:SpikeDetection, A<:Alignment}
+type Sorting{S<:SpikeDetection, C<:Cluster, A<:Alignment}
     s::S
-    c::Cluster
+    c::C
     a::A
     rawSignal::Array{Int,1}
     electrode::Array{Int,1}
@@ -19,8 +18,9 @@ type Sorting{S<:SpikeDetection, A<:Alignment}
     index::Int64
 end
 
-include("detectmethods.jl")
-include("alignmethods.jl")
+include("detect.jl")
+include("align.jl")
+include("cluster.jl")
 include("extractspikes.jl")
 
 #using Winston, Gtk.ShortNames

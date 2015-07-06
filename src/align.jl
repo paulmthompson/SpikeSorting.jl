@@ -2,24 +2,11 @@
 #=
 Alignment methods. Each method needs
 1) Type with fields necessary for algorithm
-2) function defining detection algorithm
-
+2) function "align" to operate on sort with type field defined above
+3) any other necessary functions for alignment algorithm
 =#
-
 
 export AlignMax, AlignFFT
-
-
-#=
-Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
-=#
-
-immutable alignment{Name} end
-
-@generated function call{fn}(::alignment{fn},x::Sorting)
-        :($fn(x))
-end
-
 
 #= 
 Maximum signal
@@ -28,7 +15,7 @@ type AlignMax <: Alignment
 
 end
 
-function align_max(sort::Sorting)
+function align{S,C,A<:AlignMax}(sort::Sorting{S,C,A})
     j=indmax(sort.p_temp[align_range])+window_half
     sort.waveforms[sort.numSpikes][:]=sort.p_temp[j-window_half:j+window_half-1]
 end
@@ -53,7 +40,7 @@ function AlignFFT(M::Int64)
     
 end
 
-function align_fft(sort::Sorting)
+function align{S,C,A<:AlignFFT}(sort::Sorting{S,C,A})
     
     sort.a.fout[:]=fft(sort.p_temp)
     
@@ -81,7 +68,7 @@ type AlignOsort <: Alignment
 
 end
 
-function align_osort(sort::Sorting)
+function align{S,C,A<:AlignOsort}(sort::Sorting{S,C,A})
 
 end
 

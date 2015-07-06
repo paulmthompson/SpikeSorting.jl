@@ -2,21 +2,12 @@
 #=
 Clustering methods. Each method needs
 1) Type with fields necessary for algorithm
-2) function(s) defining detection algorithm
+2) function "cluster" to operate on sort with type field defined above
+3) any other necessary functions for clustering algorithm
 
 =#
 
 export ClusterOSort, ClusterManual
-
-#=
-Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
-=#
-
-immutable clustering{Name} end
-
-@generated function call{fn}(::clustering{fn},x::Sorting)
-        :($fn(x))
-end
 
 #=
 OSort
@@ -39,8 +30,7 @@ function ClusterOSort(n::Int64)
     ClusterOSort(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
 end
 
-
-function cluster_osort(sort::Sorting)
+function cluster{S,C<:ClusterOSort,A}(sort::Sorting{S,C,A})
    
     x=getdist(sort)
     
@@ -136,7 +126,7 @@ function ClusterManual()
     ClusterOSort(zeros(Float64,5),0,zeros(Float64,4,5))  
 end
 
-function cluster_manualwindow(sort::Sorting)
+function cluster{S,C<:ClusterManual,A}(sort::Sorting{S,C,A})
 
     for i=1:sort.numClusters
         

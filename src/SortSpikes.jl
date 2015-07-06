@@ -57,30 +57,10 @@ export Sorting, onlinecal, onlinesort, offlinesort
 
 function onlinecal(sort::Sorting,method="POWER")
     
-    if method=="POWER"
-        
-        threshold_power(sort)
-        detectionmethod=detection{:detect_power}()
-        prepare_power(sort)
-        
-    elseif method=="SIGNAL"
-
-        threshold_signal(sort)
-        detectionmethod=detection{:detect_signal}()
-        
-    elseif method=="NEO"
-
-        threshold_neo(sort)
-        detectionmethod=detection{:detect_neo}()
-        
-    end
-
-    alignmethod=alignment{:align_fft}()
-    clustermethod=clustering{:cluster_osort}()
-    
+    prepare(sort)
     sort.c.Tsm=50*var(sort.rawSignal)
     sort.sigend[:]=sort.rawSignal[1:75]
-    detectspikes(sort,detectionmethod, alignmethod,clustermethod,76)
+    detectspikes(sort,76)
     
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
     #might want to change this later
@@ -104,25 +84,7 @@ end
 
 function onlinesort(sort::Sorting,method="POWER")
  
-    #Find spikes during this time block, labeled by neuron
-
-    if method=="POWER"
-             
-        detectmethod=detection{:detect_power}()   
-
-    elseif method=="SIGNAL"
-
-        detectmethod=detection{:detect_signal}()
-        
-    elseif method=="NEO"
-
-        detectmethod=detection{:detect_neo}()
-        
-    end
-
-    alignmethod=alignment{:align_fft}()
-    clustermethod=clustering{:cluster_osort}()
-    detectspikes(sort,detectmethod, alignmethod,clustermethod)
+    detectspikes(sort)
 
     #convert to absolute time stamps with the timeends variable
 
@@ -143,7 +105,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,fn_cluster::clustering,start=1)
+function detectspikes(sort::Sorting,start=1)
 
     #Threshold comparator, should be same type as threshold
     p=0.0
@@ -151,7 +113,7 @@ function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,fn_
     for i=start:signal_length
 
         #Calculate theshold comparator
-        p=fn_detect(sort,i)
+        p=detect(sort,i)
         
         #continue collecting spike information if there was a recent spike
         if sort.index>0
@@ -163,12 +125,12 @@ function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,fn_
             if sort.index==101
 
                 #alignment (power based)
-                fn_align(sort)
+                align(sort)
 
                 #overlap detection
                     
                 #50 time stamp (2.5 ms) window
-                fn_cluster(sort)
+                cluster(sort)
 
                 #Spike time stamp
                 sort.electrode[sort.numSpikes]=i #need adjust this based on alignment

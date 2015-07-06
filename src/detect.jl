@@ -2,22 +2,16 @@
 #=
 Detection methods. Each method needs
 1) Type with fields necessary for algorithm
-2) function defining detection algorithm
-3) function for threshold calculation
+2) function "detect" to operate on sort with type field defined above
+3) function "threshold" to operate on sort with type field defined above
+4) any other necessary functions for detection algorithm
 
 A method may also need a "prepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
 
 export DetectPower
 
-#=
-Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
-=#
-
-immutable detection{Name} end
-
-@generated function call{fn}(::detection{fn},x::Sorting,y::Int64)
-        :($fn(x,y))
+function prepare{S,C,A}(sort::Sorting{S,C,A})
 end
 
 #=
@@ -36,7 +30,7 @@ function DetectPower()
     DetectPower(0,0,0,1.0)
 end
 
-function detect_power(sort::Sorting, i::Int64, k=20)
+function detect{S<:DetectPower,C,A}(sort::Sorting{S,C,A}, i::Int64, k=20)
     
     sort.s.a += sort.rawSignal[i] - sort.s.c
     sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
@@ -52,7 +46,7 @@ function detect_power(sort::Sorting, i::Int64, k=20)
     
 end
 
-function threshold_power(sort::Sorting, k=20)
+function threshold{S<:DetectPower,C,A}(sort::Sorting{S,C,A}, k=20)
     
     p=Array(Float64,size(sort.rawSignal,1)-k)
     a = 0
@@ -77,7 +71,7 @@ function threshold_power(sort::Sorting, k=20)
 
 end
 
-function prepare_power(sort::Sorting,k=20)
+function prepare{S<:DetectPower,C,A}(sort::Sorting{S,C,A},k=20)
     
     sort.s.a=0
     sort.s.b=0
@@ -111,13 +105,13 @@ function DetectSignal()
     DetectSignal(1.0)
 end
 
-function detect_signal(sort::Sorting,i::Int64)
+function detect{S<:DetectSignal,C,A}(sort::Sorting{S,C,A},i::Int64)
 
     abs(sort.rawSignal[i])
     
 end
 
-function threshold_signal(sort::Sorting)
+function threshold{S<:DetectSignal,C,A}(sort::Sorting{S,C,A})
 
     sort.s.thres=median(abs(sort.rawSignal))/.6745
     
@@ -137,7 +131,7 @@ function DetectNEO()
     DetectNEO(1.0)
 end
 
-function detect_neo(sort::Sorting,i::Int64)
+function detect{S<:DetectNEO,C,A}(sort::Sorting{S,C,A},i::Int64)
 
     if i==length(sort.rawSignal)
         #Will do spike detection next iteration due to edging
@@ -162,7 +156,7 @@ function detect_neo(sort::Sorting,i::Int64)
     
 end
 
-function threshold_neo(sort::Sorting)
+function threshold{S<:DetectNEO,C,A}(sort::Sorting{S,C,A})
 
     psi=zeros(Int64,length(sort.rawSignal)-1)
     
@@ -208,7 +202,7 @@ function DetectMCWC()
     DetectMCWC(zeros(Float64,11),zeros(Float64,10),1.0)
 end
 
-function detect_mcwc(sort::Sorting, i::Int64)
+function detect{S<:DetectMCWC,C,A}(sort::Sorting{S,C,A}, i::Int64)
 
     p=0.0
     

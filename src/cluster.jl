@@ -154,6 +154,6 @@ function cluster_manualwindow(sort::Sorting)
             break
         else
 
-    end
-       
+        end   
+    end      
 end

@@ -29,19 +29,28 @@ include("cluster.jl")
 
 function Sorting()
     Sorting(DetectPower(),ClusterOSort(),AlignMax(),
-            convert(Array{Int64,1},rand(Uint16,signal_length)),zeros(Int64,500),
-            zeros(Int64,500),2,[convert(SharedArray,zeros(Int64,50)) for j=1:10], 
+            zeros(Int64,signal_length),zeros(Int64,500), zeros(Int64,500),2,
+            [convert(SharedArray,zeros(Int64,window)) for j=1:10], 
             zeros(Int64,75),0,zeros(Int64,window*2))
 end
 
 function Sorting(s::SpikeDetection,c::Cluster,a::Alignment)
 
     #Need to make this do different things based on selection choices
+
+    if typeof(a)==AlignFFT
+        
+        Sorting(s,c,a,
+                zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
+                [convert(SharedArray,zeros(Int64,a.M*window)) for j=1:10], 
+                zeros(Int64,75),0,zeros(Int64,window*2))
+    else
+        Sorting(s,c,a,
+                zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
+                [convert(SharedArray,zeros(Int64,window)) for j=1:10], 
+                zeros(Int64,75),0,zeros(Int64,window*2))
+    end
     
-    Sorting(s,c,a,
-            convert(Array{Int64,1},rand(Uint16,signal_length)),zeros(Int64,500),
-            zeros(Int64,500),2,[convert(SharedArray,zeros(Int64,50)) for j=1:10], 
-            zeros(Int64,75),0,zeros(Int64,window*2))
 end
     
 export Sorting, onlinecal, onlinesort, offlinesort
@@ -66,7 +75,7 @@ function onlinecal(sort::Sorting,method="POWER")
         
     end
 
-    alignmethod=alignment{:align_max}()
+    alignmethod=alignment{:align_fft}()
     clustermethod=clustering{:cluster_osort}()
     
     sort.c.Tsm=50*var(sort.rawSignal)
@@ -111,7 +120,7 @@ function onlinesort(sort::Sorting,method="POWER")
         
     end
 
-    alignmethod=alignment{:align_max}()
+    alignmethod=alignment{:align_fft}()
     clustermethod=clustering{:cluster_osort}()
     detectspikes(sort,detectmethod, alignmethod,clustermethod)
 

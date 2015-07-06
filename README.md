@@ -3,21 +3,17 @@ Online spike sorting methods in Julia
 
 # Introduction
 
-This is a Julia implementation of various spike sorting methods. Our initial goal is to have a system that can perform online sorting of data that is acquired via a Intan RHD2000 acquisition board:
+This is a Julia implementation of various spike sorting methods. Our big picture goal is to have a system that can perform online sorting of data that is acquired via a Intan RHD2000 acquisition board:
 
 https://github.com/paulmthompson/Intan.jl
 
-Since Osort (http://www.urut.ch/new/serendipity/index.php?/pages/osort.html) was designed with algorithms for real time acquisition, we plan on adapting these methods first. We would like to eventually include other methods of sorting and greater flexibility for other data acquisition methods (and include offline analysis). We use planar arrays and don't have to worry about the same spikes on multiple electrodes, but we could one day add methods to account for this.
+In addition, we are trying to put many existing online algorithms, or potential online algorithms, into one place, and optimize them for speed.
 
 # Required Modules
 
 * DistributedArrays - https://github.com/JuliaParallel/DistributedArrays.jl
 * Winston - https://github.com/nolta/Winston.jl
 * Gtk - https://github.com/JuliaLang/Gtk.jl
-
-# Overview of (Intended) Implementation
-
-Voltages from multi-electrode arrays are read from the Intan to computer in blocks in real time. These blocks (of n samples collected at ~20000 Hz) are then fed to the spike sorter. First, a training period needs to take place, where things like signal to noise on each electrode are calculated. Then spikes are detected, aligned and sorted according to one set of several optional methods, most of which are described in the Osort paper: http://www.urut.ch/pdfs/Rutishauser_2006a.pdf
 
 # Current Functionality and TODO
 
@@ -36,13 +32,14 @@ Voltages from multi-electrode arrays are read from the Intan to computer in bloc
 - [x] Raw Signal Threshold (as in Quiroga 2004)
 - [x] Nonlinear Energy Operator (Choi et al 2006)
 - [ ] Continuous Wavelet Transform (Nenadic et al 2005)
+- [ ] Multiscale Correlation of Wavelet Coefficients (Yang et al 2011)
 - [ ] Stationary Wavelet Transform
 
 ## Alignment
 
 - [x] maximum index
 - [ ] alignment accounting for shape (as in OSort)
-- [ ] Upsampling via fft
+- [x] Upsampling via fft 
 - [ ] upsampling via cubic splines
 - [ ] Option to assign to "noise cluster" rather than spikes
 - [ ] center of mass (as in Sahani 1999 dissertation)
@@ -50,7 +47,7 @@ Voltages from multi-electrode arrays are read from the Intan to computer in bloc
 ## Sorting
 
 Feature Extraction:
-- [ ] Multiscale correlation of wavelet coefficients (Yang 2011, M-sorter)
+- [ ] Multiscale correlation of wavelet coefficients (Yang et al 2011, M-sorter)
 - [ ] PCA
 - [ ] Wavelet packet decomposition (as in Bestel 2012)
 

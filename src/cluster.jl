@@ -41,21 +41,9 @@ function OSort(n::Int64)
 end
 
 
-function assignspike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
+function assignspike!(sort::Sorting,mytime::Int64)
    
-    #If a spike was still being analyzed from 
-    if mytime<window
-        if ind>mytime+window
-            sort.waveforms[sort.numSpikes][:]=sort.s.sigend[length(sort.sigend)-ind-window:length(sort.sigend)-ind+window-1]
-        else
-            sort.waveforms[sort.numSpikes][:]=[sort.s.sigend[length(sort.sigend)-ind-window:end],sort.rawSignal[1:window-(ind-mytime)-1]]
-        end   
-            x=getdist(sort)
-    else        
-        #Will return cluster for assignment or 0 indicating did not cross threshold
-        sort.waveforms[sort.numSpikes][:]=sort.rawSignal[mytime-ind-window:mytime-ind+window-1]
-        x=getdist(sort)
-    end
+    x=getdist(sort)
     
     #add new cluster or assign to old
     if x==0
@@ -85,7 +73,7 @@ function assignspike!(sort::Sorting,mytime::Int64,ind::Int64,window=25)
     end
 
     #Spike time stamp
-    sort.electrode[sort.numSpikes]=mytime-ind
+    sort.electrode[sort.numSpikes]=mytime #need adjust this based on alignment
 
     #add spike cluster identifier to dummy first waveform shared array
     sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]

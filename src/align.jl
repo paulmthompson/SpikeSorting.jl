@@ -7,7 +7,7 @@ Alignment methods. Each method needs
 =#
 
 
-export AlignFFT
+export AlignMax, AlignFFT
 
 
 #=
@@ -16,36 +16,22 @@ Julia isn't great at getting functions as arguments right now, so this helps the
 
 immutable alignment{Name} end
 
-@generated function call{fn}(::alignment{fn},x::Sorting,y::Int64)
-        :($fn(x,y))
+@generated function call{fn}(::alignment{fn},x::Sorting)
+        :($fn(x))
 end
 
 
 #= 
 Maximum signal
 =#
-type AlignMax
+type AlignMax <: Alignment
 
 end
 
-function align_max(sort::Sorting, i::Int64)
-
-    
-    
+function align_max(sort::Sorting)
+    j=indmax(sort.s.p_temp[(window_half+1):(window+window_half)])+window_half
+    sort.waveforms[sort.numSpikes][:]=sort.s.p_temp[j-window_half:j+window_half-1]
 end
-
-#=
-Maximum power
-=#
-type AlignPower
-
-end
-
-function align_power(sort::Sorting, i::Int64)
-
-end
-
-
 
 #=
 FFT upsampling
@@ -64,7 +50,7 @@ function AlignFFT(M::Int64,N::Int64)
     AlignFFT(N,div(N,2),M,zeros(Complex{Float64},M*N),zeros(Complex{Float64},N),zeros(Float64,M*N))
 end
 
-function align_fft(sort::Sorting, i::Int64)
+function align_fft(sort::Sorting)
 
     sort.a.fout[:]=fft(sort.p_temp) #change input
 
@@ -88,6 +74,10 @@ FFT upsampling + temporal order of peaks
 Rutishauser 2006
 =#
 
-function align_osort(sort::Sorting, i::Int64)
+type AlignOsort <: Alignment
+
+end
+
+function align_osort(sort::Sorting)
 
 end

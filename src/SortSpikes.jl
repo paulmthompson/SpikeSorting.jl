@@ -22,7 +22,6 @@ include("constants.jl")
 include("detect.jl")
 include("align.jl")
 include("cluster.jl")
-include("extractspikes.jl")
 
 #using Winston, Gtk.ShortNames
 #include("gui.jl")
@@ -49,9 +48,11 @@ function onlinecal(sort::Sorting,method="POWER")
         
     end
 
+    alignmethod=alignment{:align_max}()
+    
     sort.c.Tsm=50*var(sort.rawSignal)
     sort.sigend[:]=sort.rawSignal[1:75]
-    detectspikes(sort,detectionmethod, 76)
+    detectspikes(sort,detectionmethod, alignmethod,76)
     
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
     #might want to change this later
@@ -78,24 +79,25 @@ function onlinesort(sort::Sorting,method="POWER")
 
     if method=="POWER"
              
-        detect_power1=detection{:detect_power}()
-        detectspikes(sort,detect_power1)       
+        detectmethod=detection{:detect_power}()   
 
     elseif method=="SIGNAL"
 
-        detect_signal1=detection{:detect_signal}()
-        detectspikes(sort,detect_signal)
+        detectmethod=detection{:detect_signal}()
         
     elseif method=="NEO"
 
-        detect_neo1=detection{:detect_neo}()
-        detectspikes(sort,detect_neo1)
+        detectmethod=detection{:detect_neo}()
+        
 
     elseif method=="MANUAL"
 
         detectspikes(sort, manualdetection)
 
     end
+
+    alignmethod=alignment{:align_max}()
+    detectspikes(sort,detectmethod, alignmethod)
 
     #convert to absolute time stamps with the timeends variable
 
@@ -116,56 +118,54 @@ end
 Main processing loop for length of raw signal
 =#
 
-function detectspikes(sort::Sorting,func::detection,start=1,k=20)
+function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,start=1)
 
     #Threshold comparator, should be same type as threshold
     p=0.0
 
-    for i=start:length(sort.rawSignal)
+    for i=start:signal_length
 
         #Calculate theshold comparator
-        p=func(sort,i)
+        p=fn_detect(sort,i)
         
         #continue collecting spike information if there was a recent spike
         if sort.index>0
             
-            sort.s.p_temp[sort.index]=p
-            sort.index-=1
+            sort.s.p_temp[sort.index]=sort.rawSignal[i]
+            sort.index+=1
 
             #If end of spike window is reached, continue spike detection
-            if sort.index==0
+            if sort.index==101
 
-                #If clear peak is found
-                if true
+                #alignment (power based)
+                fn_align(sort)
 
-                    #alignment (power based)
-                    j=indmax(sort.s.p_temp)
-
-                    #overlap detection
+                #overlap detection
                     
-                    #50 time stamp (2.5 ms) window
-                    assignspike!(sort,i,j)
-                    
-                else
-                    #If no clear peak, assign to noise
-                    
-                end
-
+                #50 time stamp (2.5 ms) window
+                assignspike!(sort,i)
+                        
                 #reset temp matrix
-                sort.s.p_temp[:]=zeros(Float64,size(sort.s.p_temp))
+                #sort.s.p_temp[:]=zeros(Int64,window*2)
+                sort.index=0
                   
             end
 
         elseif p>sort.s.thres
-                
-            sort.s.p_temp[50]=p
-            sort.index=49
- 
-        end
-                   
-    end
+            
+            if i<=window
+                sort.s.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
+                sort.s.p_temp[(window-i):window]=sort.rawSignal[1:i-1]  
+            else
+                sort.s.p_temp[1:window]=sort.rawSignal[i-window:i-1]
+            end
 
-    sort.sigend[:]=sort.rawSignal[(end-74):end]
+            sort.s.p_temp[window+1]=sort.rawSignal[i]
+            sort.index=window+2
+        end
+    end
+                   
+    sort.sigend[:]=sort.rawSignal[(end-sigend_length+1):end]
     
 end
 

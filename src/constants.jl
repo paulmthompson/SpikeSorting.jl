@@ -3,9 +3,20 @@
 Constants needed for various methods
 =#
 
+#General
+
+const window=50
+const window_half=div(window,2)
+const signal_length=60000
+const sigend_length=75
+
+#Detection Power
+
+
+
 #Wavelets
 
-constant coiflets_five=[0.00021208083980379827
+const coiflets_five=[0.00021208083980379827
 0.00035858968789573785
 -0.0021782363581090178
 -0.004159358781386048
@@ -42,6 +53,6 @@ Multiscale Correlation of Wavelet Coefficients
 
 Yang et al 2011
 =#
-constant wave_a=collect(0.5:.1:1.5);
+const wave_a=collect(0.5:.1:1.5);
 
-constant coiflets_scaled=Float64[coiflets_five[i]*wave_a[j] for i=1:30, j=1:11]
+const coiflets_scaled=Float64[coiflets_five[i]*wave_a[j] for i=1:30, j=1:11]

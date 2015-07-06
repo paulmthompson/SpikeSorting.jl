@@ -29,16 +29,16 @@ type DetectPower <: SpikeDetection
     a::Int64
     b::Int64
     c::Int64
-    p_temp::Array{Float64,1}
+    p_temp::Array{Int64,1}
     thres::Float64
 end
 
 function DetectPower()
-    DetectPower(0,0,0,zeros(Float64,50),1.0)
+    DetectPower(0,0,0,zeros(Int64,window*2),1.0)
 end
 
 function DetectPower(n::Int64)
-    DetectPower(0,0,0,zeros(Float64,n),1.0)
+    DetectPower(0,0,0,zeros(Int64,n),1.0)
 end
 
 function detect_power(sort::Sorting, i::Int64, k=20)
@@ -109,12 +109,12 @@ Quiroga et al 2004
 =#
 
 type DetectSignal <: SpikeDetection
-    p_temp::Array{Float64,1}
+    p_temp::Array{Int64,1}
     thres::Float64
 end
 
 function DetectSignal()
-    DetectSignal(zeros(Float64,50),1.0)
+    DetectSignal(zeros(Int64,window*2),1.0)
 end
 
 function detect_signal(sort::Sorting,i::Int64)
@@ -136,12 +136,12 @@ Choi et al 2006
 =#
 
 type DetectNEO <: SpikeDetection
-    p_temp::Array{Float64,1}
+    p_temp::Array{Int64,1}
     thres::Float64
 end
 
-function DetectNEO
-    DetectNEO()
+function DetectNEO()
+    DetectNEO(zeros(Int64,window*2),1.0)
 end
 
 function detect_neo(sort::Sorting,i::Int64)
@@ -208,10 +208,12 @@ Yang et al 2011
 type DetectMCWC <: SpikeDetection
     Tx::Array{Float64,1}
     rs::Array{Float64,1}
+    p_temp::Array{Int64,1}
+    thres::Float64
 end
 
 function DetectMCWC()
-    DetectMCWC(zeros(Float64,11),zeros(Float64,10))
+    DetectMCWC(zeros(Float64,11),zeros(Float64,10),zeros(Int64,window*2),1.0)
 end
 
 function detect_mcwc(sort::Sorting, i::Int64)

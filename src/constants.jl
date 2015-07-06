@@ -12,7 +12,9 @@ const sigend_length=75
 
 #Detection Power
 
+#Alignment Max
 
+const align_range=(window_half+1):(window+window_half)
 
 #Wavelets
 

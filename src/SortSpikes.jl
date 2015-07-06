@@ -9,13 +9,14 @@ type Sorting{S<:SpikeDetection, C<:Cluster, A<:Alignment}
     s::S
     c::C
     a::A
-    rawSignal::Array{Int,1}
-    electrode::Array{Int,1}
-    neuronnum::Array{Int,1}
+    rawSignal::Array{Int64,1}
+    electrode::Array{Int64,1}
+    neuronnum::Array{Int64,1}
     numSpikes::Int64
     waveforms::Array{SharedArray,1}
     sigend::Array{Int64,1}
     index::Int64
+    p_temp::Array{Int64,1}
 end
 
 include("constants.jl")
@@ -24,8 +25,22 @@ include("align.jl")
 include("cluster.jl")
 
 #using Winston, Gtk.ShortNames
-#include("gui.jl")
+#include("gui.jl")           
 
+function Sorting()
+    Sorting(DetectPower(),OSort(),AlignMax(),
+            convert(Array{Int64,1},rand(Uint16,signal_length)),zeros(Int64,500),
+            zeros(Int64,500),2,[convert(SharedArray,zeros(Int64,50)) for j=1:10], 
+            zeros(Int64,75),0,zeros(Int64,window*2))
+end
+
+function Sorting(s::SpikeDetection,c::Cluster,a::Alignment)
+    Sorting(s,c,a,
+            convert(Array{Int64,1},rand(Uint16,signal_length)),zeros(Int64,500),
+            zeros(Int64,500),2,[convert(SharedArray{Int64,1},zeros(Int64,50)) for j=1:10], 
+            zeros(Int64,75),0,zeros(Int64,window*2))
+end
+    
 export Sorting, onlinecal, onlinesort, offlinesort
 
 function onlinecal(sort::Sorting,method="POWER")
@@ -66,6 +81,7 @@ function onlinecal(sort::Sorting,method="POWER")
          sort.c.numClusters-=1
     end
 
+    #reset things we would normally return
     sort.electrode=zeros(size(sort.electrode))
     sort.neuronnum=zeros(size(sort.electrode))
     sort.numSpikes=2
@@ -131,7 +147,7 @@ function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,sta
         #continue collecting spike information if there was a recent spike
         if sort.index>0
             
-            sort.s.p_temp[sort.index]=sort.rawSignal[i]
+            sort.p_temp[sort.index]=sort.rawSignal[i]
             sort.index+=1
 
             #If end of spike window is reached, continue spike detection
@@ -144,9 +160,7 @@ function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,sta
                     
                 #50 time stamp (2.5 ms) window
                 assignspike!(sort,i)
-                        
-                #reset temp matrix
-                #sort.s.p_temp[:]=zeros(Int64,window*2)
+                     
                 sort.index=0
                   
             end
@@ -154,13 +168,13 @@ function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,sta
         elseif p>sort.s.thres
             
             if i<=window
-                sort.s.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
-                sort.s.p_temp[(window-i):window]=sort.rawSignal[1:i-1]  
+                sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
+                sort.p_temp[(window-i):window]=sort.rawSignal[1:i-1]  
             else
-                sort.s.p_temp[1:window]=sort.rawSignal[i-window:i-1]
+                sort.p_temp[1:window]=sort.rawSignal[i-window:i-1]
             end
 
-            sort.s.p_temp[window+1]=sort.rawSignal[i]
+            sort.p_temp[window+1]=sort.rawSignal[i]
             sort.index=window+2
         end
     end

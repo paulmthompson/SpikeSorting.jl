@@ -29,8 +29,8 @@ type AlignMax <: Alignment
 end
 
 function align_max(sort::Sorting)
-    j=indmax(sort.s.p_temp[(window_half+1):(window+window_half)])+window_half
-    sort.waveforms[sort.numSpikes][:]=sort.s.p_temp[j-window_half:j+window_half-1]
+    j=indmax(sort.p_temp[align_range])+window_half
+    sort.waveforms[sort.numSpikes][:]=sort.p_temp[j-window_half:j+window_half-1]
 end
 
 #=

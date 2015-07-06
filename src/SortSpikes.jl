@@ -37,7 +37,7 @@ end
 function Sorting(s::SpikeDetection,c::Cluster,a::Alignment)
     Sorting(s,c,a,
             convert(Array{Int64,1},rand(Uint16,signal_length)),zeros(Int64,500),
-            zeros(Int64,500),2,[convert(SharedArray{Int64,1},zeros(Int64,50)) for j=1:10], 
+            zeros(Int64,500),2,[convert(SharedArray,zeros(Int64,50)) for j=1:10], 
             zeros(Int64,75),0,zeros(Int64,window*2))
 end
     

@@ -10,6 +10,10 @@ const window_half=div(window,2)
 const signal_length=60000
 const sigend_length=75
 
+#GUI
+
+const colordict = Dict(0 => "gray", 1 => "red", 2 => "blue", 3 => "green")
+
 #Detection Power
 
 #Alignment Max

@@ -6,7 +6,7 @@ Clustering methods. Each method needs
 
 =#
 
-export ClusterOSort 
+export ClusterOSort, ClusterManual
 
 #=
 Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
@@ -125,3 +125,35 @@ end
 #=
 Manual Detection - Window Discriminators
 =#
+
+type ClusterManual <: Cluster
+    clusters::Array{Float64,2}
+    numClusters::Int64
+    win::Array{Float64,2}
+end
+
+function ClusterManual()   
+    ClusterOSort(zeros(Float64,5),0,zeros(Float64,4,5))  
+end
+
+function cluster_manualwindow(sort::Sorting)
+
+    for i=1:sort.numClusters
+        
+        A1=(win[3,i]-win[4,i])/(win[1,i]-win[2,i])
+        b1=win[3,i]-A1*win[1,i]
+        
+        A2=(sort.waveforms[win[1,i],sort.numSpikes]-sort.waveforms[win[2,i],sort.numSpikes])/(win[1,i]-win[2,i])
+        b2=sort.waveforms[win[1,i],sort.numSpikes]-A2*win[1,i]
+
+        Xa=(b2 - b1) / (A1 - A2)
+
+        if Xa>win[1,i] &&  Xa<win[2,i]
+            sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]    
+            sort.numSpikes+=1
+            break
+        else
+
+    end
+       
+end

@@ -28,13 +28,16 @@ include("cluster.jl")
 #include("gui.jl")           
 
 function Sorting()
-    Sorting(DetectPower(),OSort(),AlignMax(),
+    Sorting(DetectPower(),ClusterOSort(),AlignMax(),
             convert(Array{Int64,1},rand(Uint16,signal_length)),zeros(Int64,500),
             zeros(Int64,500),2,[convert(SharedArray,zeros(Int64,50)) for j=1:10], 
             zeros(Int64,75),0,zeros(Int64,window*2))
 end
 
 function Sorting(s::SpikeDetection,c::Cluster,a::Alignment)
+
+    #Need to make this do different things based on selection choices
+    
     Sorting(s,c,a,
             convert(Array{Int64,1},rand(Uint16,signal_length)),zeros(Int64,500),
             zeros(Int64,500),2,[convert(SharedArray,zeros(Int64,50)) for j=1:10], 
@@ -64,10 +67,11 @@ function onlinecal(sort::Sorting,method="POWER")
     end
 
     alignmethod=alignment{:align_max}()
+    clustermethod=clustering{:cluster_osort}()
     
     sort.c.Tsm=50*var(sort.rawSignal)
     sort.sigend[:]=sort.rawSignal[1:75]
-    detectspikes(sort,detectionmethod, alignmethod,76)
+    detectspikes(sort,detectionmethod, alignmethod,clustermethod,76)
     
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
     #might want to change this later
@@ -105,15 +109,11 @@ function onlinesort(sort::Sorting,method="POWER")
 
         detectmethod=detection{:detect_neo}()
         
-
-    elseif method=="MANUAL"
-
-        detectspikes(sort, manualdetection)
-
     end
 
     alignmethod=alignment{:align_max}()
-    detectspikes(sort,detectmethod, alignmethod)
+    clustermethod=clustering{:cluster_osort}()
+    detectspikes(sort,detectmethod, alignmethod,clustermethod)
 
     #convert to absolute time stamps with the timeends variable
 
@@ -134,7 +134,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,start=1)
+function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,fn_cluster::clustering,start=1)
 
     #Threshold comparator, should be same type as threshold
     p=0.0
@@ -159,8 +159,11 @@ function detectspikes(sort::Sorting,fn_detect::detection,fn_align::alignment,sta
                 #overlap detection
                     
                 #50 time stamp (2.5 ms) window
-                assignspike!(sort,i)
-                     
+                fn_cluster(sort)
+
+                #Spike time stamp
+                sort.electrode[sort.numSpikes]=i #need adjust this based on alignment
+         
                 sort.index=0
                   
             end

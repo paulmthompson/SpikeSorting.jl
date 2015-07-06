@@ -6,8 +6,7 @@ Clustering methods. Each method needs
 
 =#
 
-
-export OSort 
+export ClusterOSort 
 
 #=
 Julia isn't great at getting functions as arguments right now, so this helps the slow downs because of that. Probably will disappear eventually
@@ -15,8 +14,8 @@ Julia isn't great at getting functions as arguments right now, so this helps the
 
 immutable clustering{Name} end
 
-@generated function call{fn}(::clustering{fn},x::Sorting,y::Int64)
-        :($fn(x,y))
+@generated function call{fn}(::clustering{fn},x::Sorting)
+        :($fn(x))
 end
 
 #=
@@ -25,66 +24,48 @@ OSort
 Rutishauser 2006
 =#
 
-type OSort <: Cluster
+type ClusterOSort <: Cluster
     clusters::Array{Float64,2}
     clusterWeight::Array{Int64,1}
     numClusters::Int64
     Tsm::Float64
 end
 
-function OSort()   
-    OSort(hcat(rand(Float64,50,1),zeros(Float64,50,4)),zeros(Int64,5),1,1.0)  
+function ClusterOSort()   
+    ClusterOSort(hcat(rand(Float64,50,1),zeros(Float64,50,4)),zeros(Int64,5),1,1.0)  
 end
 
-function OSort(n::Int64)
-    OSort(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
+function ClusterOSort(n::Int64)
+    ClusterOSort(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
 end
 
 
-function assignspike!(sort::Sorting,mytime::Int64)
+function cluster_osort(sort::Sorting)
    
     x=getdist(sort)
     
     #add new cluster or assign to old
     if x==0
-
-        sort.c.clusters[:,sort.c.numClusters+1]=sort.waveforms[:,sort.numSpikes]
-        sort.c.clusterWeight[sort.c.numClusters+1]=1
-
         sort.c.numClusters+=1
-        #Assign to new cluster
+        sort.c.clusters[:,sort.c.numClusters]=sort.waveforms[:,sort.numSpikes]
+        sort.c.clusterWeight[sort.c.numClusters]=1   
         sort.neuronnum[sort.numSpikes]=sort.c.numClusters
-
-    else
-        
-        #average with cluster waveform
+    else       
         if sort.c.clusterWeight[x]<20
             sort.c.clusterWeight[x]+=1
-            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*sort.waveforms[sort.numSpikes][:]
-            
-        else
-            
+            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*sort.waveforms[sort.numSpikes][:]            
+        else            
            sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*sort.waveforms[sort.numSpikes][:]
-
         end
-
-        sort.neuronnum[sort.numSpikes]=x
-        
+        sort.neuronnum[sort.numSpikes]=x       
     end
 
-    #Spike time stamp
-    sort.electrode[sort.numSpikes]=mytime #need adjust this based on alignment
-
     #add spike cluster identifier to dummy first waveform shared array
-    sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]
-    
+    sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]    
     sort.numSpikes+=1
-
-
     if sort.c.numClusters>1
         merged=findmerge!(sort)
     end
-
 end
 
 function getdist(sort::Sorting)
@@ -141,3 +122,6 @@ function findmerge!(sort::Sorting)
     
 end
 
+#=
+Manual Detection - Window Discriminators
+=#

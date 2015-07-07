@@ -44,6 +44,11 @@ In addition, we are trying to put many existing online algorithms, or potential 
 - [ ] Option to assign to "noise cluster" rather than spikes
 - [ ] center of mass (as in Sahani 1999 dissertation)
 
+## Overlap
+
+- [ ] Continuous Basis Pursuit (Ekanadham et al 2014)
+- [ ] Sequential Bayesian inference (Haga et at 2013)
+
 ## Sorting
 
 Feature Extraction:

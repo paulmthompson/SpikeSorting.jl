@@ -30,64 +30,68 @@ function DetectPower()
     DetectPower(0,0,0,1.0)
 end
 
-function detect{S<:DetectPower,C,A}(sort::Sorting{S,C,A}, i::Int64, k=20)
+function detect{S<:DetectPower,C,A}(sort::Sorting{S,C,A}, i::Int64)
     
     sort.s.a += sort.rawSignal[i] - sort.s.c
     sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
 
-    if i>19
-        sort.s.c=sort.rawSignal[i-k+1]
+    if i>=power_win
+        sort.s.c=sort.rawSignal[i-power_win+1]
     else
-        sort.s.c=sort.sigend[i+56]
+        sort.s.c=sort.sigend[i+sigend_length-power_win+1]
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-    sqrt((sort.s.b - (sort.s.a^2/k))/k)
+    sqrt((sort.s.b - (sort.s.a^2/power_win))/power_win)
     
 end
 
-function threshold{S<:DetectPower,C,A}(sort::Sorting{S,C,A}, k=20)
+function threshold{S<:DetectPower,C,A}(sort::Sorting{S,C,A})
     
-    p=Array(Float64,size(sort.rawSignal,1)-k)
+    p=Array(Float64,signal_length-power_win)
     a = 0
     b = 0
-    for i=1:k
+    for i=1:power_win
         a += sort.rawSignal[i]
         b += sort.rawSignal[i]^2
     end
 
     c = sort.rawSignal[1]
     
-    for i=(k+1):(size(sort.rawSignal,1)-1)
+    for i=power_win1:(signal_length-1)
         
         a += sort.rawSignal[i] - c
         b += sort.rawSignal[i]^2 - c^2
-        p[i-k]=sqrt((b - a^2/k)/k)
-        c = sort.rawSignal[i-k+1]
+        p[i-power_win]=sqrt((b - a^2/power_win)/power_win)
+        c = sort.rawSignal[i-power_win+1]
         
     end
 
     sort.s.thres=mean(p)+5*std(p)
 
+    nothing
+
 end
 
-function prepare{S<:DetectPower,C,A}(sort::Sorting{S,C,A},k=20)
+function prepare{S<:DetectPower,C,A}(sort::Sorting{S,C,A})
     
     sort.s.a=0
     sort.s.b=0
     
-    for i=1:k
+    for i=1:power_win
         sort.s.a += sort.rawSignal[i]
         sort.s.b += sort.rawSignal[i]^2
     end
 
     sort.s.c=sort.rawSignal[1]
 
-    for i=(k+1):75
+    for i=power_win1:sigend_length
         sort.s.a += sort.rawSignal[i] - sort.s.c
         sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2
-        sort.s.c = sort.rawSignal[i-k+1]
+        sort.s.c = sort.rawSignal[i-power_win+1]
     end
+
+    nothing
 
 end
 
@@ -114,6 +118,8 @@ end
 function threshold{S<:DetectSignal,C,A}(sort::Sorting{S,C,A})
 
     sort.s.thres=median(abs(sort.rawSignal))/.6745
+
+    nothing
     
 end
 
@@ -158,13 +164,15 @@ end
 
 function threshold{S<:DetectNEO,C,A}(sort::Sorting{S,C,A})
 
-    psi=zeros(Int64,length(sort.rawSignal)-1)
+    psi=zeros(Int64,signal_length-1)
     
-    for i=2:length(sort.rawSignal)-1
+    for i=2:signal_length-1
         psi[i]=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
     end
 
     sort.s.thres=3*mean(psi)
+
+    nothing
     
 end
 
@@ -232,3 +240,7 @@ function detect{S<:DetectMCWC,C,A}(sort::Sorting{S,C,A}, i::Int64)
     
 end
 
+function threshold{S<:DetectMCWC,C,A}(sort::Sorting{S,C,A})
+    sort.s.thres=1.0
+    nothing
+end

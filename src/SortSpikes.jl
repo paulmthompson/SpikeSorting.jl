@@ -124,12 +124,10 @@ function detectspikes(sort::Sorting,start=1)
             #If end of spike window is reached, continue spike detection
             if sort.index==101
 
-                #alignment (power based)
                 align(sort)
 
-                #overlap detection
+                #overlap detection?
                     
-                #50 time stamp (2.5 ms) window
                 cluster(sort)
 
                 #Spike time stamp

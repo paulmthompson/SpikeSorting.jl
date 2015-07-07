@@ -16,6 +16,9 @@ const colordict = Dict(0 => "gray", 1 => "red", 2 => "blue", 3 => "green")
 
 #Detection Power
 
+const power_win=20
+const power_win1=power_win+1
+
 #Alignment Max
 
 const align_range=(window_half+1):(window+window_half)

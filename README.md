@@ -32,7 +32,7 @@ In addition, we are trying to put many existing online algorithms, or potential 
 - [x] Raw Signal Threshold (as in Quiroga 2004)
 - [x] Nonlinear Energy Operator (Choi et al 2006)
 - [ ] Continuous Wavelet Transform (Nenadic et al 2005)
-- [ ] Multiscale Correlation of Wavelet Coefficients (Yang et al 2011)
+- [x] Multiscale Correlation of Wavelet Coefficients (Yang et al 2011)
 - [ ] Stationary Wavelet Transform
 
 ## Alignment

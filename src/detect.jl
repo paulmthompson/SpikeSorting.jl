@@ -9,7 +9,7 @@ Detection methods. Each method needs
 A method may also need a "prepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
 
-export DetectPower
+export DetectPower, DetectSignal, DetectNEO, DetectMCWC
 
 function prepare{S,C,A}(sort::Sorting{S,C,A})
 end
@@ -213,18 +213,21 @@ end
 function detect{S<:DetectMCWC,C,A}(sort::Sorting{S,C,A}, i::Int64)
 
     p=0.0
-    
-    #calculate wavelet coefficients
-    for j=1:11
-        for k=1:20 #J = 20
-            sort.s.Tx[j] += sort.RawSignal[i-20+k] * psi[21-k,j]
-        end
-        sort.s.Tx[j] = sort.s.Tx[j] * 1/sqrt(wave_a[j])
-    end
 
+    #calculate wavelet coefficients
+    if i<=bigJ
+        sort.s.Tx[:]=coiflets_scaled*[sort.sigend[(end-bigJ+i+1):end];sort.rawSignal[1:i]]    
+    else        
+        sort.s.Tx[:]=coiflets_scaled*sort.rawSignal[(i-bigJ+1):i]
+    end
+    
+    for j=1:11
+        sort.s.Tx[j] *= onesquarea[j]
+    end
+   
     #Correlation of wavelet coefficients
     for j=1:10
-        sort.s.rs[j] *= sort.s.Tx[j+1]
+        sort.s.rs[j] = sort.s.Tx[j]*sort.s.Tx[j+1]
     end
 
     #Find highest ratio
@@ -235,7 +238,11 @@ function detect{S<:DetectMCWC,C,A}(sort::Sorting{S,C,A}, i::Int64)
             p=tempp
         end
     end
-    
+
+    for j=1:11
+        sort.s.Tx[j]=0.0
+    end
+        
     p
     
 end

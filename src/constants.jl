@@ -62,6 +62,12 @@ Multiscale Correlation of Wavelet Coefficients
 
 Yang et al 2011
 =#
+
+const bigJ=20
+
 const wave_a=collect(0.5:.1:1.5);
 
-const coiflets_scaled=Float64[coiflets_five[i]*wave_a[j] for i=1:30, j=1:11]
+const coiflets_scaled=Float64[coiflets_five[i]*wave_a[j] for j=1:11,i=1:bigJ]
+
+const onesquarea=Float64[1/sqrt(wave_a[i]) for i=1:11]
+

@@ -49,18 +49,29 @@ In addition, we are trying to put many existing online algorithms, or potential 
 - [ ] Continuous Basis Pursuit (Ekanadham et al 2014)
 - [ ] Sequential Bayesian inference (Haga et at 2013)
 
-## Sorting
-
-Feature Extraction:
+## Feature Extraction:
 - [ ] Multiscale correlation of wavelet coefficients (Yang et al 2011, M-sorter)
 - [ ] PCA
 - [ ] Wavelet packet decomposition (as in Bestel 2012)
 
-Clustering:
-- [x] Online new cluster creation (OSort)
-- [x] Centroid to template comparison (OSort and lots of others)
-- [x] Similar cluster merging via centroid (OSort)
-- [ ] 2 Moment (centroid and correlation) template comparison (M-sorter and others)
+## Clustering:
+
+### Connectivity Models
+- [ ] BIRCH
+- [ ] COBWEB
+
+### Centroid Models
+- [ ] Hierachical Adaptive Means (Paraskevopoulou et al 2014)
+- [x] OSort (Rutishauser et al 2006)
+
+### Distribution Models
+- [ ] Time varying Dirichlet process (Gasthaus et al 2009)
+
+### Density MOdels
+- [ ] DenStream
+
+Notes: 
+There are many different clustering methods. For a totally unsupervised, online implementation, the number of clusters needs to be determined automatically. The clusters should be able to adapt over time to compensate for things like electrode drift. Also, the clustering algorithm should have a sense of an "outlier." 
 
 ## User Interface
 

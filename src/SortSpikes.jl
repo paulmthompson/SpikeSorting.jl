@@ -4,11 +4,13 @@ module SortSpikes
 abstract SpikeDetection
 abstract Alignment
 abstract Cluster
+abstract Feature
 
-type Sorting{S<:SpikeDetection, C<:Cluster, A<:Alignment}
+type Sorting{S<:SpikeDetection,C<:Cluster,A<:Alignment,F<:Feature}
     s::S
     c::C
     a::A
+    f::F
     rawSignal::Array{Int64,1}
     electrode::Array{Int64,1}
     neuronnum::Array{Int64,1}
@@ -17,38 +19,40 @@ type Sorting{S<:SpikeDetection, C<:Cluster, A<:Alignment}
     sigend::Array{Int64,1}
     index::Int64
     p_temp::Array{Int64,1}
+    features::Array{Float64,1}
 end
 
 include("constants.jl")
 include("detect.jl")
 include("align.jl")
+include("feature.jl")
 include("cluster.jl")
 
 #using Winston, Gtk.ShortNames
 #include("gui.jl")           
 
 function Sorting()
-    Sorting(DetectPower(),ClusterOSort(),AlignMax(),
+    Sorting(DetectPower(),ClusterOSort(),AlignMax(),FeatureTime(),
             zeros(Int64,signal_length),zeros(Int64,500), zeros(Int64,500),2,
             [convert(SharedArray,zeros(Int64,window)) for j=1:10], 
-            zeros(Int64,75),0,zeros(Int64,window*2))
+            zeros(Int64,75),0,zeros(Int64,window*2),zeros(Float64,window))
 end
 
-function Sorting(s::SpikeDetection,c::Cluster,a::Alignment)
+function Sorting(s::SpikeDetection,c::Cluster,a::Alignment,f::Feature)
 
     #Need to make this do different things based on selection choices
 
     if typeof(a)==AlignFFT
         
-        Sorting(s,c,a,
+        Sorting(s,c,a,f,
                 zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
                 [convert(SharedArray,zeros(Int64,a.M*window)) for j=1:10], 
-                zeros(Int64,75),0,zeros(Int64,window*2))
+                zeros(Int64,75),0,zeros(Int64,window*2),zeros(Float64,window*M))
     else
-        Sorting(s,c,a,
+        Sorting(s,c,a,f,
                 zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
                 [convert(SharedArray,zeros(Int64,window)) for j=1:10], 
-                zeros(Int64,75),0,zeros(Int64,window*2))
+                zeros(Int64,75),0,zeros(Int64,window*2),zeros(Float64,window))
     end
     
 end
@@ -126,12 +130,18 @@ function detectspikes(sort::Sorting,start=1)
 
                 align(sort)
 
-                #overlap detection?
+                #overlap detection? (probably need to do this in the time domain)
+                
+                feature(sort)
                     
                 cluster(sort)
 
                 #Spike time stamp
                 sort.electrode[sort.numSpikes]=i #need adjust this based on alignment
+
+                #add spike cluster identifier to dummy first waveform shared array
+                sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]    
+                sort.numSpikes+=1
          
                 sort.index=0
                   
@@ -152,6 +162,8 @@ function detectspikes(sort::Sorting,start=1)
     end
                    
     sort.sigend[:]=sort.rawSignal[(end-sigend_length+1):end]
+
+    nothing
     
 end
 

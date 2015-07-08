@@ -30,29 +30,30 @@ function ClusterOSort(n::Int64)
     ClusterOSort(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
 end
 
-function cluster{S,C<:ClusterOSort,A}(sort::Sorting{S,C,A})
+function cluster{S,C<:ClusterOSort,A,F}(sort::Sorting{S,C,A,F})
    
     x=getdist(sort)
     
     #add new cluster or assign to old
     if x==0
         sort.c.numClusters+=1
-        sort.c.clusters[:,sort.c.numClusters]=sort.waveforms[:,sort.numSpikes]
+        sort.c.clusters[:,sort.c.numClusters]=sort.features[:]
         sort.c.clusterWeight[sort.c.numClusters]=1   
         sort.neuronnum[sort.numSpikes]=sort.c.numClusters
     else       
         if sort.c.clusterWeight[x]<20
             sort.c.clusterWeight[x]+=1
-            sort.c.clusters[:,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[:,x]+1/sort.c.clusterWeight[x]*sort.waveforms[sort.numSpikes][:]            
-        else            
-           sort.c.clusters[:,x]=.95.*sort.c.clusters[:,x]+.05.*sort.waveforms[sort.numSpikes][:]
+            for i=1:size(sort.c.clusters,1)
+                sort.c.clusters[i,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[i,x]+1/sort.c.clusterWeight[x].*sort.features[i]
+            end
+        else
+            for i=1:size(sort.c.clusters,1)
+                sort.c.clusters[i,x]=.95.*sort.c.clusters[i,x]+.05.*sort.features[i]
+            end
         end
         sort.neuronnum[sort.numSpikes]=x       
     end
 
-    #add spike cluster identifier to dummy first waveform shared array
-    sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]    
-    sort.numSpikes+=1
     if sort.c.numClusters>1
         merged=findmerge!(sort)
     end
@@ -62,10 +63,9 @@ function getdist(sort::Sorting)
     
     dist=Array(Float64,sort.c.numClusters)
     for i=1:sort.c.numClusters
-        dist[i]=norm(sort.waveforms[sort.numSpikes][:]-sort.c.clusters[:,i])
+        dist[i]=norm(sort.features-sort.c.clusters[:,i])
     end
 
-    #Need to account for no clusters at beginning
     ind=indmin(dist)
 
     if dist[ind]<sort.c.Tsm
@@ -126,7 +126,7 @@ function ClusterManual()
     ClusterOSort(zeros(Float64,5),0,zeros(Float64,4,5))  
 end
 
-function cluster{S,C<:ClusterManual,A}(sort::Sorting{S,C,A})
+function cluster{S,C<:ClusterManual,A,F}(sort::Sorting{S,C,A,F})
 
     for i=1:sort.numClusters
         

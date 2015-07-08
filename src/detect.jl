@@ -11,7 +11,7 @@ A method may also need a "prepare" function to use in its first iteration if the
 
 export DetectPower, DetectSignal, DetectNEO, DetectMCWC
 
-function prepare{S,C,A}(sort::Sorting{S,C,A})
+function prepare{S,C,A,F}(sort::Sorting{S,C,A,F})
 end
 
 #=
@@ -30,7 +30,7 @@ function DetectPower()
     DetectPower(0,0,0,1.0)
 end
 
-function detect{S<:DetectPower,C,A}(sort::Sorting{S,C,A}, i::Int64)
+function detect{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F}, i::Int64)
     
     sort.s.a += sort.rawSignal[i] - sort.s.c
     sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
@@ -46,7 +46,7 @@ function detect{S<:DetectPower,C,A}(sort::Sorting{S,C,A}, i::Int64)
     
 end
 
-function threshold{S<:DetectPower,C,A}(sort::Sorting{S,C,A})
+function threshold{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F})
     
     p=Array(Float64,signal_length-power_win)
     a = 0
@@ -73,7 +73,7 @@ function threshold{S<:DetectPower,C,A}(sort::Sorting{S,C,A})
 
 end
 
-function prepare{S<:DetectPower,C,A}(sort::Sorting{S,C,A})
+function prepare{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F})
     
     sort.s.a=0
     sort.s.b=0
@@ -109,13 +109,13 @@ function DetectSignal()
     DetectSignal(1.0)
 end
 
-function detect{S<:DetectSignal,C,A}(sort::Sorting{S,C,A},i::Int64)
+function detect{S<:DetectSignal,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
 
     abs(sort.rawSignal[i])
     
 end
 
-function threshold{S<:DetectSignal,C,A}(sort::Sorting{S,C,A})
+function threshold{S<:DetectSignal,C,A,F}(sort::Sorting{S,C,A,F})
 
     sort.s.thres=median(abs(sort.rawSignal))/.6745
 
@@ -137,7 +137,7 @@ function DetectNEO()
     DetectNEO(1.0)
 end
 
-function detect{S<:DetectNEO,C,A}(sort::Sorting{S,C,A},i::Int64)
+function detect{S<:DetectNEO,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
 
     if i==length(sort.rawSignal)
         #Will do spike detection next iteration due to edging
@@ -162,7 +162,7 @@ function detect{S<:DetectNEO,C,A}(sort::Sorting{S,C,A},i::Int64)
     
 end
 
-function threshold{S<:DetectNEO,C,A}(sort::Sorting{S,C,A})
+function threshold{S<:DetectNEO,C,A,F}(sort::Sorting{S,C,A,F})
 
     psi=zeros(Int64,signal_length-1)
     
@@ -210,7 +210,7 @@ function DetectMCWC()
     DetectMCWC(zeros(Float64,11),zeros(Float64,10),1.0)
 end
 
-function detect{S<:DetectMCWC,C,A}(sort::Sorting{S,C,A}, i::Int64)
+function detect{S<:DetectMCWC,C,A,F}(sort::Sorting{S,C,A,F}, i::Int64)
 
     p=0.0
 
@@ -247,7 +247,7 @@ function detect{S<:DetectMCWC,C,A}(sort::Sorting{S,C,A}, i::Int64)
     
 end
 
-function threshold{S<:DetectMCWC,C,A}(sort::Sorting{S,C,A})
+function threshold{S<:DetectMCWC,C,A,F}(sort::Sorting{S,C,A,F})
     sort.s.thres=1.0
     nothing
 end

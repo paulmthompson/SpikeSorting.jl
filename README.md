@@ -14,6 +14,7 @@ In addition, we are trying to put many existing online algorithms, or potential 
 * DistributedArrays - https://github.com/JuliaParallel/DistributedArrays.jl
 * Winston - https://github.com/nolta/Winston.jl
 * Gtk - https://github.com/JuliaLang/Gtk.jl
+* OnlineStats - https://github.com/joshday/OnlineStats.jl
 
 # Current Functionality and TODO
 
@@ -23,7 +24,6 @@ In addition, we are trying to put many existing online algorithms, or potential 
 - [x] templates from rawsignal waveforms
 - [x] thresholds for raw signal detection
 - [x] threshold for NEO
-- [ ] template for wavelet coefficients
 - [ ] Need to add a periodic "recalibration" where the thresholds are recalculated (probably at the end of each analysis block).
 
 ## Detection
@@ -33,7 +33,7 @@ In addition, we are trying to put many existing online algorithms, or potential 
 - [x] Nonlinear Energy Operator (Choi et al 2006)
 - [ ] Continuous Wavelet Transform (Nenadic et al 2005)
 - [x] Multiscale Correlation of Wavelet Coefficients (Yang et al 2011)
-- [ ] Stationary Wavelet Transform
+- [ ] Stationary Wavelet Transform (Brychta et 2007)
 
 ## Alignment
 
@@ -50,9 +50,8 @@ In addition, we are trying to put many existing online algorithms, or potential 
 - [ ] Sequential Bayesian inference (Haga et at 2013)
 
 ## Feature Extraction:
-- [ ] Multiscale correlation of wavelet coefficients (Yang et al 2011, M-sorter)
-- [ ] PCA
-- [ ] Wavelet packet decomposition (as in Bestel 2012)
+- [x] PCA
+- [ ] Wavelet packet decomposition (Hulata et al 2002)
 
 ## Clustering:
 
@@ -67,7 +66,7 @@ In addition, we are trying to put many existing online algorithms, or potential 
 ### Distribution Models
 - [ ] Time varying Dirichlet process (Gasthaus et al 2009)
 
-### Density MOdels
+### Density Models
 - [ ] DenStream
 
 Notes: 

@@ -13,8 +13,7 @@ export FeatureTime, FeaturePCA
 Temporal Waveform
 =#
 
-type FeatureTime <: Feature
-    
+type FeatureTime <: Feature 
 end
 
 function feature{S,C,A,F<:FeatureTime}(sort::Sorting{S,C,A,F})
@@ -45,6 +44,7 @@ end
 function feature{S,C,A,F<:FeaturePCA}(sort::Sorting{S,C,A,F})
     OnlineStats.update!(sort.f.oPCA,sort.waveforms[sort.numSpikes])
     sort.features[:]=sort.f.oPCA.V*sort.waveforms[sort.numSpikes]
+    nothing
 end
 
 function mysize(feature::FeaturePCA,wavelength::Int64)

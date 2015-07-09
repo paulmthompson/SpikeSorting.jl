@@ -23,14 +23,13 @@ type DetectPower <: SpikeDetection
     a::Int64
     b::Int64
     c::Int64
-    thres::Float64
 end
 
 function DetectPower()
-    DetectPower(0,0,0,1.0)
+    DetectPower(0,0,0)
 end
 
-function detect{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F}, i::Int64)
+function detect{S<:DetectPower,C<:Cluster,A<:Alignment,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
     
     sort.s.a += sort.rawSignal[i] - sort.s.c
     sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
@@ -67,7 +66,7 @@ function threshold{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F})
         
     end
 
-    sort.s.thres=mean(p)+5*std(p)
+    sort.thres=mean(p)+5*std(p)
 
     nothing
 
@@ -102,11 +101,6 @@ Quiroga et al 2004
 =#
 
 type DetectSignal <: SpikeDetection
-    thres::Float64
-end
-
-function DetectSignal()
-    DetectSignal(1.0)
 end
 
 function detect{S<:DetectSignal,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
@@ -117,7 +111,7 @@ end
 
 function threshold{S<:DetectSignal,C,A,F}(sort::Sorting{S,C,A,F})
 
-    sort.s.thres=median(abs(sort.rawSignal))/.6745
+    sort.thres=median(abs(sort.rawSignal))/.6745
 
     nothing
     
@@ -130,11 +124,6 @@ Choi et al 2006
 =#
 
 type DetectNEO <: SpikeDetection
-    thres::Float64
-end
-
-function DetectNEO()
-    DetectNEO(1.0)
 end
 
 function detect{S<:DetectNEO,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
@@ -170,7 +159,7 @@ function threshold{S<:DetectNEO,C,A,F}(sort::Sorting{S,C,A,F})
         psi[i]=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
     end
 
-    sort.s.thres=3*mean(psi)
+    sort.thres=3*mean(psi)
 
     nothing
     
@@ -203,14 +192,13 @@ Yang et al 2011
 type DetectMCWC <: SpikeDetection
     Tx::Array{Float64,1}
     rs::Array{Float64,1}
-    thres::Float64
 end
 
 function DetectMCWC()
-    DetectMCWC(zeros(Float64,11),zeros(Float64,10),1.0)
+    DetectMCWC(zeros(Float64,11),zeros(Float64,10))
 end
 
-function detect{S<:DetectMCWC,C,A,F}(sort::Sorting{S,C,A,F}, i::Int64)
+function detect{S<:DetectMCWC,C<:Cluster,A<:Alignment,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
 
     p=0.0
 
@@ -248,6 +236,6 @@ function detect{S<:DetectMCWC,C,A,F}(sort::Sorting{S,C,A,F}, i::Int64)
 end
 
 function threshold{S<:DetectMCWC,C,A,F}(sort::Sorting{S,C,A,F})
-    sort.s.thres=1.0
+    sort.thres=1.0
     nothing
 end

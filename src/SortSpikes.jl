@@ -22,6 +22,7 @@ type Sorting{S<:SpikeDetection,C<:Cluster,A<:Alignment,F<:Feature}
     index::Int64
     p_temp::Array{Int64,1}
     features::Array{Float64,1}
+    thres::Float64
 end
 
 include("constants.jl")
@@ -45,7 +46,7 @@ function Sorting(s::SpikeDetection,c::Cluster,a::Alignment,f::Feature)
     Sorting(s,c,a,f,
             zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
             [zeros(Float64,wavelength) for j=1:10], 
-            zeros(Int64,window+window_half),0,zeros(Int64,window*2),zeros(Float64,featurelength))   
+            zeros(Int64,window+window_half),0,zeros(Int64,window*2),zeros(Float64,featurelength),1.0)   
 end
     
 export Sorting, onlinecal, onlinesort
@@ -78,7 +79,7 @@ function onlinecal(sort::Sorting)
     return sort
 end
 
-function onlinesort(sort::Sorting)
+function onlinesort{S<:SpikeDetection,C<:Cluster,A<:Alignment,F<:Feature}(sort::Sorting{S,C,A,F})
  
     detectspikes(sort)
 
@@ -99,10 +100,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function detectspikes(sort::Sorting,start=1)
-
-    #Threshold comparator, should be same type as threshold
-    p=0.0
+function detectspikes{S<:SpikeDetection,C<:Cluster,A<:Alignment,F<:Feature}(sort::Sorting{S,C,A,F},start=1)
 
     for i=start:signal_length
 
@@ -136,7 +134,7 @@ function detectspikes(sort::Sorting,start=1)
                   
             end
 
-        elseif p>sort.s.thres
+        elseif p>sort.thres
             
             if i<=window
                 sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]

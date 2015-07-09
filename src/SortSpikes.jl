@@ -14,15 +14,15 @@ type Sorting{S<:Detect,C<:Cluster,A<:Align,F<:Feature}
     a::A
     f::F
     rawSignal::Array{Int64,1}
-    electrode::Array{Int64,1}
-    neuronnum::Array{Int64,1}
-    numSpikes::Int64
-    waveforms::Array{Array{Float64,1},1}
     sigend::Array{Int64,1}
     index::Int64
     p_temp::Array{Int64,1}
+    numSpikes::Int64
     features::Array{Float64,1}
     thres::Float64
+    electrode::Array{Int64,1}
+    neuronnum::Array{Int64,1}
+    waveforms::Array{Float64,2}
 end
 
 include("constants.jl")
@@ -44,9 +44,9 @@ function Sorting(s::Detect,c::Cluster,a::Align,f::Feature)
     c=typeof(c)(featurelength)
       
     Sorting(s,c,a,f,
-            zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
-            [zeros(Float64,wavelength) for j=1:10], 
-            zeros(Int64,window+window_half),0,zeros(Int64,window*2),zeros(Float64,featurelength),1.0)   
+            zeros(Int64,signal_length),zeros(Int64,window+window_half),0,
+            zeros(Int64,window*2),2,zeros(Float64,featurelength),1.0,
+            zeros(Int64,100),zeros(Int64,100),zeros(Float64,wavelength,100))   
 end
     
 export Sorting, onlinecal, onlinesort
@@ -125,11 +125,7 @@ function detectspikes{S<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,
 
                 #Spike time stamp
                 sort.electrode[sort.numSpikes]=i #need adjust this based on alignment
-
-                #add spike cluster identifier to dummy first waveform shared array
-                sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]    
-                sort.numSpikes+=1
-         
+                sort.numSpikes+=1        
                 sort.index=0
                   
             end

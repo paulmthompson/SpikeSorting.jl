@@ -139,7 +139,7 @@ function cluster{S,C<:ClusterManual,A,F}(sort::Sorting{S,C,A,F})
         Xa=(b2 - b1) / (A1 - A2)
 
         if Xa>win[1,i] &&  Xa<win[2,i]
-            sort.waveforms[1][sort.numSpikes]=sort.neuronnum[sort.numSpikes]    
+            sort.neuronnum[sort.numSpikes]=i
             sort.numSpikes+=1
             break
         else

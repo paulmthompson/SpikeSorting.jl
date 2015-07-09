@@ -17,7 +17,7 @@ end
 
 function align{S,C,A<:AlignMax,F}(sort::Sorting{S,C,A,F})
     j=indmax(sort.p_temp[align_range])+window_half
-    sort.waveforms[sort.numSpikes][:]=convert(Array{Float64,1},sort.p_temp[j-window_half:j+window_half-1])
+    sort.waveforms[:,sort.numSpikes]=convert(Array{Float64,1},sort.p_temp[j-window_half:j+window_half-1])
     nothing
 end
 
@@ -59,7 +59,7 @@ function align{S,C,A<:AlignFFT,F}(sort::Sorting{S,C,A,F})
     sort.a.upsamp[:]=sort.a.M.*real(sort.a.x_int)
     
     j=indmax(sort.a.upsamp[sort.a.align_range])+sort.a.M*window_half
-    sort.waveforms[sort.numSpikes][:]=round(sort.a.upsamp[j-sort.a.M*window_half:j+sort.a.M*window_half-1])
+    sort.waveforms[:,sort.numSpikes]=round(sort.a.upsamp[j-sort.a.M*window_half:j+sort.a.M*window_half-1])
 
     nothing 
 end

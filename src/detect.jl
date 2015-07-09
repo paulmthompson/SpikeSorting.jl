@@ -19,7 +19,7 @@ Power
 
 Rutishauser et al 2006
 =#
-type DetectPower <: SpikeDetection
+type DetectPower <: Detect
     a::Int64
     b::Int64
     c::Int64
@@ -29,7 +29,7 @@ function DetectPower()
     DetectPower(0,0,0)
 end
 
-function detect{S<:DetectPower,C<:Cluster,A<:Alignment,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
+function detect{S<:DetectPower,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
     
     sort.s.a += sort.rawSignal[i] - sort.s.c
     sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
@@ -100,7 +100,7 @@ Raw Signal
 Quiroga et al 2004
 =#
 
-type DetectSignal <: SpikeDetection
+type DetectSignal <: Detect
 end
 
 function detect{S<:DetectSignal,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
@@ -123,7 +123,7 @@ Nonlinear Energy Operator
 Choi et al 2006
 =#
 
-type DetectNEO <: SpikeDetection
+type DetectNEO <: Detect
 end
 
 function detect{S<:DetectNEO,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
@@ -189,7 +189,7 @@ Multiscale Correlation of Wavelet Coefficients
 Yang et al 2011
 =#
 
-type DetectMCWC <: SpikeDetection
+type DetectMCWC <: Detect
     Tx::Array{Float64,1}
     rs::Array{Float64,1}
 end
@@ -198,7 +198,7 @@ function DetectMCWC()
     DetectMCWC(zeros(Float64,11),zeros(Float64,10))
 end
 
-function detect{S<:DetectMCWC,C<:Cluster,A<:Alignment,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
+function detect{S<:DetectMCWC,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
 
     p=0.0
 

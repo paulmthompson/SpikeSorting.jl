@@ -3,12 +3,12 @@ module SortSpikes
 #using Winston, Gtk.ShortNames,
 using OnlineStats
 
-abstract SpikeDetection
-abstract Alignment
+abstract Detect
+abstract Align
 abstract Cluster
 abstract Feature
 
-type Sorting{S<:SpikeDetection,C<:Cluster,A<:Alignment,F<:Feature}
+type Sorting{S<:Detect,C<:Cluster,A<:Align,F<:Feature}
     s::S
     c::C
     a::A
@@ -33,7 +33,7 @@ include("cluster.jl")
 
 #include("gui.jl")           
 
-function Sorting(s::SpikeDetection,c::Cluster,a::Alignment,f::Feature)
+function Sorting(s::Detect,c::Cluster,a::Align,f::Feature)
 
     #determine size of alignment output
     wavelength=mysize(a)
@@ -79,7 +79,7 @@ function onlinecal(sort::Sorting)
     return sort
 end
 
-function onlinesort{S<:SpikeDetection,C<:Cluster,A<:Alignment,F<:Feature}(sort::Sorting{S,C,A,F})
+function onlinesort{S<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F})
  
     detectspikes(sort)
 
@@ -100,7 +100,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function detectspikes{S<:SpikeDetection,C<:Cluster,A<:Alignment,F<:Feature}(sort::Sorting{S,C,A,F},start=1)
+function detectspikes{S<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F},start=1)
 
     for i=start:signal_length
 

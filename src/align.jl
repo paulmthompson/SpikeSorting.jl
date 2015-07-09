@@ -11,7 +11,7 @@ export AlignMax, AlignFFT
 #= 
 Maximum signal
 =#
-type AlignMax <: Alignment
+type AlignMax <: Align
 
 end
 
@@ -29,7 +29,7 @@ end
 FFT upsampling
 =#
 
-type AlignFFT <: Alignment
+type AlignFFT <: Align
     M::Int64
     x_int::Array{Complex{Float64},1}
     fout::Array{Complex{Float64},1}
@@ -74,7 +74,7 @@ FFT upsampling + temporal order of peaks
 Rutishauser 2006
 =#
 
-type AlignOsort <: Alignment
+type AlignOsort <: Align
 
 end
 

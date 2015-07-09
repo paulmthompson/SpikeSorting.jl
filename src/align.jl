@@ -21,6 +21,10 @@ function align{S,C,A<:AlignMax,F}(sort::Sorting{S,C,A,F})
     nothing
 end
 
+function mysize(align::AlignMax)
+    window
+end
+
 #=
 FFT upsampling
 =#
@@ -57,8 +61,11 @@ function align{S,C,A<:AlignFFT,F}(sort::Sorting{S,C,A,F})
     j=indmax(sort.a.upsamp[sort.a.align_range])+sort.a.M*window_half
     sort.waveforms[sort.numSpikes][:]=convert(Array{Int64,1},round(sort.a.upsamp[j-sort.a.M*window_half:j+sort.a.M*window_half-1]))
 
-    nothing
-    
+    nothing 
+end
+
+function mysize(align::AlignFFT)
+    window*align.M
 end
 
 #=
@@ -75,3 +82,7 @@ function align{S,C,A<:AlignOsort,F}(sort::Sorting{S,C,A,F})
 
 end
 
+
+function mysize(align::AlignOsort)
+    window*align.M
+end

@@ -1,5 +1,7 @@
 module SortSpikes
 
+#using Winston, Gtk.ShortNames,
+using OnlineStats
 
 abstract SpikeDetection
 abstract Alignment
@@ -28,40 +30,30 @@ include("align.jl")
 include("feature.jl")
 include("cluster.jl")
 
-#using Winston, Gtk.ShortNames
 #include("gui.jl")           
-
-function Sorting()
-    Sorting(DetectPower(),ClusterOSort(),AlignMax(),FeatureTime(),
-            zeros(Int64,signal_length),zeros(Int64,500), zeros(Int64,500),2,
-            [convert(SharedArray,zeros(Int64,window)) for j=1:10], 
-            zeros(Int64,75),0,zeros(Int64,window*2),zeros(Float64,window))
-end
 
 function Sorting(s::SpikeDetection,c::Cluster,a::Alignment,f::Feature)
 
-    #Need to make this do different things based on selection choices
+    #determine size of alignment output
+    wavelength=mysize(a)
 
-    if typeof(a)==AlignFFT
-        
-        Sorting(s,c,a,f,
-                zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
-                [convert(SharedArray,zeros(Int64,a.M*window)) for j=1:10], 
-                zeros(Int64,75),0,zeros(Int64,window*2),zeros(Float64,window*M))
-    else
-        Sorting(s,c,a,f,
-                zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
-                [convert(SharedArray,zeros(Int64,window)) for j=1:10], 
-                zeros(Int64,75),0,zeros(Int64,window*2),zeros(Float64,window))
-    end
-    
+    #determine feature size
+    featurelength=mysize(f,wavelength)
+
+    c=typeof(c)(featurelength)
+      
+    Sorting(s,c,a,f,
+            zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
+            [convert(SharedArray,zeros(Int64,wavelength)) for j=1:10], 
+            zeros(Int64,window+window_half),0,zeros(Int64,window*2),zeros(Float64,featurelength))   
 end
     
-export Sorting, onlinecal, onlinesort, offlinesort
+export Sorting, onlinecal, onlinesort
 
 function onlinecal(sort::Sorting,method="POWER")
     
     prepare(sort)
+    threshold(sort)
     sort.c.Tsm=50*var(sort.rawSignal)
     sort.sigend[:]=sort.rawSignal[1:75]
     detectspikes(sort,76)
@@ -101,8 +93,6 @@ function onlinesort(sort::Sorting,method="POWER")
 end
 
 function offlinesort()
-
-    
 end
 
 #=

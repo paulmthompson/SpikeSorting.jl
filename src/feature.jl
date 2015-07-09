@@ -18,7 +18,7 @@ type FeatureTime <: Feature
 end
 
 function feature{S,C,A,F<:FeatureTime}(sort::Sorting{S,C,A,F})
-    sort.features[:]=sort.waveforms[sort.numSpikes][:]
+    sort.features=sort.waveforms[sort.numSpikes]
     nothing
 end
 
@@ -43,8 +43,7 @@ function FeaturePCA(win::Int64,dims::Int64)
 end
 
 function feature{S,C,A,F<:FeaturePCA}(sort::Sorting{S,C,A,F})
-    a=convert(Array{Float64,1},collect(sort.waveforms[sort.numSpikes][:])) #Need to make this not suck
-    OnlineStats.update!(sort.f.oPCA,a)
+    OnlineStats.update!(sort.f.oPCA,sort.waveforms[sort.numSpikes])
     sort.features[:]=sort.f.oPCA.V*sort.waveforms[sort.numSpikes]
 end
 

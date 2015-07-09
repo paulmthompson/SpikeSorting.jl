@@ -36,9 +36,9 @@ function detect{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F}, i::Int64)
     sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
 
     if i>=power_win
-        sort.s.c=sort.rawSignal[i-power_win+1]
+        sort.s.c=sort.rawSignal[i-power_win0]
     else
-        sort.s.c=sort.sigend[i+sigend_length-power_win+1]
+        sort.s.c=sort.sigend[i+sigend_length-power_win0]
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
@@ -63,7 +63,7 @@ function threshold{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F})
         a += sort.rawSignal[i] - c
         b += sort.rawSignal[i]^2 - c^2
         p[i-power_win]=sqrt((b - a^2/power_win)/power_win)
-        c = sort.rawSignal[i-power_win+1]
+        c = sort.rawSignal[i-power_win0]
         
     end
 

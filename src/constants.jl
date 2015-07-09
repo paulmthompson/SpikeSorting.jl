@@ -18,6 +18,7 @@ const colordict = Dict(0 => "gray", 1 => "red", 2 => "blue", 3 => "green")
 
 const power_win=20
 const power_win1=power_win+1
+const power_win0=power_win-1
 
 #Alignment Max
 

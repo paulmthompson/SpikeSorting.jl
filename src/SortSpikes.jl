@@ -17,7 +17,7 @@ type Sorting{S<:SpikeDetection,C<:Cluster,A<:Alignment,F<:Feature}
     electrode::Array{Int64,1}
     neuronnum::Array{Int64,1}
     numSpikes::Int64
-    waveforms::Array{SharedArray,1}
+    waveforms::Array{Array{Int64,1},1}
     sigend::Array{Int64,1}
     index::Int64
     p_temp::Array{Int64,1}
@@ -44,13 +44,13 @@ function Sorting(s::SpikeDetection,c::Cluster,a::Alignment,f::Feature)
       
     Sorting(s,c,a,f,
             zeros(Int64,signal_length),zeros(Int64,500),zeros(Int64,500),2,
-            [convert(SharedArray,zeros(Int64,wavelength)) for j=1:10], 
+            [zeros(Int64,wavelength) for j=1:10], 
             zeros(Int64,window+window_half),0,zeros(Int64,window*2),zeros(Float64,featurelength))   
 end
     
 export Sorting, onlinecal, onlinesort
 
-function onlinecal(sort::Sorting,method="POWER")
+function onlinecal(sort::Sorting)
     
     prepare(sort)
     threshold(sort)
@@ -78,7 +78,7 @@ function onlinecal(sort::Sorting,method="POWER")
     return sort
 end
 
-function onlinesort(sort::Sorting,method="POWER")
+function onlinesort(sort::Sorting)
  
     detectspikes(sort)
 
@@ -106,7 +106,6 @@ function detectspikes(sort::Sorting,start=1)
 
     for i=start:signal_length
 
-        #Calculate theshold comparator
         p=detect(sort,i)
         
         #continue collecting spike information if there was a recent spike

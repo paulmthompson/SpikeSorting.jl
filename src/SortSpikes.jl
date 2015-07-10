@@ -83,11 +83,7 @@ function onlinesort{S<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,
  
     detectspikes(sort)
 
-    #convert to absolute time stamps with the timeends variable
-
     #move stuff around if there were mergers of clusters (I guess? maybe do all of that at the end)
-
-    #write to output  
     
     return sort
     

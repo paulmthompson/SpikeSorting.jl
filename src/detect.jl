@@ -201,7 +201,7 @@ end
 function detect{S<:DetectMCWC,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
 
     p=0.0
-
+    
     #calculate wavelet coefficients
     if i<=bigJ
         sort.s.Tx[:]=coiflets_scaled*[sort.sigend[(end-bigJ+i+1):end];sort.rawSignal[1:i]]    
@@ -218,12 +218,11 @@ function detect{S<:DetectMCWC,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,
         sort.s.rs[j] = sort.s.Tx[j]*sort.s.Tx[j+1]
     end
 
-    #Find highest ratio
-    tempp=0.0
+    #Exit if above 1.0
     for j=1:10
-        tempp=abs(sort.s.rs[j]/sort.s.Tx[j])
-        if tempp>p
-            p=tempp
+        if abs(sort.s.Tx[j]) < abs(sort.s.rs[j])
+            p=2.0
+            break
         end
     end
 

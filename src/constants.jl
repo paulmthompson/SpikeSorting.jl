@@ -56,6 +56,16 @@ const coiflets_five=[0.00021208083980379827
 2.0637618513646814e-06
 1.6744288576823017e-07
 -9.517657273819165e-08
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
 ];
 
 #=
@@ -68,7 +78,20 @@ const bigJ=20
 
 const wave_a=collect(0.5:.1:1.5);
 
-const coiflets_scaled=Float64[coiflets_five[i]*wave_a[j] for j=1:11,i=1:bigJ]
+#This is REAL ugly, and edges aren't very good. Also code isn't very Julianu
+
+const coiflets_scaled=zeros(Float64,length(wave_a),bigJ)
+
+coif_intp=interpolate(coiflets_five,BSpline(Quadratic(Line)),OnCell)
+interpvec=collect(1:.1:40)
+coif_up=Float64[coif_intp[i] for i in interpvec]
+
+for i=1:length(wave_a)
+    t=collect(1:bigJ)./wave_a[i]
+    for j=1:bigJ
+        coiflets_scaled[i,j]=coif_up[indmin(abs(interpvec-t[j]))]       
+    end
+end
 
 const onesquarea=Float64[1/sqrt(wave_a[i]) for i=1:11]
 

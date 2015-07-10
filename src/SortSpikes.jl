@@ -1,7 +1,7 @@
 module SortSpikes
 
 #using Winston, Gtk.ShortNames,
-using OnlineStats
+using OnlineStats, Interpolations
 
 abstract Detect
 abstract Align

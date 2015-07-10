@@ -218,9 +218,10 @@ function detect{S<:DetectMCWC,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,
         sort.s.rs[j] = sort.s.Tx[j]*sort.s.Tx[j+1]
     end
 
-    #Exit if above 1.0
+    #Since I'm using a rolling window, I do this a little differently
+    #maybe pre calculate the power to normalize?
     for j=1:10
-        if abs(sort.s.Tx[j]) < abs(sort.s.rs[j])
+        if sort.s.Tx[j]^2 < abs(sort.s.rs[j])
             p=2.0
             break
         end

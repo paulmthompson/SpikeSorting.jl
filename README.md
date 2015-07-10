@@ -15,6 +15,7 @@ In addition, we are trying to put many existing online algorithms, or potential 
 * Winston - https://github.com/nolta/Winston.jl
 * Gtk - https://github.com/JuliaLang/Gtk.jl
 * OnlineStats - https://github.com/joshday/OnlineStats.jl
+* Interpolations - https://github.com/tlycken/Interpolations.jl
 
 # Current Functionality and TODO
 

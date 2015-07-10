@@ -25,6 +25,7 @@ In addition, we are trying to put many existing online algorithms, or potential 
 - [x] templates from rawsignal waveforms
 - [x] thresholds for raw signal detection
 - [x] threshold for NEO
+- [ ] power normalization for MCWC
 - [ ] Need to add a periodic "recalibration" where the thresholds are recalculated (probably at the end of each analysis block).
 
 ## Detection
@@ -53,6 +54,7 @@ In addition, we are trying to put many existing online algorithms, or potential 
 ## Feature Extraction:
 - [x] PCA
 - [ ] Wavelet packet decomposition (Hulata et al 2002)
+- [ ] Classification algorithm based on frequency domain features (Yang et al 2013)
 
 ## Clustering:
 

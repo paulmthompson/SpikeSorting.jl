@@ -42,7 +42,6 @@ In addition, we are trying to put many existing online algorithms, or potential 
 - [ ] alignment accounting for shape (as in OSort)
 - [x] Upsampling via fft 
 - [ ] upsampling via cubic splines
-- [ ] Option to assign to "noise cluster" rather than spikes
 - [ ] center of mass (as in Sahani 1999 dissertation)
 
 ## Overlap

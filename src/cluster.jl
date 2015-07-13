@@ -307,21 +307,21 @@ function cobweb(N::node, x::Array{Float64,1})
         
         bestoverallind=0
         bestoverall=0.0
+        
         #add I to each child and get CUs
-        S1=zeros(Float64,length(N.c))
         best1=0.0
         best1ind=0
         best2=0.0
         best2ind=0
         for i=1:length(N.c)
             stdmat=updatestdchild(N,x,i)
-            S1[i]=cob_incorp(N,i,stdmat)
-            if S1[i]>best2
-                if S[i]>best1
-                    best1=S[i]
+            S1=cob_incorp(N,i,stdmat)
+            if S1>best2
+                if S1>best1
+                    best1=S1
                     best1ind=i
                 else
-                    best2=S[i]
+                    best2=S1
                     best2ind=i
                 end
             end            

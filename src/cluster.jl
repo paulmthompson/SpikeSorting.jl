@@ -113,6 +113,97 @@ function findmerge!(sort::Sorting)
 end
 
 #=
+CLASSIT
+=#
+
+type attribute
+    S::Float64
+    SS::Float64
+end
+
+type node
+    n::Int64 #count
+    a::Array{attribute,1} #attributes
+    
+    c::Array{node,1} #children
+    p::node #parent 
+end
+
+function runningstd(N::node,x::Array{Float64,1}) #change to sum of squares
+
+    for i=1:length(N.a)
+        std=sqrt((1/(n-1))*(SS-(S^2/n)))
+
+        if std<acuity
+            std=acuity
+        end
+    end    
+end
+
+function getstdchild(N::node,x::Array{Float64,1},ind::Int64)
+
+    stdmat=zeros(Float64,length(N.a))
+    
+    for i=1:length(N.a)
+        M_new=N.a[i].M_old+(x[i]-N.c[ind].a[i].M_old)/N.c[ind].n
+        S_new=N.a[i].S_new+(x[i]-N.c.[ind].a[i].M_old)*(x[i]-M_new)
+        stdmat[i]=sqrt(S_new/(N.c[ind].n-1))
+
+        if stdmat[i]<acuity
+            stdmat[i]=acuity
+        end
+    end
+  
+end
+
+
+function cobweb(N::node, x::Array{Float64,1})
+    if length(N.c)==0 #If leaf
+        if
+        end
+    else
+
+        #add I to each child and get CUs
+        S=zeros(Float64,length(N.c))
+        for i=1:length(N.c)
+            getstdchild(N,x,i)
+            
+        end
+        
+        #add I as new singleton child and get CU
+        for i=1:(length(N.c)+1)
+            getstdchild(N,
+        
+
+        #merge best and second best CUs from 1 and add I to merged result
+
+        #promote children of best child to be children of P, and add instance
+
+        if
+        end
+        
+    end
+end
+
+function calcCU(probs::Array{Float64,1},stdmat::Array{Float64,2},numclasses::Int64)
+
+    CU=0.0
+
+    for i=1:numclasses
+    
+        CU += probs[i]*sum(1/stdmat[:,i])
+    end
+    
+    CU=CU/numclasses
+    
+end
+    
+
+#=
+ECOWEB
+=#
+
+#=
 Manual Detection - Window Discriminators
 =#
 

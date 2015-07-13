@@ -59,7 +59,7 @@ In addition, we are trying to put many existing online algorithms, or potential 
 
 ### Connectivity Models
 - [ ] BIRCH
-- [ ] COBWEB
+- [ ] CLASSIT
 
 ### Centroid Models
 - [ ] Hierachical Adaptive Means (Paraskevopoulou et al 2014)

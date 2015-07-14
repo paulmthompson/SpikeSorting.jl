@@ -95,3 +95,10 @@ end
 
 const onesquarea=Float64[1/sqrt(wave_a[i]) for i=1:11]
 
+#=
+CLASSIT clustering algorithm
+=#
+
+const acuity=1.0 / sqrt(2.0 * pi) #Probably adjust this based on variance
+
+const cob_cutoff=0.2

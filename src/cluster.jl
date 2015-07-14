@@ -132,39 +132,48 @@ end
 
 function node(x::Array{Float64,1})
     
-    a=Array(attribute,length(x))
+    a=[attribute(x[i],x[i]^2,acuity) for i=1:length(x)]
     instdsum=0.0
     for i=1:length(x)
-        a[i].S=x[i]
-        a[i].SS=x[i]^2
-        a[i].std=acuity
         instdsum+=1/a[i].std
     end
 
-    node(1,a,instdsum,Array(node,0),false)
-    
+    node(1,a,instdsum,Array(node,0),false) 
 end
 
 function node(N1::node,N2::node)
     a=Array(attribute,length(N1.a))
     instdsum=0.0
     prior=N1.n+N2.n
-    for j=1:length(N1.a)
-        a[j].SS=N1.a[j].SS+N2.a[j].SS
-        a[j].S=N1.a[j].S+N2.a[j].S    
+    a=[attribute(N1.a[i].S+N2.a[i].S,N1.a[i].SS+N2.a[i].SS,0.0) for i=1:length(N1.a)]
+    for j=1:length(N1.a)  
         a[j].std=sqrt((1/(prior))*((a[j].SS+x[j]^2)-((a[j].S+x[j])^2/(prior+1))))
         if a[j].std<acuity
             a[j].std=acuity
         end
-
         instdsum+=1/a[j].std
     end
-
-    node(prior,a,instdsum,[N1;N2],false)
-    
+    node(prior,a,instdsum,[N1;N2],false)    
 end
 
-function updatestd(N::node,x::Array{Float64,1},ind::Int64) #change to sum of squares
+type ClusterClassit <: Cluster
+    clustree::node
+end
+
+function ClusterClassit()
+    ClusterClassit(node(zeros(Float64,3)))
+end
+
+function ClusterClassit(N::Int64)
+    ClusterClassit(node(zeros(Float64,N)))
+end
+
+function cluster{S,C<:ClusterClassit,A,F}(sort::Sorting{S,C,A,F})
+    x=sort.features[:]
+    cobweb(sort.c.clustree,x)
+end
+
+function updatestd(N::node,x::Array{Float64,1},ind::Int64)
 
     stdmat=0.0
     
@@ -187,8 +196,9 @@ function parentstd(N::node,x::Array{Float64,1})
     N.instdsum=0.0
     
     for j=1:length(N.a)
-        
-        N.a[j].std=sqrt((1/(N.n-1))*((N.a[j].SS+x[j]^2)-((N.a[j].S+x[j])^2/(N.n))))
+        N.a[j].S=N.a[j].S+x[j]
+        N.a[j].SS=N.a[j].SS+x[j]^2
+        N.a[j].std=sqrt((1/(N.n-1))*((N.a[j].SS)-((N.a[j].S)^2/(N.n))))
         if N.a[j].std<acuity
             N.a[j].std=acuity
         end
@@ -203,27 +213,27 @@ function cob_incorp(N::node,ind::Int64,stdmat::Float64)
     
     CU=0.0
 
-    for i=1:numclasses
+    for i=1:length(N.c)
         if i==ind
             CU += (N.c[i].n+1)/N.n*stdmat
         else
-            CU += (N.c[i].n+1)/N.n*N.c[i].instdsum
+            CU += (N.c[i].n)/N.n*N.c[i].instdsum
         end
     end
     
-    CU=CU/numclasses
+    CU=CU/length(N.c)
 end
 
 function cob_create(N::node)
     CU=0.0
 
-    for i=1:numclasses
-        CU += (N.c[i].n+1)/N.n*N.c[i].instdsum       
+    for i=1:length(N.c)
+        CU += (N.c[i].n/N.n)*N.c[i].instdsum       
     end
 
     CU += 1/N.n*sum([1/acuity for i=1:length(N.a)])
     
-    CU=CU/(numclasses+1)
+    CU=CU/(length(N.c)+1)
 end
 
 function cob_merge(N::node,best1ind::Int64,best2ind::Int64,x::Array{Float64,1})
@@ -231,45 +241,45 @@ function cob_merge(N::node,best1ind::Int64,best2ind::Int64,x::Array{Float64,1})
     CU=0.0
     count=0
 
-    for i=1:numclasses
+    for i=1:length(N.c)
            if (i==best1ind | i==best2ind) & count==0
-           stdmat=0.0
-           for j=1:length(N.a)
-                SS=N.c[best1ind].a[j].SS+N.c[best2ind].a[j].SS
-                S=N.c[best1ind].a[j].S+N.c[best2ind].a[j].S
-        
-                std=sqrt((1/(N.c[ind].n))*((SS+x[j]^2)-((S+x[j])^2/(N.c[ind].n+1))))
-                if std<acuity
-                    std=acuity
-                end
+               stdmat=0.0
+               prior=N.c[best1ind].n+N.c[best2ind].n
+               for j=1:length(N.a)
+                   SS=N.c[best1ind].a[j].SS+N.c[best2ind].a[j].SS
+                   S=N.c[best1ind].a[j].S+N.c[best2ind].a[j].S   
+                   std=sqrt((1/(prior))*((SS+x[j]^2)-((S+x[j])^2/(prior+1))))
+                   if std<acuity
+                       std=acuity
+                   end
 
-                stdmat+=1/std
-           end
-               CU += (N.c[best1ind].n+1+N.c[best2ind].n)/N.n*stdmat
+                   stdmat+=1/std
+               end
+               CU += (prior+1)/N.n*stdmat
                count=1
            else
-            CU += (N.c[i].n+1)/N.n*N.c[i].instdsum
+            CU += (N.c[i].n)/N.n*N.c[i].instdsum
            end
     end
     
-    CU=CU/(numclasses-1)
+    CU=CU/(length(N.c)-1)
     
 end
 
 function cob_split(N::node,best1ind::Int64)
     CU=0.0
 
-    for i=1:numclasses
+    for i=1:length(N.c)
         if i==best1ind
             for j=1:length(N.c[i].c)
-                CU += (N.c[i].c[j].n+1)/N.n*N.c[i].c[j].instdsum
+                CU += (N.c[i].c[j].n)/N.n*N.c[i].c[j].instdsum
             end
         else
-            CU += (N.c[i].n+1)/N.n*N.c[i].instdsum
+            CU += (N.c[i].n)/N.n*N.c[i].instdsum
         end
     end
     
-    CU=CU/(numclasses+length(N.c[best1ind].c))
+    CU=CU/(length(N.c)+length(N.c[best1ind].c))
 end
            
 function cobweb(N::node, x::Array{Float64,1})
@@ -279,7 +289,7 @@ function cobweb(N::node, x::Array{Float64,1})
         CU=0.0
         instdsum=0.0
         for i=1:length(N.a)
-            std=sqrt((1/(N.n))*((N.a[j].SS+x[j]^2)-((N.a[j].S+x[j])^2/(N.n+1))))
+            std=sqrt((1/(N.n))*((N.a[i].SS+x[i]^2)-((N.a[i].S+x[i])^2/(N.n+1))))
             if std<acuity
                 std=acuity
             end
@@ -289,6 +299,7 @@ function cobweb(N::node, x::Array{Float64,1})
         CU=(1/N.n*1/acuity+N.n/(N.n+1)*N.instdsum - instdsum)/2
 
         if CU<cob_cutoff
+            
         else
             N.proc=false
             newnode1=node(x)
@@ -314,7 +325,7 @@ function cobweb(N::node, x::Array{Float64,1})
         best2=0.0
         best2ind=0
         for i=1:length(N.c)
-            stdmat=updatestdchild(N,x,i)
+            stdmat=updatestd(N,x,i)
             S1=cob_incorp(N,i,stdmat)
             if S1>best2
                 if S1>best1
@@ -349,19 +360,19 @@ function cobweb(N::node, x::Array{Float64,1})
         if length(N.c[best1ind].c)>0
             S4=cob_split(N,best1ind)
             if S4>bestoverall
-                bestoverallind=3
+                bestoverallind=4
                 bestoverall=S4
             end
         end
               
-        if bestoverall==1
+        if bestoverallind==1
             N.proc=false
             cobweb(N.c[best1ind],x) #go down tree at best index
-        elseif bestoverall==2
+        elseif bestoverallind==2
             N.proc=false
             newnode=node(x)
             push!(N.c,newnode)       
-        elseif bestoverall==3
+        elseif bestoverallind==3
             newnode=node(N.c[best1ind],N.c[best2ind])
             deleteat!(N.c,best1ind)
             if best1ind>best2ind
@@ -372,7 +383,7 @@ function cobweb(N::node, x::Array{Float64,1})
             push!(N.c,newnode)
             N.c[end].proc=true
             cobweb(N.c[end],x)
-        elseif bestoverall==4
+        elseif bestoverallind==4
             append!(N.c,N.c[best1ind].c)
             deleteat!(N.c,best1ind)
             N.proc=true

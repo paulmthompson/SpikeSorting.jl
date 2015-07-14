@@ -11,7 +11,7 @@ A method may also need a "prepare" function to use in its first iteration if the
 
 export DetectPower, DetectSignal, DetectNEO, DetectMCWC
 
-function prepare{S,C,A,F}(sort::Sorting{S,C,A,F})
+function prepare{D,C,A,F}(sort::Sorting{D,C,A,F})
 end
 
 #=
@@ -29,23 +29,23 @@ function DetectPower()
     DetectPower(0,0,0)
 end
 
-function detect{S<:DetectPower,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
+function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F}, i::Int64)
     
-    sort.s.a += sort.rawSignal[i] - sort.s.c
-    sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2   
+    sort.d.a += sort.rawSignal[i] - sort.d.c
+    sort.d.b += sort.rawSignal[i]^2 - sort.d.c^2   
 
     if i>=power_win
-        sort.s.c=sort.rawSignal[i-power_win0]
+        sort.d.c=sort.rawSignal[i-power_win0]
     else
-        sort.s.c=sort.sigend[i+sigend_length-power_win0]
+        sort.d.c=sort.sigend[i+sigend_length-power_win0]
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-    sqrt((sort.s.b - (sort.s.a^2/power_win))/power_win)
+    sqrt((sort.d.b - (sort.d.a^2/power_win))/power_win)
     
 end
 
-function threshold{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F})
+function threshold{D<:DetectPower,C,A,F}(sort::Sorting{D,C,A,F})
     
     p=Array(Float64,signal_length-power_win)
     a = 0
@@ -72,22 +72,22 @@ function threshold{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F})
 
 end
 
-function prepare{S<:DetectPower,C,A,F}(sort::Sorting{S,C,A,F})
+function prepare{D<:DetectPower,C,A,F}(sort::Sorting{D,C,A,F})
     
-    sort.s.a=0
-    sort.s.b=0
+    sort.d.a=0
+    sort.d.b=0
     
     for i=1:power_win
-        sort.s.a += sort.rawSignal[i]
-        sort.s.b += sort.rawSignal[i]^2
+        sort.d.a += sort.rawSignal[i]
+        sort.d.b += sort.rawSignal[i]^2
     end
 
-    sort.s.c=sort.rawSignal[1]
+    sort.d.c=sort.rawSignal[1]
 
     for i=power_win1:sigend_length
-        sort.s.a += sort.rawSignal[i] - sort.s.c
-        sort.s.b += sort.rawSignal[i]^2 - sort.s.c^2
-        sort.s.c = sort.rawSignal[i-power_win+1]
+        sort.d.a += sort.rawSignal[i] - sort.d.c
+        sort.d.b += sort.rawSignal[i]^2 - sort.d.c^2
+        sort.d.c = sort.rawSignal[i-power_win+1]
     end
 
     nothing
@@ -103,13 +103,13 @@ Quiroga et al 2004
 type DetectSignal <: Detect
 end
 
-function detect{S<:DetectSignal,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
+function detect{D<:DetectSignal,C,A,F}(sort::Sorting{D,C,A,F},i::Int64)
 
     abs(sort.rawSignal[i])
     
 end
 
-function threshold{S<:DetectSignal,C,A,F}(sort::Sorting{S,C,A,F})
+function threshold{D<:DetectSignal,C,A,F}(sort::Sorting{D,C,A,F})
 
     sort.thres=median(abs(sort.rawSignal))/.6745
 
@@ -126,7 +126,7 @@ Choi et al 2006
 type DetectNEO <: Detect
 end
 
-function detect{S<:DetectNEO,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
+function detect{D<:DetectNEO,C,A,F}(sort::Sorting{D,C,A,F},i::Int64)
 
     if i==length(sort.rawSignal)
         #Will do spike detection next iteration due to edging
@@ -151,7 +151,7 @@ function detect{S<:DetectNEO,C,A,F}(sort::Sorting{S,C,A,F},i::Int64)
     
 end
 
-function threshold{S<:DetectNEO,C,A,F}(sort::Sorting{S,C,A,F})
+function threshold{D<:DetectNEO,C,A,F}(sort::Sorting{D,C,A,F})
 
     psi=zeros(Int64,signal_length-1)
     
@@ -198,44 +198,44 @@ function DetectMCWC()
     DetectMCWC(zeros(Float64,11),zeros(Float64,10))
 end
 
-function detect{S<:DetectMCWC,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F}, i::Int64)
+function detect{D<:DetectMCWC,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F}, i::Int64)
 
     p=0.0
     
     #calculate wavelet coefficients
     if i<=bigJ
-        sort.s.Tx[:]=coiflets_scaled*[sort.sigend[(end-bigJ+i+1):end];sort.rawSignal[1:i]]    
+        sort.d.Tx[:]=coiflets_scaled*[sort.sigend[(end-bigJ+i+1):end];sort.rawSignal[1:i]]    
     else        
-        sort.s.Tx[:]=coiflets_scaled*sort.rawSignal[(i-bigJ+1):i]
+        sort.d.Tx[:]=coiflets_scaled*sort.rawSignal[(i-bigJ+1):i]
     end
     
     for j=1:11
-        sort.s.Tx[j] *= onesquarea[j]
+        sort.d.Tx[j] *= onesquarea[j]
     end
    
     #Correlation of wavelet coefficients
     for j=1:10
-        sort.s.rs[j] = sort.s.Tx[j]*sort.s.Tx[j+1]
+        sort.d.rs[j] = sort.d.Tx[j]*sort.d.Tx[j+1]
     end
 
     #Since I'm using a rolling window, I do this a little differently
     #maybe pre calculate the power to normalize?
     for j=1:10
-        if sort.s.Tx[j]^2 < abs(sort.s.rs[j])
+        if sort.d.Tx[j]^2 < abs(sort.d.rs[j])
             p=2.0
             break
         end
     end
 
     for j=1:11
-        sort.s.Tx[j]=0.0
+        sort.d.Tx[j]=0.0
     end
         
     p
     
 end
 
-function threshold{S<:DetectMCWC,C,A,F}(sort::Sorting{S,C,A,F})
+function threshold{D<:DetectMCWC,C,A,F}(sort::Sorting{D,C,A,F})
     sort.thres=1.0
     nothing
 end

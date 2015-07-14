@@ -30,7 +30,7 @@ function ClusterOSort(n::Int64)
     ClusterOSort(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
 end
 
-function cluster{S,C<:ClusterOSort,A,F}(sort::Sorting{S,C,A,F})
+function cluster{D,C<:ClusterOSort,A,F}(sort::Sorting{D,C,A,F})
    
     x=getdist(sort)
     
@@ -168,7 +168,7 @@ function ClusterClassit(N::Int64)
     ClusterClassit(node(zeros(Float64,N)))
 end
 
-function cluster{S,C<:ClusterClassit,A,F}(sort::Sorting{S,C,A,F})
+function cluster{D,C<:ClusterClassit,A,F}(sort::Sorting{D,C,A,F})
     x=sort.features[:]
     cobweb(sort.c.clustree,x)
 end
@@ -409,7 +409,7 @@ function ClusterManual()
     ClusterOSort(zeros(Float64,5),0,zeros(Float64,4,5))  
 end
 
-function cluster{S,C<:ClusterManual,A,F}(sort::Sorting{S,C,A,F})
+function cluster{D,C<:ClusterManual,A,F}(sort::Sorting{D,C,A,F})
 
     for i=1:sort.numClusters
         

@@ -15,7 +15,7 @@ type AlignMax <: Align
 
 end
 
-function align{S,C,A<:AlignMax,F}(sort::Sorting{S,C,A,F})
+function align{D,C,A<:AlignMax,F}(sort::Sorting{D,C,A,F})
     j=indmax(sort.p_temp[align_range])+window_half
     sort.waveforms[:,sort.numSpikes]=convert(Array{Float64,1},sort.p_temp[j-window_half:j+window_half-1])
     nothing
@@ -45,7 +45,7 @@ function AlignFFT(M::Int64)
     
 end
 
-function align{S,C,A<:AlignFFT,F}(sort::Sorting{S,C,A,F})
+function align{D,C,A<:AlignFFT,F}(sort::Sorting{D,C,A,F})
     
     sort.a.fout[:]=fft(sort.p_temp)
     
@@ -78,7 +78,7 @@ type AlignOsort <: Align
 
 end
 
-function align{S,C,A<:AlignOsort,F}(sort::Sorting{S,C,A,F})
+function align{D,C,A<:AlignOsort,F}(sort::Sorting{D,C,A,F})
 
 end
 

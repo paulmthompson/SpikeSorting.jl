@@ -1,6 +1,6 @@
 module SortSpikes
 
-#using Winston, Gtk.ShortNames,
+#using Winston, Gtk.ShortNames
 using OnlineStats, Interpolations
 
 abstract Detect
@@ -8,8 +8,8 @@ abstract Align
 abstract Cluster
 abstract Feature
 
-type Sorting{S<:Detect,C<:Cluster,A<:Align,F<:Feature}
-    s::S
+type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature}
+    d::D
     c::C
     a::A
     f::F
@@ -33,7 +33,7 @@ include("cluster.jl")
 
 #include("gui.jl")           
 
-function Sorting(s::Detect,c::Cluster,a::Align,f::Feature)
+function Sorting(d::Detect,c::Cluster,a::Align,f::Feature)
 
     #determine size of alignment output
     wavelength=mysize(a)
@@ -43,7 +43,7 @@ function Sorting(s::Detect,c::Cluster,a::Align,f::Feature)
 
     c=typeof(c)(featurelength)
       
-    Sorting(s,c,a,f,
+    Sorting(d,c,a,f,
             zeros(Int64,signal_length),zeros(Int64,window+window_half),0,
             zeros(Int64,window*2),2,zeros(Float64,featurelength),1.0,
             zeros(Int64,100),zeros(Int64,100),zeros(Float64,wavelength,100))   
@@ -51,13 +51,13 @@ end
     
 export Sorting, onlinecal, onlinesort
 
-function onlinecal(sort::Sorting)
+function onlinecal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
     
     prepare(sort)
     threshold(sort)
     sort.c.Tsm=50*var(sort.rawSignal)
     sort.sigend[:]=sort.rawSignal[1:75]
-    detectspikes(sort,76)
+    main(sort,76)
     
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
     #might want to change this later
@@ -79,9 +79,9 @@ function onlinecal(sort::Sorting)
     return sort
 end
 
-function onlinesort{S<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F})
+function onlinesort{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
  
-    detectspikes(sort)
+    main(sort)
 
     #move stuff around if there were mergers of clusters (I guess? maybe do all of that at the end)
     
@@ -96,7 +96,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function detectspikes{S<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{S,C,A,F},start=1)
+function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F},start=1)
 
     for i=start:signal_length
 

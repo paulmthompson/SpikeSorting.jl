@@ -111,7 +111,7 @@ end
 
 function threshold{D<:DetectSignal,C,A,F}(sort::Sorting{D,C,A,F})
 
-    sort.thres=median(abs(sort.rawSignal))/.6745
+    sort.thres=4*median(abs(sort.rawSignal)/.6745)
 
     nothing
     

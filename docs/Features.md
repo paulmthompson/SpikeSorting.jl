@@ -64,13 +64,19 @@ Refs:
 
 Chah, E. and Hok, V. and Della-Chiesa, A. and Miller, J J H. and O'Mara, S. M. and Reilly, R. B. Automated spike sorting algorithm based on Laplacian eigenmaps and k-means clustering. 2011.
 
-## PCA
+## Principle Components Analysis
 
 Refs:
 
 Adamos, Dimitrios A and Kosmidis, Efstratios K and Theophilidis, George. Performance evaluation of PCA-based spike sorting algorithms. 2008.
 
 Jung, Hae Kyung and Choi, Joon Hwan and Kim, Taejeong. Solving alignment problems in neural spike sorting using frequency domain PCA. 2006.
+
+## Projection pursuit method based on negentropy maximization
+
+Refs:
+
+Kim, Kyung Hwan and Kim, Sung June. Method for unsupervised classification of multiunit neural signal recording under low signal-to-noise ratio. 2003.
 
 ## SVD
 

@@ -12,7 +12,7 @@ Horton, P. M. and Nicol, A. U. and Kendrick, K. M. and Feng, J. F. Spike sorting
 
 Refs:
 
-
+Zamani, Majid and Demosthenous, Andreas. Feature extraction using extrema sampling of discrete derivatives for spike sorting in implantable upper-limb neural prostheses. 2014.
 
 ## Discrete Derivatives - Feature extraction using first and second derivative extrema (FSDE)
 

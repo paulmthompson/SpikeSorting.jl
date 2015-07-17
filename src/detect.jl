@@ -184,6 +184,12 @@ Song et al 2006
 =#
 
 #=
+Smoothed Nonlinear Energy Operator
+
+Azami et al 2014
+=#
+
+#=
 Multiscale Correlation of Wavelet Coefficients
 
 Yang et al 2011
@@ -239,3 +245,9 @@ function threshold{D<:DetectMCWC,C,A,F}(sort::Sorting{D,C,A,F})
     sort.thres=1.0
     nothing
 end
+
+#=
+
+=#
+
+

@@ -6,12 +6,12 @@ Detection methods. Each method needs
 3) function "threshold" to operate on sort with type field defined above
 4) any other necessary functions for detection algorithm
 
-A method may also need a "prepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
+A method may also need a "detectprepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
 
 export DetectPower, DetectSignal, DetectNEO, DetectMCWC
 
-function prepare{D,C,A,F}(sort::Sorting{D,C,A,F})
+function detectprepare{D,C,A,F}(sort::Sorting{D,C,A,F})
 end
 
 #=
@@ -72,7 +72,7 @@ function threshold{D<:DetectPower,C,A,F}(sort::Sorting{D,C,A,F})
 
 end
 
-function prepare{D<:DetectPower,C,A,F}(sort::Sorting{D,C,A,F})
+function detectprepare{D<:DetectPower,C,A,F}(sort::Sorting{D,C,A,F})
     
     sort.d.a=0
     sort.d.b=0

@@ -9,6 +9,10 @@ Feature extraction methods. Each method needs
 
 export FeatureTime, FeaturePCA
 
+function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
+    nothing
+end
+
 #=
 Temporal Waveform
 =#

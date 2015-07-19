@@ -9,6 +9,9 @@ Clustering methods. Each method needs
 
 export ClusterOSort, ClusterManual
 
+function clusterprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})   
+end
+
 #=
 OSort
 
@@ -111,6 +114,12 @@ function findmerge!(sort::Sorting)
     [skip,merger]
     
 end
+
+function clusterprepare{D<:Detect,C<:ClusterOSort,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
+    sort.c.Tsm=50*var(sort.rawSignal)
+    nothing
+end
+
 
 #=
 CLASSIT

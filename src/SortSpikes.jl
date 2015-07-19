@@ -49,18 +49,29 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature)
             zeros(Int64,100),zeros(Int64,100),zeros(Float64,wavelength,100))   
 end
     
-export Sorting, onlinecal, onlinesort
+export Sorting, firstrun, onlinecal, onlinesort
+
+function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
+    
+    #detection initialization
+    detectprepare(sort)
+    threshold(sort)
+
+    #
+    
+    sort.sigend[:]=sort.rawSignal[1:75]
+
+    maincal(sort,76)
+    
+end
 
 function onlinecal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
     
-    prepare(sort)
-    threshold(sort)
-    sort.c.Tsm=50*var(sort.rawSignal)
-    sort.sigend[:]=sort.rawSignal[1:75]
-    main(sort,76)
+    maincal(sort)
     
     #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
     #might want to change this later
+    #=
     if sort.c.numClusters>1
         for j=2:sort.c.numClusters
             sort.c.clusters[:,j-1]=sort.c.clusters[:,j]
@@ -75,18 +86,13 @@ function onlinecal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A
     sort.electrode=zeros(size(sort.electrode))
     sort.neuronnum=zeros(size(sort.electrode))
     sort.numSpikes=2
-
+    =#
     return sort
 end
 
 function onlinesort{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
- 
-    main(sort)
-
-    #move stuff around if there were mergers of clusters (I guess? maybe do all of that at the end)
-    
-    return sort
-    
+    main(sort)    
+    return sort  
 end
 
 function offlinesort()
@@ -96,9 +102,9 @@ end
 Main processing loop for length of raw signal
 =#
 
-function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F},start=1)
+function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
 
-    for i=start:signal_length
+    for i=1:signal_length
 
         p=detect(sort,i)
         
@@ -146,5 +152,49 @@ function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F},s
     
 end
 
+#=
+Main calibration loop
+=#
+
+function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F},start=1)
+
+    for i=start:signal_length
+
+        p=detect(sort,i)
+        
+        #continue collecting spike information if there was a recent spike
+        if sort.index>0
+            
+            sort.p_temp[sort.index]=sort.rawSignal[i]
+            sort.index+=1
+
+            #If end of spike window is reached, continue spike detection
+            if sort.index==101
+
+                align(sort))
+                
+                featureprepare(sort)
+                           
+            end
+
+        elseif p>sort.thres
+            
+            if i<=window
+                sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
+                sort.p_temp[(window-i):window]=sort.rawSignal[1:i-1]  
+            else
+                sort.p_temp[1:window]=sort.rawSignal[i-window:i-1]
+            end
+
+            sort.p_temp[window+1]=sort.rawSignal[i]
+            sort.index=window+2
+        end
+    end
+                   
+    sort.sigend[:]=sort.rawSignal[(end-sigend_length+1):end]
+
+    nothing
+    
+end
 
 end

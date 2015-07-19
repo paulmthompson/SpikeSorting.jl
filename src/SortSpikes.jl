@@ -56,12 +56,12 @@ function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,
     #detection initialization
     detectprepare(sort)
     threshold(sort)
-
-    #
     
     sort.sigend[:]=sort.rawSignal[1:75]
 
     maincal(sort,76)
+
+    return sort
     
 end
 
@@ -171,9 +171,11 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F
             #If end of spike window is reached, continue spike detection
             if sort.index==101
 
-                align(sort))
+                align(sort)
                 
                 featureprepare(sort)
+
+                sort.index=0
                            
             end
 

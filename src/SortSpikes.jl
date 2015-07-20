@@ -41,6 +41,7 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature)
     #determine feature size
     featurelength=mysize(f,wavelength)
 
+    f=typeof(f)(wavelength)
     c=typeof(c)(featurelength)
       
     Sorting(d,c,a,f,

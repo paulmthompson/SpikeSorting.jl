@@ -102,3 +102,9 @@ CLASSIT clustering algorithm
 const acuity=1.0 / sqrt(2.0 * pi) #Probably adjust this based on variance
 
 const cob_cutoff=0.2
+
+#=
+Discrete Derivatives - Maximum Difference Test
+=#
+
+const DD_inds=[1; 3; 7]

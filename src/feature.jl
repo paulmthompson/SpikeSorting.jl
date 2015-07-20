@@ -7,7 +7,7 @@ Feature extraction methods. Each method needs
 
 =#
 
-export FeatureTime, FeaturePCA, FeatureIT
+export FeatureTime, FeaturePCA, FeatureIT, FeatureDDMDT
 
 function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
     nothing
@@ -18,6 +18,10 @@ Temporal Waveform
 =#
 
 type FeatureTime <: Feature 
+end
+
+function FeatureTime(N::Int64)
+    FeatureTime()
 end
 
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureTime}(sort::Sorting{D,C,A,F})
@@ -39,6 +43,10 @@ end
 
 function FeaturePCA()
     FeaturePCA(OnlineStats.OnlinePCA(window,4))
+end
+
+function FeaturePCA(N::Int64)
+    FeaturePCA(OnlineStats.OnlinePCA(N,4))
 end
 
 function FeaturePCA(win::Int64,dims::Int64)
@@ -87,6 +95,10 @@ type FeatureIT <: Feature
 end
 
 function FeatureIT()
+    FeatureIT(0,0,0.0,0,0,0)
+end
+
+function FeatureIT(N::Int64)
     FeatureIT(0,0,0.0,0,0,0)
 end
 
@@ -178,3 +190,86 @@ function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureIT}(sort::Sortin
     
 end
 
+#=
+Discrete Derivatives - Maximum Difference Test
+
+Gibson et al 2010
+=#
+
+type FeatureDDMDT <: Feature
+    maximum_difference::Array{Int64,1}
+    local_difference::Array{Float64,1}
+    spike_new::Array{Float64,1}
+    spike_old::Array{Float64,1}
+    D::Array{Int64,1}
+    Dc::Array{Int64,1}
+end
+
+function FeatureDDMDT()
+    FeatureDDMDT(zeros(Int64,10),zeros(Float64,10),zeros(Float64,10),zeros(Float64,10),zeros(Int64,10),zeros(Int64,10))
+end
+
+function FeatureDDMDT(N::Int64)
+
+    sizeN=0
+
+    for i=1:length(DD_inds)
+        sizeN+=N-DD_inds[i]
+    end
+    
+    FeatureDDMDT(zeros(Int64,sizeN),zeros(Float64,sizeN),zeros(Float64,sizeN),zeros(Float64,sizeN),zeros(Int64,10),zeros(Int64,10))
+end
+
+function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDDMDT}(sort::Sorting{D,C,A,F})
+    
+    nothing
+end
+
+function mysize(feature::FeatureDDMDT,wavelength::Int64)
+    10
+end
+
+function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDDMDT}(sort::Sorting{D,C,A,F})
+
+    counter=1
+    max3ind=zeros(Int64,3)
+    
+    for i in DD_inds
+        for j=(i+1):size(sort.waveforms,1)
+            sort.f.spike_new[counter]=sort.waveforms[j,sort.numSpikes]-sort.waveforms[j-i,sort.numSpikes]
+            sort.f.local_difference[counter]=abs(sort.f.spike_old[counter]-sort.f.spike_new[counter])
+
+            if sort.f.local_difference[counter]>max3ind[1]
+                if sort.f.local_difference[counter]>max3ind[2]
+                    if sort.f.local_difference[counter]>max3ind[3]
+                        max3ind[1]=max3ind[2]
+                        max3ind[2]=max3ind[3]
+                        max3ind[3]=counter
+                    end
+                    max3ind[1]=max3ind[2]
+                    max3ind[2]=counter
+                end
+                max3ind[1]=counter
+            end
+            
+            counter+=1
+        end
+    end
+
+    sort.f.maximum_difference[max3ind]+=1
+
+    sort.f.spike_old[:]=sort.f.spike_new[:]
+
+    #Need to fix this so there are no duplicates
+    for i=1:3
+        (mymin,myindex)=findmin(sort.f.Dc)
+        if sort.f.maximum_difference[max3ind[i]]>mymin
+            if max3ind[i]!=sort.f.D[myindex]
+                sort.f.Dc[myindex]=sort.f.maximum_difference[max3ind[i]]
+                sort.f.D[myindex]=max3ind[i]
+            end     
+        end
+    end
+  
+    nothing
+end

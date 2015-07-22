@@ -21,6 +21,7 @@ type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}
     p_temp::Array{Int64,1}
     numSpikes::Int64
     features::Array{Float64,1}
+    fullfeature::Array{Float64,1}
     dims::Array{Int64,1}
     thres::Float64
     electrode::Array{Int64,1}
@@ -43,15 +44,20 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
     wavelength=mysize(a)
 
     #determine feature size
-    featurelength=mysize(f,wavelength)
+    fulllength=mysize(f,wavelength)
 
-    f=typeof(f)(wavelength)
-    c=typeof(c)(featurelength)
-      
+    if typeof(r)==ReductionNone
+        reducedims=fulllength
+    else
+        r=typeof(r)(fulllength,r.mydims)
+        reducedims=r.mydims
+    end
+    c=typeof(c)(reducedims)
     Sorting(d,c,a,f,r,
             zeros(Int64,signal_length),zeros(Int64,window+window_half),0,
-            zeros(Int64,window*2),2,zeros(Float64,featurelength),collect(1:featurelength),1.0,
-            zeros(Int64,100),zeros(Int64,100),zeros(Float64,wavelength,100))   
+            zeros(Int64,window*2),2,zeros(Float64,reducedims),zeros(Float64,fulllength),
+            collect(1:reducedims),1.0,zeros(Int64,100),zeros(Int64,100),
+            zeros(Float64,wavelength,100))   
 end
     
 export Sorting, firstrun, onlinecal, onlinesort
@@ -177,6 +183,8 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::So
             if sort.index==101
 
                 align(sort)
+
+                feature(sort)
                 
                 reductionprepare(sort)
 

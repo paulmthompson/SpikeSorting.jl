@@ -81,6 +81,7 @@ end
 Lilliefor's Test
 =#
 type ReductionLT <: Reduction
+    
 end
 
 #=

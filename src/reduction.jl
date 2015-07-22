@@ -21,22 +21,23 @@ end
     
 #=
 Maximum Difference
+
+Gibson et al 2010
 =#
 type ReductionMD <: Reduction
     mydims::Int64
     maximum_difference::Array{Int64,1}
     local_difference::Array{Float64,1}
     spike_old::Array{Float64,1}
-    D::Array{Int64,1}
     Dc::Array{Int64,1}
 end
 
 function ReductionMD(dims::Int64)
-    ReductionMD(dims,zeros(Int64,10),zeros(Float64,10),zeros(Float64,10),zeros(Int64,dims),zeros(Int64,dims))
+    ReductionMD(dims,zeros(Int64,10),zeros(Float64,10),zeros(Float64,10),zeros(Int64,dims))
 end
 
 function ReductionMD(N::Int64,dims::Int64)    
-    ReductionMD(dims,zeros(Int64,N),zeros(Float64,N),zeros(Float64,N),zeros(Int64,dims),zeros(Int64,dims))
+    ReductionMD(dims,zeros(Int64,N),zeros(Float64,N),zeros(Float64,N),zeros(Int64,dims))
 end
 
 function reductionprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:ReductionMD}(sort::Sorting{D,C,A,F,R})
@@ -62,21 +63,18 @@ function reductionprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:ReductionM
     sort.r.maximum_difference[max3ind]+=1
     sort.r.spike_old[:]=sort.fullfeature[:]
 
-    #Need to fix this so there are no duplicates
-    for i=1:3
-        (mymin,myindex)=findmin(sort.f.Dc)
-        if sort.r.maximum_difference[max3ind[i]]>mymin
-            if max3ind[i]!=sort.r.D[myindex]
-                sort.r.Dc[myindex]=sort.r.maximum_difference[max3ind[i]]
-                sort.r.D[myindex]=max3ind[i]
-            end     
+    for i in max3ind
+        for j=1:length(sort.r.Dc)
+            if maximum_difference[max3ind[i]]>sort.r.Dc[j]
+                if max3ind[i] != sort.dims[j]                
+                    sort.dims[j]=max3ind[i]
+                end
+                sort.r.Dc[j]=maximum_difference[max3ind[i]]
+                break
+            end
         end
-    end
-
-    #sort.dims = 
-  
+    end   
     nothing
-
 end
 
 #=

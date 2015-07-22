@@ -9,7 +9,7 @@ Feature extraction methods. Each method needs
 
 export FeatureTime, FeaturePCA, FeatureIT, FeatureDDMDT
 
-function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
+function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     nothing
 end
 
@@ -24,8 +24,8 @@ function FeatureTime(N::Int64)
     FeatureTime()
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureTime}(sort::Sorting{D,C,A,F})
-    sort.features[:]=sort.waveforms[:,sort.numSpikes]
+function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureTime,R<:Reduction}(sort::Sorting{D,C,A,F,R})
+    sort.features[:]=sort.waveforms[sort.dims,sort.numSpikes]
     nothing
 end
 
@@ -53,7 +53,7 @@ function FeaturePCA(win::Int64,dims::Int64)
     FeaturePCA(OnlineStats.OnlinePCA(win,dims))
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeaturePCA}(sort::Sorting{D,C,A,F})
+function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeaturePCA,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     OnlineStats.update!(sort.f.oPCA,sort.waveforms[:,sort.numSpikes])
     sort.features[:]=sort.f.oPCA.V*sort.waveforms[:,sort.numSpikes]
     nothing
@@ -70,7 +70,7 @@ Wavelet
 type FeatureWPD <: Feature
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureWPD}(sort::Sorting{D,C,A,F})
+function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureWPD,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     #a=2^i where i = 1:L and L=log2(N) where N is signal length
 
 end
@@ -102,7 +102,8 @@ function FeatureIT(N::Int64)
     FeatureIT(0,0,0.0,0,0,0)
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureIT}(sort::Sorting{D,C,A,F})
+function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureIT,R<:Reduction}(sort::Sorting{D,C,A,F,R})
+    
     sort.features[:]=zeros(Float64,length(sort.features))
     for i=sort.f.talpha:(sort.f.talpha+sort.f.N1)
         sort.features[1]+=sort.waveforms[i,sort.numSpikes]
@@ -121,7 +122,7 @@ function mysize(feature::FeatureIT,wavelength::Int64)
     2
 end
 
-function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureIT}(sort::Sorting{D,C,A,F})
+function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureIT,R<:Reduction}(sort::Sorting{D,C,A,F,R})
 
     sort.f.wavemean=mean(sort.waveforms[:,sort.numSpikes])
     tempN1=0
@@ -220,7 +221,7 @@ function FeatureDDMDT(N::Int64)
     FeatureDDMDT(zeros(Int64,sizeN),zeros(Float64,sizeN),zeros(Float64,sizeN),zeros(Float64,sizeN),zeros(Int64,10),zeros(Int64,10))
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDDMDT}(sort::Sorting{D,C,A,F})
+function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDDMDT,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     
     nothing
 end
@@ -229,7 +230,7 @@ function mysize(feature::FeatureDDMDT,wavelength::Int64)
     10
 end
 
-function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDDMDT}(sort::Sorting{D,C,A,F})
+function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDDMDT,R<:Reduction}(sort::Sorting{D,C,A,F,R})
 
     counter=1
     max3ind=zeros(Int64,3)

@@ -7,18 +7,21 @@ abstract Detect
 abstract Align
 abstract Cluster
 abstract Feature
+abstract Reduction
 
-type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature}
+type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}
     d::D
     c::C
     a::A
     f::F
+    r::R
     rawSignal::Array{Int64,1}
     sigend::Array{Int64,1}
     index::Int64
     p_temp::Array{Int64,1}
     numSpikes::Int64
     features::Array{Float64,1}
+    dims::Array{Int64,1}
     thres::Float64
     electrode::Array{Int64,1}
     neuronnum::Array{Int64,1}
@@ -29,11 +32,12 @@ include("constants.jl")
 include("detect.jl")
 include("align.jl")
 include("feature.jl")
+include("reduction.jl")
 include("cluster.jl")
 
 #include("gui.jl")           
 
-function Sorting(d::Detect,c::Cluster,a::Align,f::Feature)
+function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
 
     #determine size of alignment output
     wavelength=mysize(a)
@@ -44,15 +48,15 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature)
     f=typeof(f)(wavelength)
     c=typeof(c)(featurelength)
       
-    Sorting(d,c,a,f,
+    Sorting(d,c,a,f,r,
             zeros(Int64,signal_length),zeros(Int64,window+window_half),0,
-            zeros(Int64,window*2),2,zeros(Float64,featurelength),1.0,
+            zeros(Int64,window*2),2,zeros(Float64,featurelength),collect(1:featurelength),1.0,
             zeros(Int64,100),zeros(Int64,100),zeros(Float64,wavelength,100))   
 end
     
 export Sorting, firstrun, onlinecal, onlinesort
 
-function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
+function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     
     #detection initialization
     detectprepare(sort)
@@ -66,7 +70,7 @@ function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,
     
 end
 
-function onlinecal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
+function onlinecal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     
     maincal(sort)
     
@@ -91,7 +95,7 @@ function onlinecal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A
     return sort
 end
 
-function onlinesort{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
+function onlinesort{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     main(sort)    
     return sort  
 end
@@ -103,7 +107,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F})
+function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
 
     for i=1:signal_length
 
@@ -157,7 +161,7 @@ end
 Main calibration loop
 =#
 
-function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F},start=1)
+function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},start=1)
 
     for i=start:signal_length
 
@@ -174,7 +178,7 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature}(sort::Sorting{D,C,A,F
 
                 align(sort)
                 
-                featureprepare(sort)
+                reductionprepare(sort)
 
                 sort.index=0
                            

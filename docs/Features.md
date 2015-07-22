@@ -8,6 +8,14 @@ Refs:
 
 Horton, P. M. and Nicol, A. U. and Kendrick, K. M. and Feng, J. F. Spike sorting based upon machine learning algorithms (SOMA). 2007.
 
+## Discrete Derivatives
+
+Refs:
+
+Gibson, Sarah and Judy, Jack W. and Markovi{\'{c}}, Dejan. Technology-aware algorithm design for neural spike detection, feature extraction, and dimensionality reduction. 2010
+
+Karkare, Vaibhav and Gibson, Sarah and Markovi{\'c}, Dejan. A 130-W, 64-channel neural spike-sorting DSP chip. 2011
+
 ## Discrete Derivatives - DD2 extrema
 
 Refs:
@@ -19,18 +27,6 @@ Zamani, Majid and Demosthenous, Andreas. Feature extraction using extrema sampli
 Refs:
 
 Paraskevopoulou, Sivylla E. and Barsakcioglu, Deren Y. and Saberi, Mohammed R. and Eftekhar, Amir and Constandinou, Timothy G. Feature extraction using first and second derivative extrema (FSDE) for real-time and hardware-efficient spike sorting. 2013.
-
-## Discrete Derivatives - Maximum Difference Test
-
-Refs:
-
-Gibson, Sarah and Judy, Jack W. and Markovi{\'{c}}, Dejan. Technology-aware algorithm design for neural spike detection, feature extraction, and dimensionality reduction. 2010
-
-## Discrete Derivatives - Uniform Sampling
-
-Refs:
-
-Karkare, Vaibhav and Gibson, Sarah and Markovi{\'c}, Dejan. A 130-W, 64-channel neural spike-sorting DSP chip. 2011
 
 ## Frequency - Raw
 
@@ -57,12 +53,6 @@ Refs:
 Gibson, S. and Judy, J. and Markovic, D. Comparison of spike sorting algorithms for future hardware implementation. 2008
 
 Zviagintsev, A. and Perelman, Y. and Ginosar, R. Algorithms and architectures for low power spike detection and alignment. 2006.
-
-## Laplacian eigenmaps
-
-Refs:
-
-Chah, E. and Hok, V. and Della-Chiesa, A. and Miller, J J H. and O'Mara, S. M. and Reilly, R. B. Automated spike sorting algorithm based on Laplacian eigenmaps and k-means clustering. 2011.
 
 ## Principle Components Analysis
 

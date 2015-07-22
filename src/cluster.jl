@@ -26,11 +26,11 @@ type ClusterOSort <: Cluster
 end
 
 function ClusterOSort()   
-    ClusterOSort(hcat(rand(Float64,50,1),zeros(Float64,50,4)),zeros(Int64,5),1,1.0)  
+    ClusterOSort(zeros(Float64,50,5),zeros(Int64,5),0,1.0)  
 end
 
 function ClusterOSort(n::Int64)
-    ClusterOSort(hcat(rand(Float64,n,1),zeros(Float64,n,4)),zeros(Int64,5),1,1.0)
+    ClusterOSort(zeros(Float64,n,5),zeros(Int64,5),0,1.0)
 end
 
 function cluster{D,C<:ClusterOSort,A,F,R}(sort::Sorting{D,C,A,F,R})
@@ -60,6 +60,7 @@ function cluster{D,C<:ClusterOSort,A,F,R}(sort::Sorting{D,C,A,F,R})
     if sort.c.numClusters>1
         merged=findmerge!(sort)
     end
+    nothing
 end
 
 function getdist(sort::Sorting)
@@ -68,15 +69,17 @@ function getdist(sort::Sorting)
     for i=1:sort.c.numClusters
         dist[i]=norm(sort.features-sort.c.clusters[:,i])
     end
-
-    ind=indmin(dist)
-
-    if dist[ind]<sort.c.Tsm
-        return ind
-    else
+    if sort.c.numClusters<1
         return 0
+    else 
+        ind=indmin(dist)
+        if dist[ind]<sort.c.Tsm
+            return ind
+        else
+            return 0
+        end
     end
-    
+  
 end
 
 function findmerge!(sort::Sorting)

@@ -1,7 +1,7 @@
 module SortSpikes
 
 #using Winston, Gtk.ShortNames
-using OnlineStats, Interpolations
+using OnlineStats, Interpolations, DistributedArrays
 
 abstract Detect
 abstract Align
@@ -60,7 +60,7 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
             zeros(Float64,wavelength,100))   
 end
     
-export Sorting, firstrun, onlinecal, onlinesort
+export Sorting, firstrun, firstrun_par,cal,cal_par,onlinesort,onlinesort_par
 
 function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     
@@ -76,7 +76,12 @@ function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::S
     
 end
 
-function onlinecal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
+function firstrun_par{T<:Sorting}(s::DArray{T,1,Array{T,1}})
+    map!(firstrun,s)
+    nothing
+end
+
+function cal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     
     maincal(sort)
     
@@ -101,9 +106,19 @@ function onlinecal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::
     return sort
 end
 
+function onlinecal_par{T<:Sorting}(s::DArray{T,1,Array{T,1}})    
+    map!(onlinecal,s)
+    nothing
+end
+
 function onlinesort{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     main(sort)    
     return sort  
+end
+
+function onlinesort_par{T<:Sorting}(s::DArray{T,1,Array{T,1}})
+    map!(onlinesort,s)
+    nothing
 end
 
 function offlinesort()

@@ -7,7 +7,7 @@ Feature extraction methods. Each method needs
 
 =#
 
-export FeatureTime, FeaturePCA, FeatureIT, FeatureDDMDT
+export FeatureTime, FeaturePCA, FeatureIT, FeatureDD, FeatureCurv
 
 function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     nothing
@@ -68,7 +68,6 @@ function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureWPD,R<:Reduction}(sort:
 end
 
 function mysize(feature::FeatureWPD,wavelength::Int64)
-    feature.oPCA.k
 end
 
 #=
@@ -207,3 +206,29 @@ function mysize(feature::FeatureDD,wavelength::Int64)
     end
     sizeN
 end
+
+#=
+Curvature
+=#
+
+type FeatureCurv <: Feature
+end
+
+function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureCurv,R<:Reduction}(sort::Sorting{D,C,A,F,R})
+    V1=0.0
+    V2=0.0
+
+    for i=2:size(sort.waveforms,1)-1
+        V1=sort.waveforms[i,sort.numSpikes]-sort.waveforms[i-1,sort.numSpikes]
+        V2=sort.waveforms[i+1,sort.numSpikes]-2*sort.waveforms[i,sort.numSpikes]+sort.waveforms[i-1,sort.numSpikes]
+        sort.fullfeature[i-1]=V2/(1+V1^2)^1.5
+    end
+    
+    nothing
+end
+
+function mysize(feature::FeatureCurv,wavelength::Int64)
+    wavelength-2
+end
+
+

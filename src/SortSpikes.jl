@@ -83,31 +83,18 @@ end
 
 function cal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     
-    maincal(sort)
-    
-    #if new clusters were discovered, get rid of initial noise cluster to skip merger code later on when unnecessary
-    #might want to change this later
-    #=
-    if sort.c.numClusters>1
-        for j=2:sort.c.numClusters
-            sort.c.clusters[:,j-1]=sort.c.clusters[:,j]
-            sort.c.clusters[:,j]=zeros(Float64,size(sort.c.clusters[:,j]))
-            sort.c.clusterWeight[j-1]=sort.c.clusterWeight[j]
-            sort.c.clusterWeight[j]=0
-         end
-         sort.c.numClusters-=1
-    end
+    maincal(sort)    
 
     #reset things we would normally return
     sort.electrode=zeros(size(sort.electrode))
     sort.neuronnum=zeros(size(sort.electrode))
     sort.numSpikes=2
-    =#
+
     return sort
 end
 
-function onlinecal_par{T<:Sorting}(s::DArray{T,1,Array{T,1}})    
-    map!(onlinecal,s)
+function cal_par{T<:Sorting}(s::DArray{T,1,Array{T,1}})    
+    map!(cal,s)
     nothing
 end
 

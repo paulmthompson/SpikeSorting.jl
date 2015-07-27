@@ -52,6 +52,7 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
         r=typeof(r)(fulllength,r.mydims)
         reducedims=r.mydims
     end
+    f=typeof(f)(wavelength,reducedims)
     c=typeof(c)(reducedims)
     Sorting(d,c,a,f,r,
             zeros(Int64,signal_length),zeros(Int64,window+window_half),0,
@@ -186,7 +187,7 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::So
 
                 align(sort)
 
-                feature(sort)
+                featureprepare(sort)
                 
                 reductionprepare(sort)
 

@@ -20,6 +20,10 @@ Temporal Waveform
 type FeatureTime <: Feature 
 end
 
+function FeatureTime(M::Int64,N::Int64)
+    FeatureTime()
+end
+
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureTime,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     sort.features[:]=sort.waveforms[sort.dims,sort.numSpikes]
     nothing
@@ -87,6 +91,10 @@ end
 
 function FeatureIT()
     FeatureIT(0,0,0.0,0,0,0)
+end
+
+function FeatureIT(M::Int64,N::Int64)
+    FeatureIT()
 end
 
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureIT,R<:Reduction}(sort::Sorting{D,C,A,F,R})
@@ -183,19 +191,21 @@ Discrete Derivatives
 =#
 
 type FeatureDD <: Feature
+    inds::Array{Int64,2}
+end
+
+function FeatureDD()
+    FeatureDD(ones(Int64,10,2))
+end
+
+function FeatureDD(M::Int64,N::Int64)
+    FeatureDD(ones(Int64,N,2))
 end
 
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDD,R<:Reduction}(sort::Sorting{D,C,A,F,R})
-    counter=1
-    for i in DD_inds
-        for j=(i+1):size(sort.waveforms,1)
-            sort.fullfeature[counter]=sort.waveforms[j,sort.numSpikes]-sort.waveforms[j-i,sort.numSpikes]
-            counter+=1
-        end
-    end
-
-    sort.features[:]=sort.fullfeature[sort.dims]
-    
+    for i=1:length(sort.dims)
+        sort.features[i]=sort.waveforms[sort.f.inds[i,2],sort.numSpikes]-sort.waveforms[sort.f.inds[i,2]-sort.f.inds[i,1],sort.numSpikes]
+    end     
     nothing
 end
 
@@ -207,11 +217,34 @@ function mysize(feature::FeatureDD,wavelength::Int64)
     sizeN
 end
 
+function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDD,R<:Reduction}(sort::Sorting{D,C,A,F,R})
+    counter=1
+    counterdim=1
+    for i in DD_inds
+        for j=(i+1):size(sort.waveforms,1)
+            sort.fullfeature[counter]=sort.waveforms[j,sort.numSpikes]-sort.waveforms[j-i,sort.numSpikes]
+            if counter==sort.dims[counterdim]
+                sort.f.inds[counterdim,1]=i
+                sort.f.inds[counterdim,2]=j
+                counterdim+=1
+            end
+            counter+=1
+        end
+    end
+
+    sort.features[:]=sort.fullfeature[sort.dims]
+    nothing      
+end
+
 #=
 Curvature
 =#
 
 type FeatureCurv <: Feature
+end
+
+function FeatureCurv(M::Int64,N::Int64)
+    FeatureCurv()
 end
 
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureCurv,R<:Reduction}(sort::Sorting{D,C,A,F,R})

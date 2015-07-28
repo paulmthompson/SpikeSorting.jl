@@ -66,6 +66,10 @@ Wavelet
 type FeatureWPD <: Feature
 end
 
+function FeatureWPD(M::Int64,N::Int64)
+    FeatureWPD()
+end
+
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureWPD,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     #a=2^i where i = 1:L and L=log2(N) where N is signal length
 
@@ -251,10 +255,10 @@ function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureCurv,R<:Reduction}(sort
     V1=0.0
     V2=0.0
 
-    for i=2:size(sort.waveforms,1)-1
+    for i in sort.dims
         V1=sort.waveforms[i,sort.numSpikes]-sort.waveforms[i-1,sort.numSpikes]
         V2=sort.waveforms[i+1,sort.numSpikes]-2*sort.waveforms[i,sort.numSpikes]+sort.waveforms[i-1,sort.numSpikes]
-        sort.fullfeature[i-1]=V2/(1+V1^2)^1.5
+        sort.feature[i-1]=V2/(1+V1^2)^1.5
     end
     
     nothing
@@ -264,4 +268,16 @@ function mysize(feature::FeatureCurv,wavelength::Int64)
     wavelength-2
 end
 
+function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureCurv,R<:Reduction}(sort::Sorting{D,C,A,F,R})
+    V1=0.0
+    V2=0.0
+
+    for i=2:size(sort.waveforms,1)-1
+        V1=sort.waveforms[i,sort.numSpikes]-sort.waveforms[i-1,sort.numSpikes]
+        V2=sort.waveforms[i+1,sort.numSpikes]-2*sort.waveforms[i,sort.numSpikes]+sort.waveforms[i-1,sort.numSpikes]
+        sort.fullfeature[i-1]=V2/(1+V1^2)^1.5
+    end
+    
+    nothing
+end
 

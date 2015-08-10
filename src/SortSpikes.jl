@@ -3,11 +3,13 @@ module SortSpikes
 #using Winston, Gtk.ShortNames
 using OnlineStats, Interpolations, DistributedArrays
 
-abstract Detect
-abstract Align
-abstract Cluster
-abstract Feature
-abstract Reduction
+abstract Algorithm
+
+abstract Detect <: Algorithm
+abstract Align <:Algorithm
+abstract Cluster <:Algorithm
+abstract Feature <:Algorithm
+abstract Reduction <:Algorithm
 
 type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}
     d::D
@@ -87,6 +89,7 @@ function cal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sortin
     maincal(sort)    
 
     #reset things we would normally return
+    #Need to reset waveforms
     sort.electrode=zeros(size(sort.electrode))
     sort.neuronnum=zeros(size(sort.electrode))
     sort.numSpikes=2

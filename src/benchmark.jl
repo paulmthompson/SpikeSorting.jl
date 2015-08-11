@@ -42,6 +42,8 @@ function benchmark{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(datase
 
     #Accuracy due to overlap, clustering, and detection phases
     accuracy_bench(electrode,neuronnum,dataset,cal_length*sample_rate)
+
+    #speed calculations
            
 end
 
@@ -76,13 +78,17 @@ function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},data
     next=1
 
     for i=start:(start+div(overlap_win,2)-1)
-        next=update_spikes(neuronnum,win_detect,spike_present,win_real,next,i)
+        if neuronnum[next]==i
+            push!(win_detect,25)
+            push!(spike_present,25)
+            next+=1
+        end
+        update_spikes!(dataset,win_detect,spike_present,win_real,i)
     end
     
     #each neuron has a total number of spikes
     #algorithm will have true positive for each of those neurons or FN/FP for one of the reasons below
     overlap_win=50
-    i=start+overlap_win/2
     
     for i=(start+div(overlap_win,2)):(size(dataset,1)-overlap_win)
     
@@ -105,24 +111,25 @@ function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},data
             end
         end
         
-        next=update_spikes(neuronnum,win_detect,spike_present,win_real,next,i)
+        if neuronnum[next]==i
+            push!(win_detect,25)
+            push!(spike_present,25)
+            next+=1
+        end
+        update_spikes!(dataset,win_detect,spike_present,win_real,i)
         
     end
    
 end
 
-function update_spikes(neuronnum::Array{Int64,1},win_detect::Array{Int64,1},spike_present::Array{Int64,1},win_real::Array{Int64,1},next::Int64,i::Int64)
+function update_spikes!(dataset::Array{Int64,2},win_detect::Array{Int64,1},spike_present::Array{Int64,1},win_real::Array{Int64,1},i::Int64)
     
-    if neuronnum[next]==i
-        push!(win_detect,25)
-        push!(spike_present,25)
-        next+=1
-    end
-
     for j=2:size(dataset,2)
         if dataset[i,j]==1
             push!(win_real,25)
-            push!(spike_present,25)
+            if spike_present[end]!=25
+                push!(spike_present,25)
+            end
         end
     end
 
@@ -140,13 +147,9 @@ function update_spikes(neuronnum::Array{Int64,1},win_detect::Array{Int64,1},spik
         end
     end
 
-    for j in spike_present
-        if j<1
-            shift!(spike_present)
-        end
+    if spike_present[1]<1
+        shift!(spike_present)
     end
-
-    next
     
 end
 

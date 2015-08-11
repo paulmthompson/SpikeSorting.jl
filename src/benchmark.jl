@@ -41,7 +41,7 @@ function benchmark{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(datase
     #ISI violations
 
     #Accuracy due to overlap, clustering, and detection phases
-    accuracy_bench(electrode,neuronnum,dataset,cal_length*sample_rate)
+    accuracy_bench(electrode,neuronnum,dataset,cal_length*sample_rate,sort.numSpikes)
 
     #speed calculations
            
@@ -63,6 +63,66 @@ function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
 
     
 end
+
+function accuracy_bench2(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dataset::Array{Int64,2},start::Int64,numspikes::Int64)
+
+    #first go through detected spikes to classify as false positives or true positives
+    #then go through ground truth to look for false negatives
+
+    #need to figure out what cluster corresponds to what neuron
+    myzeros=zeros(Float64,size(dataset,1))
+    corrmat=zeros(Float64,size(dataset,2)-1,numspikes)
+    
+    for i=1:numspikes
+        inds=electrode[neuronnum.==i]
+        myzeros[inds]=1
+        for j=2:size(dataset,2)
+            corrmat[j-1,i]=cor(myzeros,dataset[start:end,j])
+        end
+        myzeros[inds]=0.0
+    end
+
+    myinds=(0,0)
+    if (size(dataset,2)-1)>=numspikes #fewer neurons (or equal) detected than actually exist
+        assignedd=zeros(Int64,numspikes)
+        assigneds=falses(size(dataset,2)-1)
+        count=1
+        while count <= numspikes
+            myinds=ind2sub(size(corrmat),indmax(corrmat))
+            if assignedd[myinds[2]]==0 & assigneds[myinds[1]]==false
+                assignedd[myinds[2]]=myinds[1]
+                assigneds[myinds[1]]=true
+                count+=1
+            end
+            corrmat[myinds[1],myinds[2]]=0.0
+        end
+  
+    elseif numspikes>(size(dataset,2)-1) #more neurons detected than actually exist
+        assignedd=zeros(Int64,numspikes)
+        assigneds=falses(size(dataset,2)-1)
+        count=1
+        while count < size(dataset,2)
+            myinds=ind2sub(size(corrmat),indmax(corrmat))
+            if assignedd[myinds[2]]==0 & assigneds[myinds[1]]==false
+                assignedd[myinds[2]]=myinds[1]
+                assigneds[myinds[1]]=true
+                count+=1
+            end
+            corrmat[myinds[1],myinds[2]]=0.0
+        end
+    end
+    
+    
+    win=50
+    for i=1:length(electrode)
+        #search for true positive
+        for j=(electrode[i]-div(win,2)):(electrode[i]+div(win,2))
+            if dataset[j
+        end
+    end
+    
+end
+
 
 function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dataset::Array{Int64,2},start::Int64)
     #this is much harder than i expected it to be. maybe i'm not thinking this through right

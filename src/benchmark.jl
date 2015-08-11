@@ -11,14 +11,14 @@ function benchmark{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(datase
     sample_rate=20000 #hertz
     
     #Calibrate
-    counter=1
+
+    sort.rawSignal[:]=dataset[1:sample_rate,1]
+    firstrun(sort)
+    
+    counter=sample_rate
     while counter<cal_length*sample_rate
         sort.rawSignal[:]=dataset[counter:(counter+sample_rate-1),1]
-        if counter==1
-            firstrun(sort)
-        else
-            cal(sort)
-        end
+        cal(sort)
         counter+=sample_rate
     end
 

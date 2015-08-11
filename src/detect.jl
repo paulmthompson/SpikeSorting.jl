@@ -189,6 +189,40 @@ Smoothed Nonlinear Energy Operator
 Azami et al 2014
 =#
 
+type DetectSNEO <: Detect
+end
+
+function detect{D<:DetectSNEO,C,A,F,R}(sort::Sorting{D,C,A,F,R},i::Int64)
+
+    if i==length(sort.rawSignal)
+        #Will do spike detection next iteration due to edging
+        psi=0
+    elseif i>20
+        
+    elseif i>1
+        psi=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
+    else
+
+        #perform calculation for end of last step and this one, and return the larger
+        psi1=sort.sigend[end]^2 - sort.rawSignal[i] * sort.sigend[end-1]
+        psi2=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.sigend[end]
+
+        if psi1>psi2
+            return psi1
+        else
+            return psi2
+        end
+
+    end
+
+    psi   
+end
+
+function threshold{D<:DetectSNEO,C,A,F,R}(sort::Sorting{D,C,A,F,R})
+
+    nothing   
+end
+
 #=
 Multiscale Correlation of Wavelet Coefficients
 

@@ -118,13 +118,13 @@ function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},data
     FN_O=0
     #1 yet undetected
     #-1 detected
-    win=50
+    win=25
     for i=1:length(electrode) #loop through all detected spikes
         if assignedd[neuronnum[i]]==0 #if this cluster doesn't even exist, FP
             FP_C+=1
         else
             found=false
-            for j=(electrode[i]-div(win,2)):(electrode[i]+div(win,2))
+            for j=(electrode[i]-win):(electrode[i]+win)
                 if dataset[j,assignedd[neuronnum[i]]]!=1 #found
                     TP+=1
                     found=true
@@ -133,7 +133,7 @@ function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},data
                 end
             end
             if found==false #If no TP, determine if FP is from overlap or clustering
-                totalspikes=sum(abs(dataset[(electrode[i]-div(win,2)):(electrode[i]+div(win,2)),2:end]))
+                totalspikes=sum(abs(dataset[(electrode[i]-win):(electrode[i]+win),2:end]))
                 if totalspikes>1
                     FP_O+=1
                 else
@@ -148,7 +148,7 @@ function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},data
     for i=start:(size(dataset,1)-win)
         for j=2:(size(dataset,2))
             if dataset[i,j]==1 #missed spike
-                overlap=sum(abs(dataset[(i-div(win,2)):(i+div(win,2)),2:end]))
+                overlap=sum(abs(dataset[(i-win):(i+win),2:end]))
                 if overlap>1
                     FN_O+=1
                 else

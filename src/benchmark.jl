@@ -64,7 +64,7 @@ function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
     
 end
 
-function accuracy_bench2(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dataset::Array{Int64,2},start::Int64,numspikes::Int64)
+function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dataset::Array{Int64,2},start::Int64,numspikes::Int64)
 
     #first go through detected spikes to classify as false positives or true positives
     #then go through ground truth to look for false negatives
@@ -83,10 +83,12 @@ function accuracy_bench2(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dat
     end
 
     myinds=(0,0)
+    assignedd=zeros(Int64,numspikes) #zero indicates it doesn't correspond to anything
+    assigneds=falses(size(dataset,2)-1)
+    count=1
+
+    
     if (size(dataset,2)-1)>=numspikes #fewer neurons (or equal) detected than actually exist
-        assignedd=zeros(Int64,numspikes)
-        assigneds=falses(size(dataset,2)-1)
-        count=1
         while count <= numspikes
             myinds=ind2sub(size(corrmat),indmax(corrmat))
             if assignedd[myinds[2]]==0 & assigneds[myinds[1]]==false
@@ -98,9 +100,6 @@ function accuracy_bench2(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dat
         end
   
     elseif numspikes>(size(dataset,2)-1) #more neurons detected than actually exist
-        assignedd=zeros(Int64,numspikes)
-        assigneds=falses(size(dataset,2)-1)
-        count=1
         while count < size(dataset,2)
             myinds=ind2sub(size(corrmat),indmax(corrmat))
             if assignedd[myinds[2]]==0 & assigneds[myinds[1]]==false
@@ -111,107 +110,57 @@ function accuracy_bench2(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dat
             corrmat[myinds[1],myinds[2]]=0.0
         end
     end
-    
-    
+
+    TP=0
+    FP_C=0
+    FP_O=0
+    FN_T=0
+    FN_O=0
+    #1 yet undetected
+    #-1 detected
     win=50
-    for i=1:length(electrode)
-        #search for true positive
-        for j=(electrode[i]-div(win,2)):(electrode[i]+div(win,2))
-            if dataset[j
-        end
-    end
-    
-end
-
-
-function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dataset::Array{Int64,2},start::Int64)
-    #this is much harder than i expected it to be. maybe i'm not thinking this through right
-
-    #clustering miss
-    # How to determine which cluster corresponds to which neuron?
-    # FP - assigned to cluster when there is no corresponding spike in that window
-    # FN - did not assign spike to cluster when there was a spike
-    
-    win_real=Array(Int64,0)
-    win_detect=Array(Int64,0)
-
-    next=1
-
-    for i=start:(start+div(overlap_win,2)-1)
-        if neuronnum[next]==i
-            push!(win_detect,25)
-            push!(spike_present,25)
-            next+=1
-        end
-        update_spikes!(dataset,win_detect,spike_present,win_real,i)
-    end
-    
-    #each neuron has a total number of spikes
-    #algorithm will have true positive for each of those neurons or FN/FP for one of the reasons below
-    overlap_win=50
-    
-    for i=(start+div(overlap_win,2)):(size(dataset,1)-overlap_win)
-    
-        if spike_present[1]==1
-            
-            if length(win_detect)<length(win_real) #more spikes than what is detected in window
-                if length(win_real)==1
-                    #false negative due to threshold
-                else
-                    #false negative due to overlap
-                end  
-            elseif length(win_detect)>length(win_real) #more spikes detected than actually exist
-                #false positive due to detection
-            else #number of spikes that exist equals number that have been detected
-                if length(win_detect)==0 #no spikes present, detected correctly
-                else
-                    #determine if spike was clustered correctly
-                    #don't want to duplicate for others in the window
+    for i=1:length(electrode) #loop through all detected spikes
+        if assignedd[neuronnum[i]]==0 #if this cluster doesn't even exist, FP
+            FP_C+=1
+        else
+            found=false
+            for j=(electrode[i]-div(win,2)):(electrode[i]+div(win,2))
+                if dataset[j,assignedd[neuronnum[i]]]!=1 #found
+                    TP+=1
+                    found=true
+                    dataset[j,assigned[neuronnum[i]]]=-1
+                    break
                 end
             end
-        end
-        
-        if neuronnum[next]==i
-            push!(win_detect,25)
-            push!(spike_present,25)
-            next+=1
-        end
-        update_spikes!(dataset,win_detect,spike_present,win_real,i)
-        
+            if found==false #If no TP, determine if FP is from overlap or clustering
+                totalspikes=sum(abs(dataset[(electrode[i]-div(win,2)):(electrode[i]+div(win,2)),2:end]))
+                if totalspikes>1
+                    FP_O+=1
+                else
+                    FP_C+=1
+                end
+            else
+            end            
+        end 
     end
-   
-end
 
-function update_spikes!(dataset::Array{Int64,2},win_detect::Array{Int64,1},spike_present::Array{Int64,1},win_real::Array{Int64,1},i::Int64)
-    
-    for j=2:size(dataset,2)
-        if dataset[i,j]==1
-            push!(win_real,25)
-            if spike_present[end]!=25
-                push!(spike_present,25)
+    #Determine FN in real spikes that were not detected
+    for i=start:(size(dataset,1)-win)
+        for j=2:(size(dataset,2))
+            if dataset[i,j]==1 #missed spike
+                overlap=sum(abs(dataset[(i-div(win,2)):(i+div(win,2)),2:end]))
+                if overlap>1
+                    FN_O+=1
+                else
+                    FN_C+=1
+                end
+            else
             end
         end
     end
-
-    win_detect=win_detect-1
-    win_real=win_real-1
-    spike_present=spike_present-1
-
-    if win_detect[1]<-25
-        shift!(win_detect)
-    end
-
-    for j in win_real
-        if j<-25
-            shift!(win_real)
-        end
-    end
-
-    if spike_present[1]<1
-        shift!(spike_present)
-    end
-    
+  
 end
+
 
 #ISI violation calculation
 

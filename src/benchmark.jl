@@ -125,7 +125,7 @@ function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},data
         else
             found=false
             for j=(electrode[i]-win):(electrode[i]+win)
-                if dataset[j,assignedd[neuronnum[i]]]!=1 #found
+                if dataset[j,assignedd[neuronnum[i]]]==1 #found
                     TP+=1
                     found=true
                     dataset[j,assigned[neuronnum[i]]]=-1
@@ -161,8 +161,11 @@ function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},data
   
 end
 
-
 #ISI violation calculation
+function ISI_violations(electrode::Array{Int64,1},neuronnum::Array{Int64,1},numspikes::Int64)
+
+end
+
 
 #Generate benchmark dataset
 

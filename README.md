@@ -19,6 +19,12 @@ In addition, we are trying to put many existing online algorithms, or potential 
 
 # Current Functionality and TODO
 
+## Program Structure
+
+Rather than copying arrays so frequently, and storing separate spike waveforms, should be using unitranges and arrayviews. Probably can scrap entire spike waveforms matrix altogether (yay!)
+
+May also be better to bring the rawSignal out of the data structure and rather have a 2D shared array. that contains all of the neural data
+
 ## Calibration
 
 - [x] thresholds for power detection

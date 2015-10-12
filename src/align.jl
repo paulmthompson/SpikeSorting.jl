@@ -16,8 +16,9 @@ type AlignMax <: Align
 end
 
 function align{D,C,A<:AlignMax,F,R}(sort::Sorting{D,C,A,F,R})
-    j=indmax(sort.p_temp[align_range])+window_half
-    sort.waveforms[:,sort.numSpikes]=convert(Array{Float64,1},sort.p_temp[j-window_half:j+window_half-1])
+    j=indmax(sort.p_temp)+window_half
+    sort.waveform=view(sort.p_temp,j-window_half:j+window_half-1)
+    sort.waveforms[sort.neuronnum]=j-window_half:j+window_half-1
     nothing
 end
 
@@ -59,8 +60,8 @@ function align{D,C,A<:AlignFFT,F,R}(sort::Sorting{D,C,A,F,R})
     sort.a.upsamp[:]=sort.a.M.*real(sort.a.x_int)
     
     j=indmax(sort.a.upsamp[sort.a.align_range])+sort.a.M*window_half
-    sort.waveforms[:,sort.numSpikes]=round(sort.a.upsamp[j-sort.a.M*window_half:j+sort.a.M*window_half-1])
-
+    sort.waveform=view(sort.a.upsamp,j-sort.a.M*window_half:j+sort.a.M*window_half-1)
+    sort.waveforms[sort.neuronnum]=j-window_half:j+window_half-1
     nothing 
 end
 

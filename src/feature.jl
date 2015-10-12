@@ -25,7 +25,7 @@ function FeatureTime(M::Int64,N::Int64)
 end
 
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureTime,R<:Reduction}(sort::Sorting{D,C,A,F,R})
-    sort.features[:]=sort.waveforms[sort.dims,sort.numSpikes]
+    sort.features=sub(sort.waveform,sort.dims)
     nothing
 end
 
@@ -208,7 +208,7 @@ end
 
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDD,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     for i=1:length(sort.dims)
-        sort.features[i]=sort.waveforms[sort.f.inds[i,2],sort.numSpikes]-sort.waveforms[sort.f.inds[i,2]-sort.f.inds[i,1],sort.numSpikes]
+        sort.features[i]=sort.waveform[sort.f.inds[i,2]]-sort.waveform[sort.f.inds[i,2]-sort.f.inds[i,1]]
     end     
     nothing
 end
@@ -226,7 +226,7 @@ function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDD,R<:Reduction}
     counterdim=1
     for i in DD_inds
         for j=(i+1):size(sort.waveforms,1)
-            sort.fullfeature[counter]=sort.waveforms[j,sort.numSpikes]-sort.waveforms[j-i,sort.numSpikes]
+            sort.fullfeature[counter]=sort.waveform[j]-sort.waveform[j-i]
             if counter==sort.dims[counterdim]
                 sort.f.inds[counterdim,1]=i
                 sort.f.inds[counterdim,2]=j
@@ -256,8 +256,8 @@ function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureCurv,R<:Reduction}(sort
     V2=0.0
 
     for i in sort.dims
-        V1=sort.waveforms[i,sort.numSpikes]-sort.waveforms[i-1,sort.numSpikes]
-        V2=sort.waveforms[i+1,sort.numSpikes]-2*sort.waveforms[i,sort.numSpikes]+sort.waveforms[i-1,sort.numSpikes]
+        V1=sort.waveform[i]-sort.waveform[i-1]
+        V2=sort.waveform[i+1]-2*sort.waveform[i]+sort.waveform[i-1]
         sort.feature[i-1]=V2/(1+V1^2)^1.5
     end
     
@@ -273,8 +273,8 @@ function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureCurv,R<:Reductio
     V2=0.0
 
     for i=2:size(sort.waveforms,1)-1
-        V1=sort.waveforms[i,sort.numSpikes]-sort.waveforms[i-1,sort.numSpikes]
-        V2=sort.waveforms[i+1,sort.numSpikes]-2*sort.waveforms[i,sort.numSpikes]+sort.waveforms[i-1,sort.numSpikes]
+        V1=sort.waveform[i]-sort.waveform[i-1]
+        V2=sort.waveform[i+1]-2*sort.waveform[i]+sort.waveform[i-1]
         sort.fullfeature[i-1]=V2/(1+V1^2)^1.5
     end
     

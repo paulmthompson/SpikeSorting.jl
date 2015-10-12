@@ -20,15 +20,15 @@ type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}
     rawSignal::Array{Int64,1}
     sigend::Array{Int64,1}
     index::Int64
-    p_temp::Array{Int64,1}
+    p_temp::Array{Float64,1}
     numSpikes::Int64
     features::Array{Float64,1}
     fullfeature::Array{Float64,1}
     dims::Array{Int64,1}
     thres::Float64
-    electrode::Array{Int64,1}
     neuronnum::Array{Int64,1}
-    waveforms::Array{Float64,2}
+    waveforms::Array{UnitRange{Int64},1}
+    waveform::Array{Float64,1}
 end
 
 include("constants.jl")
@@ -59,8 +59,8 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
     Sorting(d,c,a,f,r,
             zeros(Int64,signal_length),zeros(Int64,window+window_half),0,
             zeros(Int64,window*2),2,zeros(Float64,reducedims),zeros(Float64,fulllength),
-            collect(1:reducedims),1.0,zeros(Int64,100),zeros(Int64,100),
-            zeros(Float64,wavelength,100))   
+            collect(1:reducedims),1.0,zeros(Int64,100),
+            Array(UnitRange{Int64},100),zeros(Float64,wavelength))   
 end
     
 export Sorting, firstrun, firstrun_par,cal,cal_par,onlinesort,onlinesort_par
@@ -90,8 +90,7 @@ function cal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sortin
 
     #reset things we would normally return
     #Need to reset waveforms
-    sort.electrode=zeros(size(sort.electrode))
-    sort.neuronnum=zeros(size(sort.electrode))
+    sort.neuronnum=zeros(size(sort.neuronnum))
     sort.numSpikes=2
 
     return sort
@@ -143,7 +142,6 @@ function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorti
                 cluster(sort)
 
                 #Spike time stamp
-                sort.electrode[sort.numSpikes]=i #need adjust this based on alignment
                 sort.numSpikes+=1        
                 sort.index=0
                   

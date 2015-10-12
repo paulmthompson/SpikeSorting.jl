@@ -428,8 +428,8 @@ function cluster{D,C<:ClusterManual,A,F,R}(sort::Sorting{D,C,A,F,R})
         A1=(win[3,i]-win[4,i])/(win[1,i]-win[2,i])
         b1=win[3,i]-A1*win[1,i]
         
-        A2=(sort.waveforms[win[1,i],sort.numSpikes]-sort.waveforms[win[2,i],sort.numSpikes])/(win[1,i]-win[2,i])
-        b2=sort.waveforms[win[1,i],sort.numSpikes]-A2*win[1,i]
+        A2=(sort.waveform[win[1,i]]-sort.waveform[win[2,i]])/(win[1,i]-win[2,i])
+        b2=sort.waveform[win[1,i]]-A2*win[1,i]
 
         Xa=(b2 - b1) / (A1 - A2)
 

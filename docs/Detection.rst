@@ -7,8 +7,19 @@ Detection
 Overview
 *********
 
+Voltage samples will be compared to some threshold value to determine if spiking has occured. Different methods of detection can be defined by declaring 1) a Type that is the data structure for the algorithm, 2) a function "detect" that implements the algorithm 3) a function "threshold" to determine the threshold for comparison during the training period.
 
+Often methods will need to be initialized during a calibration period, such as calculating the running sum of the last n samples in power detection. These initialization procedures are defined in "detectprepare" functions.
 
+All datatypes are members of the abstract class Detect. They should have default constructors to be initialized as follows:
+
+.. code-block:: julia
+
+	#Create instance of power detection for use in sorting
+	mypowerdetection=DetectPower()
+
+	#Create instance of median absolute value threshold detection for use in sorting
+	mymedian=DetectSignal()
 
 
 ********
@@ -29,6 +40,11 @@ Each timepoint is compared to a threshold, where the threshold is generated as s
 
 Usually the threshold is set as 4 sigma.
 
+.. code-block:: julia
+
+	type DetectSignal <: Detect
+	end
+
 Reference:
 
 Quiroga, R Quian and Nadasdy, Z. and Ben-Shaul, Y. Unsupervised spike detection and sorting with wavelets and superparamagnetic clustering. 2004
@@ -40,6 +56,11 @@ Nonlinear Energy Operator (NEO)
 Also known as Teager energy operator (TEO). The NEO is calculated at each time point based on the current, future and past sample and compared to a threshold.
 
 .. math:: \psi [x(n)] = x^2(n) - x(n+1) x(n-1)
+
+.. code-block:: julia 
+
+	type DetectNEO <: Detect
+	end
 
 References:
 
@@ -57,6 +78,14 @@ This method looks at the local energy built up over n samples, where by default 
 .. math:: \bar{f}(t) = \frac{1}{n} \sum_{i=1}^n f(t-i)
 
 Some value of power is chosen as a threshold.
+
+.. code-block:: julia
+
+	type DetectPower <: Detect
+    		a::Int64 #sum of last n samples
+    		b::Int64 #sum of squares of last n samples
+    		c::Int64 #value of sample at t-n
+	end
 
 Reference:
 

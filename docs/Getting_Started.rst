@@ -50,7 +50,7 @@ Most algorithms require some period of calibration, such as determining the appr
 Methods
 ==========
 
-Unlike Python or C++, Julia does have object oriented programming; instead multiple dispatch can be used to call unique implementions of a method for different data types. 
+Unlike Python or C++, Julia does not have object oriented programming; instead multiple dispatch can be used to call unique implementions of a method for different data types. 
 
 ************
 Parallelism

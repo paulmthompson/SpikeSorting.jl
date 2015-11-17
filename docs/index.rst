@@ -13,4 +13,8 @@ Contents:
 
    Getting_Started.rst
    Detection.rst
+   Alignment.rst
+   Features.rst
+   Reduction.rst
+   Clustering.rst
 

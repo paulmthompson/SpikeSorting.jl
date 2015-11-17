@@ -11,7 +11,7 @@ Voltage samples will be compared to some threshold value to determine if spiking
 
 Often methods will need to be initialized during a calibration period, such as calculating the running sum of the last n samples in power detection. These initialization procedures are defined in "detectprepare" functions.
 
-All datatypes are members of the abstract class Detect. They should have default constructors to be initialized as follows:
+All datatypes are members of the abstract type Detect. They should have default constructors to be initialized as follows:
 
 .. code-block:: julia
 

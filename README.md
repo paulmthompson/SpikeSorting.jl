@@ -1,6 +1,10 @@
 # SpikeSorting.jl
 Online spike sorting methods in Julia
 
+# Documentation
+
+http://spikesortingjl.readthedocs.org/en/latest/
+
 # Introduction
 
 This is a Julia implementation of various spike sorting methods. Our big picture goal is to have a system that can perform online sorting of data that is acquired via a Intan RHD2000 acquisition board:

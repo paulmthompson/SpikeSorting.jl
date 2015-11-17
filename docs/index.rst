@@ -11,12 +11,6 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   Getting_Started.rst
+   Detection.rst
 

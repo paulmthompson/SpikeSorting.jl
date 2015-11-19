@@ -1,53 +1,22 @@
 
 #=
-Main loops for spike sorting
+Main functions for spike sorting
 
 =#
 
-export firstrun,cal,onlinesort
+export cal!,onlinesort!
 
 #Single Channel
-function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
-    
-    #detection initialization
-    detectprepare(sort,v)
-    threshold(sort,v)
-    
-    sort.sigend[:]=v[1:75,sort.id]
+function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2},firstrun=false)
 
-    maincal(sort,v,76)
-    
-end
-
-#Multi-channel - single core
-function firstrun{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
-
-    for i=1:length(s)
-        firstrun(s[i],v)
+    if firstrun==false
+        maincal(sort,v)
+    else
+        detectprepare(sort,v)
+        threshold(sort,v)
+        sort.sigend[:]=v[1:75,sort.id]
+        maincal(sort,v,76)
     end
-
-    nothing
-    
-end
-
-#Multi-channel - Multi-core
-function firstrun{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
-    
-    @sync for p=1:length(s.pids)
-
-	@spawnat s.pids[p] begin
-		for i in s.indexes[p][1]
-		    firstrun(s[i],v)
-		end
-	end   
-    end
-    nothing
-end
-
-#Single Channel
-function cal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
-    
-    maincal(sort,v)    
 
     #reset things we would normally return
     #Need to reset waveforms
@@ -58,22 +27,22 @@ function cal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sortin
 end
 
 #Multi-channel - Single Core
-function cal{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
+function cal!{T<:Sorting}(s::Array{T,1},v::Array{Int64,2},firstrun=false)
 
     for i=1:length(s)
-        cal(s[i],v)
+        cal!(s[i],v,firstrun)
     end
     
     nothing
 end
 
 #Multi-channel - Multi-Core
-function cal{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
+function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2},firstrun=false)
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
 		for i in s.indexes[p][1]
-		    cal(s[i],v)
+		    cal!(s[i],v)
 		end
 	end   
     end
@@ -81,26 +50,26 @@ function cal{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
 end
 
 #Single channel
-function onlinesort{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
+function onlinesort!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
     main(sort,v)    
     nothing
 end
 
 #Multi-channel - Single Core
-function onlinesort{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
+function onlinesort!{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
     for i=1:length(s)
-        onlinesort(s[i],v)
+        onlinesort!(s[i],v)
     end
     nothing
 end
 
 #Multi-channel - multi-core
-function onlinesort{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
+function onlinesort!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
 		for i in s.indexes[p][1]
-		    onlinesort(s[i],v)
+		    onlinesort!(s[i],v)
 		end
 	end   
     end

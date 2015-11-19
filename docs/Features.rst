@@ -37,9 +37,25 @@ Currently Implemented
 Temporal
 -----------
 
+The simplest feature to use is the plain temporally varying voltage data with no transformation applied. This is invoked with:
+
+.. code-block:: julia
+
+	myfeature=FeatureTime()
+
 -----------
 Curvature
 -----------
+
+The curvature at time t can be found as the following:
+
+.. math:: curv(t) = \frac{V''}{(1+V'^2)^(3/2)}
+
+where V' and V'' are the first and second derivatives at time t. This is invoked as:
+
+.. code-block:: julia
+
+	myfeature=FeatureCurv()
 
 Reference:
 
@@ -48,6 +64,16 @@ Horton, P. M. and Nicol, A. U. and Kendrick, K. M. and Feng, J. F. Spike sorting
 ---------------------
 Discrete Derivatives
 ---------------------
+
+Slopes are calculated at each time t over different time scales:
+
+.. math:: dd_{\delta}(n) = s(n) - s(n - \delta)
+
+By default, delta values of 1,3, and 7 are used. We therefore have more features than in the original temporal waveform. This can be invoked as
+
+.. code-block:: julia
+
+	myfeature=FeatureDD()
 
 References:
 

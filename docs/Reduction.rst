@@ -39,9 +39,21 @@ Currently Implemented
 No Reduction
 -------------
 
+Dimensionality reduction is not necessary for spike sorting, though it may produce more accurate results depending on the selected feature space and clustering method. No reduction is chosen by invoking:
+
+.. code-block:: julia
+
+	myreduction=ReductionNone()
+
 -------------------
 Maximum Difference
 -------------------
+
+The maximum difference test will find the dimensions in the feature space that were most likely to have the largest difference between them during a calibration period. By default, 3 dimensions are chosen. It can be implemented as follows:
+
+.. code-block:: julia
+
+	myreduction=ReductionMD()
 
 Reference:
 

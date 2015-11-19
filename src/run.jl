@@ -4,7 +4,9 @@ Main loops for spike sorting
 
 =#
 
+export firstrun,cal,onlinesort
 
+#Single Channel
 function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
     
     #detection initialization
@@ -14,16 +16,35 @@ function firstrun{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::S
     sort.sigend[:]=v[1:75,sort.id]
 
     maincal(sort,v,76)
-
-    return sort
     
 end
 
-function firstrun_par{T<:Sorting}(s::DArray{T,1,Array{T,1}})
-    map!(firstrun,s)
+#Multi-channel - single core
+function firstrun{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
+
+    for i=1:length(s)
+        firstrun(s[i],v)
+    end
+
+    nothing
+    
+end
+
+#Multi-channel - Multi-core
+function firstrun{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
+    
+    @sync for p=1:length(s.pids)
+
+	@spawnat s.pids[p] begin
+		for i in s.indexes[p][1]
+		    firstrun(s[i],v)
+		end
+	end   
+    end
     nothing
 end
 
+#Single Channel
 function cal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
     
     maincal(sort,v)    
@@ -33,25 +54,57 @@ function cal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sortin
     sort.neuronnum=zeros(size(sort.neuronnum))
     sort.numSpikes=2
 
-    return sort
-end
-
-function cal_par{T<:Sorting}(s::DArray{T,1,Array{T,1}})    
-    map!(cal,s)
     nothing
 end
 
+#Multi-channel - Single Core
+function cal{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
+
+    for i=1:length(s)
+        cal(s[i],v)
+    end
+    
+    nothing
+end
+
+#Multi-channel - Multi-Core
+function cal{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
+    @sync for p=1:length(s.pids)
+
+	@spawnat s.pids[p] begin
+		for i in s.indexes[p][1]
+		    cal(s[i],v)
+		end
+	end   
+    end
+    nothing
+end
+
+#Single channel
 function onlinesort{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
     main(sort,v)    
-    return sort  
-end
-
-function onlinesort_par{T<:Sorting}(s::DArray{T,1,Array{T,1}})
-    map!(onlinesort,s)
     nothing
 end
 
-function offlinesort()
+#Multi-channel - Single Core
+function onlinesort{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
+    for i=1:length(s)
+        onlinesort(s[i],v)
+    end
+    nothing
+end
+
+#Multi-channel - multi-core
+function onlinesort{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
+    @sync for p=1:length(s.pids)
+
+	@spawnat s.pids[p] begin
+		for i in s.indexes[p][1]
+		    onlinesort(s[i],v)
+		end
+	end   
+    end
+    nothing
 end
 
 #=

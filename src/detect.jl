@@ -11,7 +11,7 @@ A method may also need a "detectprepare" function to use in its first iteration 
 
 export DetectPower, DetectSignal, DetectNEO, DetectMCWC
 
-function detectprepare{D,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
+function detectprepare{D,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2})
 end
 
 #=
@@ -29,7 +29,7 @@ function DetectPower()
     DetectPower(0,0,0)
 end
 
-function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R}, i::Int64,v::Array{Int64,2})
+function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R}, i::Int64,v::AbstractArray{Int64,2})
     
     sort.d.a += v[i,sort.id] - sort.d.c
     sort.d.b += v[i,sort.id]^2 - sort.d.c^2   
@@ -45,7 +45,7 @@ function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort
     
 end
 
-function threshold{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
+function threshold{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2})
     
     p=Array(Float64,size(v,1)-power_win)
     a = 0
@@ -72,7 +72,7 @@ function threshold{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::Array{Int
 
 end
 
-function detectprepare{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
+function detectprepare{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2})
     
     sort.d.a=0
     sort.d.b=0

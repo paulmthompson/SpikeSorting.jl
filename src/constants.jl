@@ -82,7 +82,7 @@ const wave_a=collect(0.5:.1:1.5);
 
 const coiflets_scaled=zeros(Float64,length(wave_a),bigJ)
 
-coif_intp=interpolate(coiflets_five,BSpline(Quadratic(Line)),OnCell)
+coif_intp=interpolate(coiflets_five,BSpline(Quadratic(Line())),OnCell())
 interpvec=collect(1:.1:40)
 coif_up=Float64[coif_intp[i] for i in interpvec]
 

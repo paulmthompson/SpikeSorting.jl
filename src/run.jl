@@ -7,7 +7,7 @@ Main functions for spike sorting
 export cal!,onlinesort!
 
 #Single Channel
-function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2},firstrun=false)
+function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},firstrun=false)
 
     if firstrun==false
         maincal(sort,v)
@@ -27,7 +27,7 @@ function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorti
 end
 
 #Multi-channel - Single Core
-function cal!{T<:Sorting}(s::Array{T,1},v::Array{Int64,2},firstrun=false)
+function cal!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2},firstrun=false)
 
     for i=1:length(s)
         cal!(s[i],v,firstrun)
@@ -37,12 +37,12 @@ function cal!{T<:Sorting}(s::Array{T,1},v::Array{Int64,2},firstrun=false)
 end
 
 #Multi-channel - Multi-Core
-function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2},firstrun=false)
+function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2},firstrun=false)
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
 		for i in s.indexes[p][1]
-		    cal!(s[i],v)
+		    cal!(s[i],v,firstrun)
 		end
 	end   
     end
@@ -50,13 +50,13 @@ function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2},firstrun=f
 end
 
 #Single channel
-function onlinesort!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
+function onlinesort!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2})
     main(sort,v)    
     nothing
 end
 
 #Multi-channel - Single Core
-function onlinesort!{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
+function onlinesort!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2})
     for i=1:length(s)
         onlinesort!(s[i],v)
     end
@@ -64,7 +64,7 @@ function onlinesort!{T<:Sorting}(s::Array{T,1},v::Array{Int64,2})
 end
 
 #Multi-channel - multi-core
-function onlinesort!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::Array{Int64,2})
+function onlinesort!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2})
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
@@ -80,7 +80,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
+function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2})
 
     for i=1:size(v,1)
 
@@ -133,7 +133,7 @@ end
 Main calibration loop
 =#
 
-function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2},start=1)
+function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},start=1)
 
     for i=start:size(v,1)
 

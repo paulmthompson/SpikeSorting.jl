@@ -44,9 +44,25 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
     f=typeof(f)(wavelength,reducedims)
     c=typeof(c)(reducedims)
     Sorting(d,c,a,f,r,
-            0,zeros(Int64,window+window_half),0,
+            1,zeros(Int64,window+window_half),0,
             zeros(Float64,window*2),2,zeros(Float64,reducedims),zeros(Float64,fulllength),
             collect(1:reducedims),1.0,zeros(Int64,100),
             Array(UnitRange{Int64},100),zeros(Float64,wavelength))   
+end
+
+function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num::Int64,par=false)
+    st=Array(Sorting{typeof(d),typeof(c),typeof(a),typeof(f),typeof(r)},num)
+
+    for i=1:num
+        st[i]=Sorting(typeof(d)(),typeof(c)(),typeof(a)(),typeof(f)(),typeof(r)())
+        st[i].id=i
+    end
+
+    if par==true
+        st=distribute(st)
+    end
+
+    st
+    
 end
     

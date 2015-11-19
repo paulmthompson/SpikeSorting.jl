@@ -33,6 +33,10 @@ Currently Implemented
 OSort / Hierachical Adaptive Means
 -----------------------------------
 
+These algorithms characterize clusters by their centroid in feature space, and assign a spike to a particular cluster based on minimizing the euclidean distance between the spike and the existing clusters. If the distance between the spike and existing clusters is above some estimate of the noise between clusters, then a new cluster can be created on the fly.
+
+To account for electrode drift, the centroids that define each cluster are continuously updated with new samples.
+
 References:
 
 Rutishauser, Ueli and Schuman, Erin M. and Mamelak, Adam N. Online detection and sorting of extracellularly recorded action potentials in human medial temporal lobe recordings, in vivo. 2006.

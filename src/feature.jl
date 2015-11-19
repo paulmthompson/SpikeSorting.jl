@@ -7,7 +7,7 @@ Feature extraction methods. Each method needs
 
 =#
 
-export FeatureTime, FeaturePCA, FeatureIT, FeatureDD, FeatureCurv
+export FeatureTime, FeatureIT, FeatureDD, FeatureCurv
 
 function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     nothing
@@ -35,7 +35,7 @@ end
 
 #=
 online PCA
-=#
+
 
 type FeaturePCA <: Feature
     oPCA::OnlineStats.OnlinePCA
@@ -49,6 +49,7 @@ function FeaturePCA(win::Int64,dims::Int64)
     FeaturePCA(OnlineStats.OnlinePCA(win,dims))
 end
 
+
 function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeaturePCA,R<:Reduction}(sort::Sorting{D,C,A,F,R})
     OnlineStats.update!(sort.f.oPCA,sort.waveforms[:,sort.numSpikes])
     sort.features[:]=sort.f.oPCA.V*sort.waveforms[:,sort.numSpikes]
@@ -58,6 +59,8 @@ end
 function mysize(feature::FeaturePCA,wavelength::Int64)
     feature.oPCA.k
 end
+
+=#
 
 #=
 Wavelet

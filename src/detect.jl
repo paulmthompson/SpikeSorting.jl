@@ -11,7 +11,7 @@ A method may also need a "detectprepare" function to use in its first iteration 
 
 export DetectPower, DetectSignal, DetectNEO, DetectMCWC
 
-function detectprepare{D,C,A,F,R}(sort::Sorting{D,C,A,F,R})
+function detectprepare{D,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
 end
 
 #=
@@ -29,13 +29,13 @@ function DetectPower()
     DetectPower(0,0,0)
 end
 
-function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R}, i::Int64)
+function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R}, i::Int64,v::Array{Int64,2})
     
-    sort.d.a += sort.rawSignal[i] - sort.d.c
-    sort.d.b += sort.rawSignal[i]^2 - sort.d.c^2   
+    sort.d.a += v[i,sort.id] - sort.d.c
+    sort.d.b += v[i,sort.id]^2 - sort.d.c^2   
 
     if i>=power_win
-        sort.d.c=sort.rawSignal[i-power_win0]
+        sort.d.c=v[i-power_win0,sort.id]
     else
         sort.d.c=sort.sigend[i+sigend_length-power_win0]
     end
@@ -45,24 +45,24 @@ function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort
     
 end
 
-function threshold{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R})
+function threshold{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
     
-    p=Array(Float64,signal_length-power_win)
+    p=Array(Float64,size(v,1)-power_win)
     a = 0
     b = 0
     for i=1:power_win
-        a += sort.rawSignal[i]
-        b += sort.rawSignal[i]^2
+        a += v[i,sort.id]
+        b += v[i,sort.id]^2
     end
 
-    c = sort.rawSignal[1]
+    c = v[1,sort.id]
     
-    for i=power_win1:(signal_length-1)
+    for i=power_win1:(size(v,1)-1)
         
-        a += sort.rawSignal[i] - c
-        b += sort.rawSignal[i]^2 - c^2
+        a += v[i,sort.id] - c
+        b += v[i,sort.id]^2 - c^2
         p[i-power_win]=sqrt((b - a^2/power_win)/power_win)
-        c = sort.rawSignal[i-power_win0]
+        c = v[i-power_win0,sort.id]
         
     end
 
@@ -72,22 +72,22 @@ function threshold{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R})
 
 end
 
-function detectprepare{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R})
+function detectprepare{D<:DetectPower,C,A,F,R}(sort::Sorting{D,C,A,F,R},v::Array{Int64,2})
     
     sort.d.a=0
     sort.d.b=0
     
     for i=1:power_win
-        sort.d.a += sort.rawSignal[i]
-        sort.d.b += sort.rawSignal[i]^2
+        sort.d.a += v[i,sort.id]
+        sort.d.b += v[i,sort.id]^2
     end
 
-    sort.d.c=sort.rawSignal[1]
+    sort.d.c=v[1,sort.id]
 
     for i=power_win1:sigend_length
-        sort.d.a += sort.rawSignal[i] - sort.d.c
-        sort.d.b += sort.rawSignal[i]^2 - sort.d.c^2
-        sort.d.c = sort.rawSignal[i-power_win+1]
+        sort.d.a += v[i,sort.id] - sort.d.c
+        sort.d.b += v[i,sort.id]^2 - sort.d.c^2
+        sort.d.c = v[i-power_win+1,sort.id]
     end
 
     nothing

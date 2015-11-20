@@ -149,6 +149,12 @@ The code above above may not actually be faster, however, because the matrix v h
 Real-Time Application
 **********************
 
+SpikeSorting.jl is being designed to work on real time incoming electrophysiology using a Julia wrapper for Intan evaluation boards:
+
+https://github.com/paulmthompson/Intan.jl
+
+
+
 *************
 Benchmarking
 *************

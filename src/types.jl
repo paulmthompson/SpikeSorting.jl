@@ -1,4 +1,6 @@
 
+export Algorithm
+
 abstract Algorithm
 
 abstract Detect <: Algorithm

@@ -3,7 +3,7 @@ module SpikeSorting
 #using Winston, Gtk.ShortNames
 using Interpolations, DistributedArrays
 
-export Sorting,create_multi,output_buffer
+export Sorting,Spike,create_multi,output_buffer
 
 include("types.jl")
 include("constants.jl")

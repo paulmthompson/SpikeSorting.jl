@@ -31,13 +31,13 @@ end
 
 function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R}, i::Int64,v::AbstractArray{Int64,2})
     
-    sort.d.a += v[i,sort.id] - sort.d.c
-    sort.d.b += v[i,sort.id]^2 - sort.d.c^2   
+    @inbounds sort.d.a += v[i,sort.id] - sort.d.c
+    @inbounds sort.d.b += v[i,sort.id]^2 - sort.d.c^2   
 
     if i>=power_win
-        sort.d.c=v[i-power_win0,sort.id]
+        @inbounds sort.d.c=v[i-power_win0,sort.id]
     else
-        sort.d.c=sort.sigend[i+sigend_length-power_win0]
+        @inbounds sort.d.c=sort.sigend[i+sigend_length-power_win0]
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))

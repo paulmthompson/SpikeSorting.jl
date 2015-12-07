@@ -7,7 +7,7 @@ Clustering methods. Each method needs
 
 =#
 
-export ClusterOSort, ClusterManual
+export ClusterOSort
 
 function clusterprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})   
 end
@@ -36,13 +36,15 @@ end
 function cluster{D,C<:ClusterOSort,A,F,R}(sort::Sorting{D,C,A,F,R})
    
     x=getdist(sort)
+
+    id=0
     
     #add new cluster or assign to old
     if x==0
         sort.c.numClusters+=1
         sort.c.clusters[:,sort.c.numClusters]=sort.features[:]
         sort.c.clusterWeight[sort.c.numClusters]=1   
-        sort.neuronnum[sort.numSpikes]=sort.c.numClusters
+        id=sort.c.numClusters
     else       
         if sort.c.clusterWeight[x]<20
             sort.c.clusterWeight[x]+=1
@@ -54,13 +56,13 @@ function cluster{D,C<:ClusterOSort,A,F,R}(sort::Sorting{D,C,A,F,R})
                 sort.c.clusters[i,x]=.95.*sort.c.clusters[i,x]+.05.*sort.features[i]
             end
         end
-        sort.neuronnum[sort.numSpikes]=x       
+        id=x       
     end
 
     if sort.c.numClusters>1
         merged=findmerge!(sort)
     end
-    nothing
+    id
 end
 
 function getdist(sort::Sorting)

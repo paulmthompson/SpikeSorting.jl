@@ -7,42 +7,37 @@ Main functions for spike sorting
 export cal!,onlinesort!
 
 #Single Channel
-function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},firstrun=false)
+function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=false)
 
     if firstrun==false
-        maincal(sort,v)
+        maincal(sort,v,spikes,ns)
     else
         detectprepare(sort,v)
         threshold(sort,v)
         sort.sigend[:]=v[1:75,sort.id]
-        maincal(sort,v,76)
+        maincal(sort,v,spikes,ns,76)
     end
-
-    #reset things we would normally return
-    #Need to reset waveforms
-    sort.neuronnum=zeros(size(sort.neuronnum))
-    sort.numSpikes=2
-
+    
     nothing
 end
 
 #Multi-channel - Single Core
-function cal!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2},firstrun=false)
+function cal!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=false)
 
     for i=1:length(s)
-        cal!(s[i],v,firstrun)
+        cal!(s[i],v,spikes,ns,firstrun)
     end
     
     nothing
 end
 
 #Multi-channel - Multi-Core
-function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2},firstrun=false)
+function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=false)
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
 		for i in s.indexes[p][1]
-		    cal!(s[i],v,firstrun)
+		    cal!(s[i],v,spikes,ns,firstrun)
 		end
 	end   
     end
@@ -50,26 +45,26 @@ function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2},fi
 end
 
 #Single channel
-function onlinesort!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2})
-    main(sort,v)    
+function onlinesort!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
+    main(sort,v,spikes,ns)    
     nothing
 end
 
 #Multi-channel - Single Core
-function onlinesort!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2})
+function onlinesort!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
     for i=1:length(s)
-        onlinesort!(s[i],v)
+        onlinesort!(s[i],v,spikes,ns)
     end
     nothing
 end
 
 #Multi-channel - multi-core
-function onlinesort!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2})
+function onlinesort!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
 		for i in s.indexes[p][1]
-		    onlinesort!(s[i],v)
+		    onlinesort!(s[i],v,spikes,ns)
 		end
 	end   
     end
@@ -80,7 +75,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2})
+function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
 
     for i=1:size(v,1)
 
@@ -95,16 +90,17 @@ function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorti
             #If end of spike window is reached, continue spike detection
             if sort.index==101
 
-                align(sort)
+                inds=align(sort)
 
                 #overlap detection? (probably need to do this in the time domain)
                 
                 feature(sort)
                     
-                cluster(sort,v)
+                id=cluster(sort,v,spikes,ns)
 
                 #Spike time stamp
-                sort.numSpikes+=1        
+                @inbounds spikes[ns[sort.id],sort.id]=Spike(inds,id)
+                @inbounds ns[sort.id]+=1        
                 sort.index=0
                   
             end
@@ -133,7 +129,7 @@ end
 Main calibration loop
 =#
 
-function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},start=1)
+function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},start=1)
 
     for i=start:size(v,1)
 

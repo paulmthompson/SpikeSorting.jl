@@ -17,6 +17,16 @@ SpikeSorting.jl employs this modular framework, such that one method in a step i
 Data Structures
 ================
 
+---------------------
+Analog Voltage Input
+---------------------
+
+The methods of SpikeSorting.jl expect to operator on a 2D (M time x N channels) matrix of voltage values. 
+
+---------
+Sorting
+---------
+
 The primary data structure is the Sorting type, which contains the variables necessary for individual methods in the spike sorting workflow outlined above, as well as variables common to all of the methods. An instance of sorting is initialized by providing the desired method for each step in the workflow. For instance:
 
 .. code-block:: julia
@@ -39,6 +49,29 @@ In the example above, the detection container of type DetectPower will store all
     		c::Int64
 	end
 
+---------------
+Output Buffers
+---------------
+
+Spikes are characterized by their location in the input voltage array, as well as the cluster they are assigned to. This idea is captured by the Spike type:
+
+.. code-block:: julia
+
+	immutable Spike
+    		inds::UnitRange{Int64}
+    		id::Int64
+	end
+
+For online sorting, an output buffer is used to temporarily store newly detected spikes before they are written to disk. Two buffers are used: one to keep record of the spikes detected, and one to keep track of the number of spikes detected on each channel. These can be created with the output_buffer function:
+
+.. code-block:: julia
+
+	channel_num = 64 # number of channels
+
+	(buf,nums)=output_buffer(channel_num);
+	#buf is 100 x 64 array of Spike type, all initialized to (0:0, 0)
+	#nums is a 64 index array with each element initialized to 0
+
 
 =========
 Workflow
@@ -60,18 +93,21 @@ To create an instance of spike sorting for a single channel, a complete Sorting 
 	reduction=Reduction()	#Use all time points for clustering steps
 	cluster=ClusterOSort()	#OSort style clustering (compare clusters with candidate spikes by euclidean distance)
 
-	mysort=Sorting(detection,cluster,alignment,feature,reduction)
+	s = Sorting(detection,cluster,alignment,feature,reduction)
 
 To use the your sorting instance, you need a collection of analog voltage signals. This is assumed to be stored in a m x n matrix of Int64s, where m is the length of the sampling period, and n is the number of channels. Most methos for spike sorting require some calibration period, which is called with the cal! method. In addition, the first time you process signals with a new sorting instance, several methods that don't run everytime you calibrate (such as setting a threshold) need to be run; you can invoke these by setting the "firstrun" flag in the cal! method equal to true. Once you have finished calibration, you can call the onlinesort! method.
 
 .. code-block:: julia
 
 	#Single channel sorting workflow. v is assumed to be an m x 1 vector of voltage values
+
+	#Create output buffers for single channel
+	(buf1,nums1)=output_buffer(1);
 	
 	#First collect voltage trace
 
 	#Call calibration with first run flag
-	cal!(mysort,v,true)
+	cal!(s,v,buf1,nums1,true)
 
 	#Define some flag to determine when you want to switch from calibration to online sorting
 	while (calibrate==true)
@@ -79,13 +115,13 @@ To use the your sorting instance, you need a collection of analog voltage signal
 	#collect next voltage traces and overwrite v
 
 		#Call calibration methods
-		cal!(mysort,v)
+		cal!(s,v,buf1,nums1)
 
 	end
 
 	#Once calibration is finished, you can perform online sorting instead for incoming data
 	while (sorting==true)
-		onlinesort!(mysort,v)
+		onlinesort!(s,v,buf1,nums1)
 	end
 
 
@@ -99,15 +135,17 @@ The same methods have also been designed to work with m x n voltage arrays, wher
 
 	num_channels=64 
 
-	mysort2=create_multi(detection,cluster,alignment,feature,reduction, num_channels);
+	s2=create_multi(detection,cluster,alignment,feature,reduction, num_channels);
+
+	(buf2,nums2)=output_buffer(num_channels);
 
 Now the same processing methods can be called on a 64 column voltage array:
 
 .. code-block:: julia
 
-	cal!(mysort2,v,true); #first run flag set to true
-	cal!(mysort2,v);
-	onlinesort!(mysort2,v);
+	cal!(s2,v,buf2,nums2,true); #first run flag set to true
+	cal!(s2,v,buf2,nums2);
+	onlinesort!(s2,v,buf2,nums2);
 
 
 ************
@@ -126,24 +164,25 @@ Parallel multi-channel processing works almost identically to single core multi-
 
 	num_channels=64 
 
-	mysort3=create_multi(detection,cluster,alignment,feature,reduction, num_channels, true);
+	s3=create_multi(detection,cluster,alignment,feature,reduction, num_channels, true);
+	(buf3,nums3)=output_buffer(num_channels,true);
 
 Now rather than an array of Sorting instance, mysort3 is a Distributed Array of Sorting instances. This can be applied to all of the processing methods as above:
 
 .. code-block:: julia
 
-	cal!(mysort3,v,true); #first run flag set to true
-	cal!(mysort3,v);
-	onlinesort!(mysort3,v);
+	cal!(s3,v,buf3,nums3,true); #first run flag set to true
+	cal!(s3,v,buf3,nums3);
+	onlinesort!(mysort3,v,buf3,nums3);
 
 The code above above may not actually be faster, however, because the matrix v has to be copied to each process during each interation. To get around this, you can store your voltage values in a SharedArray:
 
 .. code-block:: julia
 
 	v2=convert(SharedArray{Int64,2},v);
-	cal!(mysort3,v2,true); #first run flag set to true
-	cal!(mysort3,v2);
-	onlinesort!(mysort3,v2);
+	cal!(mysort3,v2,buf3,nums3,true); #first run flag set to true
+	cal!(mysort3,v2,buf3,nums3);
+	onlinesort!(mysort3,v2,buf3,nums3);
 
 **********************
 Real-Time Application

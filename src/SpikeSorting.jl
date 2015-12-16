@@ -1,7 +1,6 @@
 module SpikeSorting
 
-#using Winston, Gtk.ShortNames
-using Interpolations, DistributedArrays
+using Interpolations, DistributedArrays, ArrayViews
 
 export Sorting,Spike,create_multi,output_buffer
 

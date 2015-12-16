@@ -73,7 +73,8 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
             collect(1:reducedims),1.0,zeros(Float64,wavelength))   
 end
 
-function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num::Int64,par=false)
+function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num::Int64)
+    
     st=Array(Sorting{typeof(d),typeof(c),typeof(a),typeof(f),typeof(r)},num)
 
     for i=1:num
@@ -81,11 +82,14 @@ function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num:
         st[i].id=i
     end
 
-    if par==true
-        st=distribute(st)
-    end
-
     st
     
 end
     
+function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num::Int64,cores::UnitRange{Int64})
+        
+    st=create_multi(d,c,a,f,r,num)
+
+    st=distribute(st,procs=cores)
+    
+end

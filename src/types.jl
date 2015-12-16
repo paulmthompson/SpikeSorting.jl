@@ -90,6 +90,6 @@ function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num:
         
     st=create_multi(d,c,a,f,r,num)
 
-    st=distribute(st,procs=cores)
+    st=distribute(st,procs=collect(cores))
     
 end

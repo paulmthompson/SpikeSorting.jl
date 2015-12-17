@@ -135,6 +135,14 @@ Reference:
 
 Mtetwa, Nhamoinesu and Smith, Leslie S. Smoothing and thresholding in neuronal spike detection. 2006.
 
+------------------------------
+Precise Timing Spike Detection
+------------------------------
+
+Reference:
+
+Maccione, Alessandro et al. A novel algorithm for precise identification of spikes in extracellularly recorded neuronal signals. 2009.
+
 ----------
 Summation
 ----------
@@ -161,9 +169,9 @@ Reference:
 
 Kim, Kyung Hwan and Kim, Sung June. A wavelet-based method for action potential detection from extracellular neural signal recording with low signal-to-noise ratio. 2003.
 
--------------------------------
+----------------------------
 Wavelet - Wavelet Footprints
--------------------------------
+----------------------------
 
 Reference:
 

@@ -17,7 +17,7 @@ end
 
 function align{D,C,A<:AlignMax,F,R}(sort::Sorting{D,C,A,F,R})
     j=indmax(sort.p_temp)+window_half
-    sort.waveform=view(sort.p_temp,j-window_half:j+window_half-1)
+    sort.waveform=sub(sort.p_temp,j-window_half:j+window_half-1)
     
     return j-window_half:j+window_half-1
 end

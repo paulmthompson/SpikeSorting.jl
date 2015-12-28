@@ -228,7 +228,7 @@ function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDD,R<:Reduction}
     counter=1
     counterdim=1
     for i in DD_inds
-        for j=(i+1):size(sort.waveforms,1)
+        for j=(i+1):size(sort.waveform,1)
             sort.fullfeature[counter]=sort.waveform[j]-sort.waveform[j-i]
             if counter==sort.dims[counterdim]
                 sort.f.inds[counterdim,1]=i

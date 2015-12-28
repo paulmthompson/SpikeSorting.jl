@@ -148,7 +148,7 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::So
 
                 featureprepare(sort)
                 
-                reductionprepare(sort,v)
+                reductionprepare(sort)
 
                 sort.index=0
                            

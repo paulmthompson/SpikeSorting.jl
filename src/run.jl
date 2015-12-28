@@ -7,22 +7,23 @@ Main functions for spike sorting
 export cal!,onlinesort!
 
 #Single Channel
-function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=false)
+function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=0)
 
-    if firstrun==false
+    if firstrun==2 #General Calibration
         maincal(sort,v,spikes,ns)
-    else
+    elseif firstrun==1 #After first run, but still need threshold
+        threscal(sort,v,spikes,ns)
+    else #Very first run
         detectprepare(sort,v)
-        threshold(sort,v)
         sort.sigend[:]=v[1:75,sort.id]
-        maincal(sort,v,spikes,ns,76)
+        threscal(sort,v,spikes,ns,76)
     end
     
     nothing
 end
 
 #Multi-channel - Single Core
-function cal!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=false)
+function cal!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=0)
 
     for i=1:length(s)
         cal!(s[i],v,spikes,ns,firstrun)
@@ -32,7 +33,7 @@ function cal!{T<:Sorting}(s::Array{T,1},v::AbstractArray{Int64,2},spikes::Abstra
 end
 
 #Multi-channel - Multi-Core
-function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=false)
+function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=0)
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
@@ -96,7 +97,7 @@ function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorti
                 
                 feature(sort)
                     
-                id=cluster(sort,v,spikes,ns)
+                id=cluster(sort)
 
                 #Spike time stamp
                 @inbounds spikes[ns[sort.id],sort.id]=Spike(inds,id)
@@ -155,12 +156,14 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::So
             end
 
         elseif p>sort.thres
+
+            #println(i)
             
             if i<=window
                 sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
-                sort.p_temp[(window-i):window]=v[1:i-1,sort.id]  
+                sort.p_temp[(window-i+2):window]=v[1:i-1,sort.id]  
             else
-                sort.p_temp[1:window]=v[i-window:i-1,sort.id]
+                sort.p_temp[1:window]=v[(i-window):(i-1),sort.id]
             end
 
             sort.p_temp[window+1]=v[i,sort.id]
@@ -174,3 +177,22 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::So
 
 end
 
+#=
+Threshold calibration loop
+=#
+
+function threscal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},start=1)
+
+    for i=start:size(v,1)
+
+        p=detect(sort,i,v)
+
+        threshold(sort,p)
+              
+    end
+                   
+    sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
+
+    nothing
+
+end

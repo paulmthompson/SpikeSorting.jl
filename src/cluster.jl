@@ -9,7 +9,7 @@ Clustering methods. Each method needs
 
 export ClusterOSort
 
-function clusterprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})   
+function clusterprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})   
 end
 
 #=
@@ -33,7 +33,7 @@ function ClusterOSort(n::Int64)
     ClusterOSort(zeros(Float64,n,5),zeros(Int64,5),0,1.0)
 end
 
-function cluster{D,C<:ClusterOSort,A,F,R}(sort::Sorting{D,C,A,F,R})
+function cluster{D,C<:ClusterOSort,A,F,R,T}(sort::Sorting{D,C,A,F,R,T})
    
     x=getdist(sort)
 
@@ -120,7 +120,7 @@ function findmerge!(sort::Sorting)
     
 end
 
-function clusterprepare{D<:Detect,C<:ClusterOSort,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
+function clusterprepare{D<:Detect,C<:ClusterOSort,A<:Align,F<:Feature,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
     sort.c.Tsm=50*var(sort.rawSignal)
     nothing
 end
@@ -182,7 +182,7 @@ function ClusterClassit(N::Int64)
     ClusterClassit(node(zeros(Float64,N)))
 end
 
-function cluster{D,C<:ClusterClassit,A,F,R}(sort::Sorting{D,C,A,F,R})
+function cluster{D,C<:ClusterClassit,A,F,R,T}(sort::Sorting{D,C,A,F,R,T})
     x=sort.features[:]
     cobweb(sort.c.clustree,x)
 end

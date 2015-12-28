@@ -8,6 +8,7 @@ abstract Align <:Algorithm
 abstract Cluster <:Algorithm
 abstract Feature <:Algorithm
 abstract Reduction <:Algorithm
+abstract Threshold <:Algorithm
 
 #Data Structure to store range of a spike and cluster ID
 immutable Spike
@@ -34,12 +35,13 @@ function output_buffer(channels::Int64,par=false)
     
 end
 
-type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}
+type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction,T<:Threshold}
     d::D
     c::C
     a::A
     f::F
     r::R
+    t::T
     id::Int64
     sigend::Array{Int64,1}
     index::Int64
@@ -51,7 +53,7 @@ type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}
     waveform::Array{Float64,1}
 end
 
-function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
+function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold)
 
     #determine size of alignment output
     wavelength=mysize(a)
@@ -67,18 +69,18 @@ function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction)
     end
     f=typeof(f)(wavelength,reducedims)
     c=typeof(c)(reducedims)
-    Sorting(d,c,a,f,r,
+    Sorting(d,c,a,f,r,t,
             1,zeros(Int64,window+window_half),0,
             zeros(Float64,window*2),zeros(Float64,reducedims),zeros(Float64,fulllength),
             collect(1:reducedims),1.0,zeros(Float64,wavelength))   
 end
 
-function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num::Int64)
+function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64)
     
-    st=Array(Sorting{typeof(d),typeof(c),typeof(a),typeof(f),typeof(r)},num)
+    st=Array(Sorting{typeof(d),typeof(c),typeof(a),typeof(f),typeof(r),typeof(t)},num)
 
     for i=1:num
-        st[i]=Sorting(typeof(d)(),typeof(c)(),typeof(a)(),typeof(f)(),typeof(r)())
+        st[i]=Sorting(typeof(d)(),typeof(c)(),typeof(a)(),typeof(f)(),typeof(r)(),typeof(t)())
         st[i].id=i
     end
 
@@ -86,9 +88,9 @@ function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num:
     
 end
     
-function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,num::Int64,cores::UnitRange{Int64})
+function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64,cores::UnitRange{Int64})
         
-    st=create_multi(d,c,a,f,r,num)
+    st=create_multi(d,c,a,f,r,t,num)
 
     st=distribute(st,procs=collect(cores))
     

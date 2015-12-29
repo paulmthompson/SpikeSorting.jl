@@ -39,6 +39,9 @@ end
 
 global sorting_num = 1
 
+function MakeSorting()
+end
+
 function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Threshold)
 
     global sorting_num
@@ -96,7 +99,10 @@ end
 
 function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64)
 
-    gen_sorting(d,c,a,f,r,t)
+    if method_exists(MakeSorting,(typeof(d),typeof(c),typeof(a),typeof(f),typeof(r),typeof(t)))
+    else
+        gen_sorting(d,c,a,f,r,t)
+    end
     
     st=Array(typeof(MakeSorting(d,c,a,f,r,t)),num)
 

@@ -9,7 +9,7 @@ Feature extraction methods. Each method needs
 
 export FeatureTime, FeatureIT, FeatureDD, FeatureCurv
 
-function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function featureprepare(f::Feature,sort::Sorting)
     nothing
 end
 
@@ -24,7 +24,7 @@ function FeatureTime(M::Int64,N::Int64)
     FeatureTime()
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureTime,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function feature(f::FeatureTime,sort::Sorting)
     sort.features=sub(sort.waveform,sort.dims)
     nothing
 end
@@ -73,7 +73,7 @@ function FeatureWPD(M::Int64,N::Int64)
     FeatureWPD()
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureWPD,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function feature(f::FeatureWPD,sort::Sorting)
     #a=2^i where i = 1:L and L=log2(N) where N is signal length
 
 end
@@ -104,7 +104,7 @@ function FeatureIT(M::Int64,N::Int64)
     FeatureIT()
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureIT,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function feature(f::FeatureIT,sort::Sorting)
     
     sort.features[:]=zeros(Float64,length(sort.features))
     for i=sort.f.talpha:(sort.f.talpha+sort.f.N1)
@@ -124,7 +124,7 @@ function mysize(feature::FeatureIT,wavelength::Int64)
     2
 end
 
-function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureIT,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function featureprepare(f::FeatureIT,sort::Sorting)
 
     sort.f.wavemean=mean(sort.waveforms[:,sort.numSpikes])
     tempN1=0
@@ -209,7 +209,7 @@ function FeatureDD(M::Int64,N::Int64)
     FeatureDD(ones(Int64,N,2))
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDD,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function feature(f::FeatureDD,sort::Sorting)
     for i=1:length(sort.dims)
         sort.features[i]=sort.waveform[sort.f.inds[i,2]]-sort.waveform[sort.f.inds[i,2]-sort.f.inds[i,1]]
     end     
@@ -224,7 +224,7 @@ function mysize(feature::FeatureDD,wavelength::Int64)
     sizeN
 end
 
-function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureDD,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function featureprepare(f::FeatureDD,sort::Sorting)
     counter=1
     counterdim=1
     for i in DD_inds
@@ -254,7 +254,7 @@ function FeatureCurv(M::Int64,N::Int64)
     FeatureCurv()
 end
 
-function feature{D<:Detect,C<:Cluster,A<:Align,F<:FeatureCurv,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function feature(f::FeatureCurv,sort::Sorting)
     V1=0.0
     V2=0.0
 
@@ -271,7 +271,7 @@ function mysize(feature::FeatureCurv,wavelength::Int64)
     wavelength-2
 end
 
-function featureprepare{D<:Detect,C<:Cluster,A<:Align,F<:FeatureCurv,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T})
+function featureprepare(f::FeatureCurv,sort::Sorting)
     V1=0.0
     V2=0.0
 

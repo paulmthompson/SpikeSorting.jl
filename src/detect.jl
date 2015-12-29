@@ -10,7 +10,7 @@ A method may also need a "detectprepare" function to use in its first iteration 
 
 export DetectPower, DetectSignal, DetectNEO
 
-function detectprepare{D,C,A,F,R,T}(sort::Sorting{D,C,A,F,R,T},v::AbstractArray{Int64,2})
+function detectprepare(d::Detect,sort::Sorting,v::AbstractArray{Int64,2})
 end
 
 #=
@@ -28,7 +28,7 @@ function DetectPower()
     DetectPower(0,0,0)
 end
 
-function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T}, i::Int64,v::AbstractArray{Int64,2})
+function detect(d::DetectPower,sort::Sorting, i::Int64,v::AbstractArray{Int64,2})
     
     @inbounds sort.d.a += v[i,sort.id] - sort.d.c
     @inbounds sort.d.b += v[i,sort.id]^2 - sort.d.c^2   
@@ -44,7 +44,7 @@ function detect{D<:DetectPower,C<:Cluster,A<:Align,F<:Feature,R<:Reduction,T}(so
     
 end
 
-function detectprepare{D<:DetectPower,C,A,F,R,T}(sort::Sorting{D,C,A,F,R,T},v::AbstractArray{Int64,2})
+function detectprepare(d::DetectPower,sort::Sorting,v::AbstractArray{Int64,2})
     
     sort.d.a=0
     sort.d.b=0
@@ -75,17 +75,9 @@ Quiroga et al 2004
 type DetectSignal <: Detect
 end
 
-function detect{D<:DetectSignal,C,A,F,R,T}(sort::Sorting{D,C,A,F,R,T},i::Int64)
+function detect(d::DetectSignal,sort::Sorting,i::Int64,v::AbstractArray{Int64,2})
 
-    abs(sort.rawSignal[i])
-    
-end
-
-function threshold{D<:DetectSignal,C,A,F,R,T}(sort::Sorting{D,C,A,F,R,T})
-
-    sort.thres=4*median(abs(sort.rawSignal)/.6745)
-
-    nothing
+    abs(v[i,sort.id])
     
 end
 
@@ -98,7 +90,7 @@ Choi et al 2006
 type DetectNEO <: Detect
 end
 
-function detect{D<:DetectNEO,C,A,F,R,T}(sort::Sorting{D,C,A,F,R,T},i::Int64)
+function detect(d::DetectNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2})
 
     if i==length(sort.rawSignal)
         #Will do spike detection next iteration due to edging
@@ -120,20 +112,6 @@ function detect{D<:DetectNEO,C,A,F,R,T}(sort::Sorting{D,C,A,F,R,T},i::Int64)
     end
 
     psi
-    
-end
-
-function threshold{D<:DetectNEO,C,A,F,R,T}(sort::Sorting{D,C,A,F,R,T})
-
-    psi=zeros(Int64,signal_length-1)
-    
-    for i=2:signal_length-1
-        psi[i]=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
-    end
-
-    sort.thres=3*mean(psi)
-
-    nothing
     
 end
 
@@ -164,7 +142,7 @@ Azami et al 2014
 type DetectSNEO <: Detect
 end
 
-function detect{D<:DetectSNEO,C,A,F,R,T}(sort::Sorting{D,C,A,F,R,T},i::Int64)
+function detect(d::DetectSNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2})
 
     if i==length(sort.rawSignal)
         #Will do spike detection next iteration due to edging
@@ -206,7 +184,7 @@ function DetectMCWC()
     DetectMCWC(zeros(Float64,11),zeros(Float64,10))
 end
 
-function detect{D<:DetectMCWC,C<:Cluster,A<:Align,F<:Feature,R<:Reduction,T}(sort::Sorting{D,C,A,F,R,T}, i::Int64)
+function detect(d::DetectMCWC, sort::Sorting, i::Int64, v::AbstractArray{Int64,2})
 
     p=0.0
     

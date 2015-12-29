@@ -9,7 +9,7 @@ Dimensionality Reduction methods. Each method needs
 
 export ReductionNone, ReductionMD
 
-function reductionprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R})
+function reductionprepare(r::Reduction,sort::Sorting)
     nothing
 end
 
@@ -40,7 +40,7 @@ function ReductionMD(N::Int64,dims::Int64)
     ReductionMD(dims,zeros(Int64,N),zeros(Float64,N),zeros(Float64,N),zeros(Int64,dims))
 end
 
-function reductionprepare{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:ReductionMD}(sort::Sorting{D,C,A,F,R})
+function reductionprepare(r::ReductionMD,sort::Sorting)
 
     max3ind=zeros(Int64,3)
     for i=1:length(sort.fullfeature)

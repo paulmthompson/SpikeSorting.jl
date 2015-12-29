@@ -10,6 +10,8 @@ abstract Feature <:Algorithm
 abstract Reduction <:Algorithm
 abstract Threshold <:Algorithm
 
+abstract Sorting
+
 #Data Structure to store range of a spike and cluster ID
 immutable Spike
     inds::UnitRange{Int64}
@@ -35,52 +37,71 @@ function output_buffer(channels::Int64,par=false)
     
 end
 
-type Sorting{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction,T<:Threshold}
-    d::D
-    c::C
-    a::A
-    f::F
-    r::R
-    t::T
-    id::Int64
-    sigend::Array{Int64,1}
-    index::Int64
-    p_temp::Array{Float64,1}
-    features::Array{Float64,1}
-    fullfeature::Array{Float64,1}
-    dims::Array{Int64,1}
-    thres::Float64
-    waveform::Array{Float64,1}
-end
+global sorting_num = 1
 
-function Sorting(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold)
+function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Threshold)
 
-    #determine size of alignment output
-    wavelength=mysize(a)
+    global sorting_num
+    
+    @eval begin
+        type $(symbol("Sorting_$sorting_num")) <: Sorting
+            d::($(typeof(D)))
+            c::($(typeof(C)))
+            a::($(typeof(A)))
+            f::($(typeof(F)))
+            r::($(typeof(R)))
+            t::($(typeof(T)))
+            id::Int64
+            sigend::Array{Int64,1}
+            index::Int64
+            p_temp::Array{Float64,1}
+            features::Array{Float64,1}
+            fullfeature::Array{Float64,1}
+            dims::Array{Int64,1}
+            thres::Float64
+            waveform::Array{Float64,1}
+        end
 
-    #determine feature size
-    fulllength=mysize(f,wavelength)
+        function MakeSorting(D::($(typeof(D))),C::($(typeof(C))),A::($(typeof(A))),F::($(typeof(F))),R::($(typeof(R))),T::($(typeof(T))))
+    
+            #determine size of alignment output
+            wavelength=mysize(A)
 
-    if typeof(r)==ReductionNone
-        reducedims=fulllength
-    else
-        r=typeof(r)(fulllength,r.mydims)
-        reducedims=r.mydims
+            #determine feature size
+            fulllength=mysize(F,wavelength)
+
+            if typeof(R)==ReductionNone
+                reducedims=fulllength
+            else
+                R=typeof(R)(fulllength,R.mydims)
+                reducedims=R.mydims
+            end
+            F=typeof(F)(wavelength,reducedims)
+            C=typeof(C)(reducedims)
+            $(symbol("Sorting_$sorting_num"))(typeof(D)(),typeof(C)(),typeof(A)(),typeof(F)(),typeof(R)(),typeof(T)(),
+                    1,zeros(Int64,window+window_half),0,
+                    zeros(Float64,window*2),zeros(Float64,reducedims),zeros(Float64,fulllength),
+                    collect(1:reducedims),1.0,zeros(Float64,wavelength))   
+        end
+
     end
-    f=typeof(f)(wavelength,reducedims)
-    c=typeof(c)(reducedims)
-    Sorting(d,c,a,f,r,t,
-            1,zeros(Int64,window+window_half),0,
-            zeros(Float64,window*2),zeros(Float64,reducedims),zeros(Float64,fulllength),
-            collect(1:reducedims),1.0,zeros(Float64,wavelength))   
+
+    sorting_num+=1
+
+    nothing
+
 end
+
+
 
 function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64)
+
+    gen_sorting(d,c,a,f,r,t)
     
-    st=Array(Sorting{typeof(d),typeof(c),typeof(a),typeof(f),typeof(r),typeof(t)},num)
+    st=Array(typeof(MakeSorting(d,c,a,f,r,t)),num)
 
     for i=1:num
-        st[i]=Sorting(typeof(d)(),typeof(c)(),typeof(a)(),typeof(f)(),typeof(r)(),typeof(t)())
+        st[i]=MakeSorting(d,c,a,f,r,t)
         st[i].id=i
     end
 

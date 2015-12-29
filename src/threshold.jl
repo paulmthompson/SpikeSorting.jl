@@ -25,7 +25,7 @@ function ThresholdMean()
     ThresholdMean(0.0,1,0.0,0.0,0.0,0.0)
 end
 
-function threshold{D,C,A,F,R,T<:ThresholdMean}(sort::Sorting{D,C,A,F,R,T},p::Float64)
+function threshold(t::ThresholdMean,sort::Sorting,p::Float64)
 
     sort.t.k+=1
     

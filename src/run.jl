@@ -7,14 +7,14 @@ Main functions for spike sorting
 export cal!,onlinesort!
 
 #Single Channel
-function cal!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=0)
+function cal!(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=0)
 
     if firstrun==2 #General Calibration
         maincal(sort,v,spikes,ns)
     elseif firstrun==1 #After first run, but still need threshold
         threscal(sort,v,spikes,ns)
     else #Very first run
-        detectprepare(sort,v)
+        detectprepare(sort.d,sort,v)
         sort.sigend[:]=v[1:75,sort.id]
         threscal(sort,v,spikes,ns,76)
     end
@@ -46,7 +46,7 @@ function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v::AbstractArray{Int64,2},sp
 end
 
 #Single channel
-function onlinesort!{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
+function onlinesort!(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
     main(sort,v,spikes,ns)    
     nothing
 end
@@ -76,11 +76,11 @@ end
 Main processing loop for length of raw signal
 =#
 
-function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
+function main(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
 
     for i=1:size(v,1)
 
-        p=detect(sort,i,v)
+        p=detect(sort.d,sort,i,v)
         
         #continue collecting spike information if there was a recent spike
         if sort.index>0
@@ -91,13 +91,13 @@ function main{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorti
             #If end of spike window is reached, continue spike detection
             if sort.index==101
 
-                inds=align(sort)
+                inds=align(sort.a,sort)
 
                 #overlap detection? (probably need to do this in the time domain)
                 
-                feature(sort)
+                feature(sort.f,sort)
                     
-                id=cluster(sort)
+                id=cluster(sort.c,sort)
 
                 #Spike time stamp
                 @inbounds spikes[ns[sort.id],sort.id]=Spike(inds,id)
@@ -130,11 +130,11 @@ end
 Main calibration loop
 =#
 
-function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},start=1)
+function maincal(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},start=1)
 
     for i=start:size(v,1)
 
-        p=detect(sort,i,v)
+        p=detect(sort.d,sort,i,v)
         
         #continue collecting spike information if there was a recent spike
         if sort.index>0
@@ -145,11 +145,11 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::So
             #If end of spike window is reached, continue spike detection
             if sort.index==101
 
-                align(sort)
+                align(sort.a,sort)
 
-                featureprepare(sort)
+                featureprepare(sort.f,sort)
                 
-                reductionprepare(sort)
+                reductionprepare(sort.r,sort)
 
                 sort.index=0
                            
@@ -179,13 +179,13 @@ end
 Threshold calibration loop
 =#
 
-function threscal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::Sorting{D,C,A,F,R},v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},start=1)
+function threscal(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},start=1)
 
     for i=start:size(v,1)
 
-        p=detect(sort,i,v)
+        p=detect(sort.d,sort,i,v)
 
-        threshold(sort,p)
+        threshold(sort.t,sort,p)
               
     end
                    

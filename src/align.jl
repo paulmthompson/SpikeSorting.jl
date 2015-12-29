@@ -19,7 +19,7 @@ function align(a::AlignMax, sort::Sorting)
     j=indmax(sub(sort.p_temp,window_half:(window+window_half)))+window_half
     sort.waveform=sub(sort.p_temp,j-window_half:j+window_half-1)
     
-    return j-window_half:j+window_half-1
+    return j
 end
 
 function mysize(align::AlignMax)

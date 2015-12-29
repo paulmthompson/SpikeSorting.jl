@@ -91,16 +91,17 @@ function main(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spik
             #If end of spike window is reached, continue spike detection
             if sort.index==101
 
-                inds=align(sort.a,sort)
+                ind=align(sort.a,sort)
 
                 #overlap detection? (probably need to do this in the time domain)
                 
                 feature(sort.f,sort)
-                    
+
+                println("made it!")
                 id=cluster(sort.c,sort)
 
                 #Spike time stamp
-                @inbounds spikes[ns[sort.id],sort.id]=Spike(inds,id)
+                @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-75):(ind+i-25),id)
                 @inbounds ns[sort.id]+=1        
                 sort.index=0
                   
@@ -150,6 +151,8 @@ function maincal(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{S
                 featureprepare(sort.f,sort)
                 
                 reductionprepare(sort.r,sort)
+
+                clusterprepare(sort.c,sort,v[i,sort.id])
 
                 sort.index=0
                            

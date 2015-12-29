@@ -23,14 +23,19 @@ type ClusterOSort <: Cluster
     clusterWeight::Array{Int64,1}
     numClusters::Int64
     Tsm::Float64
+    m_k::Float64
+    k::Int64
+    m_l::Float64
+    s_k::Float64
+    s_l::Float64
 end
 
 function ClusterOSort()   
-    ClusterOSort(zeros(Float64,50,5),zeros(Int64,5),0,1.0)  
+    ClusterOSort(zeros(Float64,50,5),zeros(Int64,5),0,1.0,0.0,1,0.0,0.0,0.0)  
 end
 
 function ClusterOSort(n::Int64)
-    ClusterOSort(zeros(Float64,n,5),zeros(Int64,5),0,1.0)
+    ClusterOSort(zeros(Float64,n,5),zeros(Int64,5),0,1.0,0.0,1,0.0,0.0,0.0)
 end
 
 function cluster(c::ClusterOSort,sort::Sorting)
@@ -120,8 +125,21 @@ function findmerge!(sort::Sorting)
     
 end
 
-function clusterprepare(c::ClusterOSort,sort::Sorting)
-    sort.c.Tsm=50*var(sort.rawSignal)
+function clusterprepare(c::ClusterOSort,sort::Sorting,p::Int64)
+
+    sort.c.k+=1
+    
+    sort.c.m_k=sort.c.m_l+(p-sort.c.m_l)/sort.c.k
+    sort.c.s_k=sort.c.s_l+(p-sort.c.m_l)*(p-sort.c.m_k)
+
+    myvar=sort.c.s_k/(sort.c.k-1)
+
+
+    sort.c.Tsm=50*(myvar)
+
+    sort.c.m_l=sort.c.m_k
+    sort.c.s_l=sort.c.s_k
+   
     nothing
 end
 

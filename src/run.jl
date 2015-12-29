@@ -97,12 +97,12 @@ function main(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spik
                 
                 feature(sort.f,sort)
 
-                println("made it!")
+                #println("made it!")
                 id=cluster(sort.c,sort)
 
                 #Spike time stamp
-                @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-75):(ind+i-25),id)
-                @inbounds ns[sort.id]+=1        
+                @inbounds ns[sort.id]+=1    
+                @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-125):(ind+i-75),id)   
                 sort.index=0
                   
             end
@@ -111,7 +111,7 @@ function main(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spik
             
             if i<=window
                 @inbounds sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
-                @inbounds sort.p_temp[(window-i):window]=v[1:i-1,sort.id]  
+                @inbounds sort.p_temp[(window-i+2):window]=v[1:i-1,sort.id]  
             else
                 @inbounds sort.p_temp[1:window]=v[i-window:i-1,sort.id]
             end

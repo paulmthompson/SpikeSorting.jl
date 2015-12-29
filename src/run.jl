@@ -156,8 +156,6 @@ function maincal{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(sort::So
             end
 
         elseif p>sort.thres
-
-            #println(i)
             
             if i<=window
                 sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]

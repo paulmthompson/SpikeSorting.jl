@@ -136,11 +136,13 @@ function maincal(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{S
     for i=start:size(v,1)
 
         p=detect(sort.d,sort,i,v)
+
+        @inbounds clusterprepare(sort.c,sort,v[i,sort.id])
         
         #continue collecting spike information if there was a recent spike
         if sort.index>0
             
-            sort.p_temp[sort.index]=v[i,sort.id]
+            @inbounds sort.p_temp[sort.index]=v[i,sort.id]
             sort.index+=1
 
             #If end of spike window is reached, continue spike detection
@@ -152,8 +154,6 @@ function maincal(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{S
                 
                 reductionprepare(sort.r,sort)
 
-                clusterprepare(sort.c,sort,v[i,sort.id])
-
                 sort.index=0
                            
             end
@@ -161,18 +161,18 @@ function maincal(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{S
         elseif p>sort.thres
             
             if i<=window
-                sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
-                sort.p_temp[(window-i+2):window]=v[1:i-1,sort.id]  
+                @inbounds sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
+                @inbounds sort.p_temp[(window-i+2):window]=v[1:i-1,sort.id]  
             else
-                sort.p_temp[1:window]=v[(i-window):(i-1),sort.id]
+                @inbounds sort.p_temp[1:window]=v[(i-window):(i-1),sort.id]
             end
 
-            sort.p_temp[window+1]=v[i,sort.id]
+            @inbounds sort.p_temp[window+1]=v[i,sort.id]
             sort.index=window+2
         end
     end
                    
-    sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
+    @inbounds sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
 
     nothing
 

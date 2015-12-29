@@ -74,7 +74,7 @@ function getdist(sort::Sorting)
     
     dist=Array(Float64,sort.c.numClusters)
     for i=1:sort.c.numClusters
-        dist[i]=norm(sort.features-sort.c.clusters[:,i])
+        dist[i]=norm(sort.features-sort.c.clusters[:,i])^2
     end
     if sort.c.numClusters<1
         return 0
@@ -102,7 +102,7 @@ function findmerge!(sort::Sorting)
         end
         
         for j=(i+1):sort.c.numClusters
-                dist=norm(sort.c.clusters[:,i]-sort.c.clusters[:,j])
+                dist=norm(sort.c.clusters[:,i]-sort.c.clusters[:,j])^2
             if dist<sort.c.Tsm
                 for k=1:size(sort.c.clusters[:,i],1)
                     sort.c.clusters[k,i]=(sort.c.clusters[k,i]+sort.c.clusters[k,j])/2
@@ -135,7 +135,7 @@ function clusterprepare(c::ClusterOSort,sort::Sorting,p::Int64)
     myvar=sort.c.s_k/(sort.c.k-1)
 
 
-    sort.c.Tsm=50*(myvar)
+    sort.c.Tsm=(myvar)*50
 
     sort.c.m_l=sort.c.m_k
     sort.c.s_l=sort.c.s_k

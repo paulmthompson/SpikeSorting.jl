@@ -31,11 +31,11 @@ type ClusterOSort <: Cluster
 end
 
 function ClusterOSort()   
-    ClusterOSort(zeros(Float64,50,5),zeros(Int64,5),0,1.0,0.0,1,0.0,0.0,0.0)  
+    ClusterOSort(zeros(Float64,50,10),zeros(Int64,10),0,1.0,0.0,1,0.0,0.0,0.0)  
 end
 
 function ClusterOSort(n::Int64)
-    ClusterOSort(zeros(Float64,n,5),zeros(Int64,5),0,1.0,0.0,1,0.0,0.0,0.0)
+    ClusterOSort(zeros(Float64,n,10),zeros(Int64,10),0,1.0,0.0,1,0.0,0.0,0.0)
 end
 
 function cluster(c::ClusterOSort,sort::Sorting)
@@ -64,9 +64,10 @@ function cluster(c::ClusterOSort,sort::Sorting)
         id=x       
     end
 
-    if sort.c.numClusters>1
-        merged=findmerge!(sort)
+    if x>0
+        findmerge!(sort,id)
     end
+
     id
 end
 
@@ -89,39 +90,44 @@ function getdist(sort::Sorting)
   
 end
 
-function findmerge!(sort::Sorting)
-    #if two clusters are below threshold distance away, merge them
+function findmerge!(sort::Sorting,id::Int64)
 
-    skip=0
-    merger=0
+    if sort.c.numClusters>1
 
-    for i=1:sort.c.numClusters-1
+        dist=zeros(Float64,sort.c.numClusters)
         
-        if i==skip
-            continue
-        end
-        
-        for j=(i+1):sort.c.numClusters
-                dist=norm(sort.c.clusters[:,i]-sort.c.clusters[:,j])^2
-            if dist<sort.c.Tsm
-                for k=1:size(sort.c.clusters[:,i],1)
-                    sort.c.clusters[k,i]=(sort.c.clusters[k,i]+sort.c.clusters[k,j])/2
-                end
-                sort.c.numClusters-=1
-                skip=j
-                merger=i
+        for i=1:sort.c.numClusters
+            if i==id
+                dist[i]=1.0e20
+            else
+                dist[i]=norm(sub(sort.c.clusters,:,id)-sub(sort.c.clusters,:,i))^2
             end
         end
-    end
 
-    if skip!=0
+        ind=indmin(dist)
+        if dist[ind]<sort.c.Tsm #if less than threshold, combine clusters
 
-        for i=skip:sort.c.numClusters+1
-            sort.c.clusters[:,i]=sort.c.clusters[:,i+1]
+            newid=min(ind,id)
+
+            sort.c.clusters[:,newid]=(sort.c.clusters[:,ind]+sort.c.clusters[:,id])/2
+            sort.c.clusterWeight[newid]=1
+
+            delid=max(ind,id)
+
+            for i=delid:sort.c.numClusters
+                sort.c.clusters[:,i]=sort.c.clusters[:,i+1]
+                sort.c.clusterWeight[i]=sort.c.clusterWeight[i+1]
+            end
+
+            sort.c.numClusters-=1
+
+            findmerge!(sort,newid) #compare newly created cluster to existing clusters
+            
         end
+        
     end
 
-    [skip,merger]
+    nothing
     
 end
 
@@ -135,7 +141,7 @@ function clusterprepare(c::ClusterOSort,sort::Sorting,p::Int64)
     myvar=sort.c.s_k/(sort.c.k-1)
 
 
-    sort.c.Tsm=(myvar)*50
+    sort.c.Tsm=(myvar)*100
 
     sort.c.m_l=sort.c.m_k
     sort.c.s_l=sort.c.s_k

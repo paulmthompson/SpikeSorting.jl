@@ -1,6 +1,10 @@
 # SpikeSorting.jl
 Online spike sorting methods in Julia
 
+# Installation
+
+Pkg.clone("https://github.com/paulmthompson/SpikeSorting.jl.git")
+
 # Documentation
 
 http://spikesortingjl.readthedocs.org/en/latest/

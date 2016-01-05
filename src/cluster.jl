@@ -7,9 +7,9 @@ Clustering methods. Each method needs
 
 =#
 
-export ClusterOSort
+export ClusterOSort, ClusterNone
 
-function clusterprepare(c::Cluster, sort::Sorting)   
+function clusterprepare(c::Cluster, sort::Sorting,p::Int64)   
 end
 
 #=
@@ -149,6 +149,20 @@ function clusterprepare(c::ClusterOSort,sort::Sorting,p::Int64)
     nothing
 end
 
+#=
+No clustering
+=#
+
+type ClusterNone <: Cluster
+end
+
+function ClusterNone(n::Int64)
+    ClusterNone()
+end
+
+function cluster(c::ClusterNone,sort::Sorting)
+    1
+end
 
 #=
 CLASSIT

@@ -119,6 +119,14 @@ Reference:
 
 Kamboh, Awais M. and Mason, Andrew J. Computationally efficient neural feature extraction for spike sorting in implantable high-density recording systems. 2013
 
+----------------------------
+Dynamic Multiphasic Detector
+----------------------------
+
+Reference:
+
+Swindale, Nicholas V. and Spacek, Martin A. Spike detection methods for polytrodes and high density microelectrode arrays. 2014.
+
 -------------------------------------------
 Nonlinear Energy Operator - smoothed (SNEO)
 -------------------------------------------
@@ -142,6 +150,14 @@ Precise Timing Spike Detection
 Reference:
 
 Maccione, Alessandro et al. A novel algorithm for precise identification of spikes in extracellularly recorded neuronal signals. 2009.
+
+-------------------------------
+Spatial Interpolation Detection
+-------------------------------
+
+Reference:
+
+Muthmann et al. Spike Detection for Large Neural Populations Using High Density Multielectrode Arrays. 2015.
 
 ----------
 Summation

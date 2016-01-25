@@ -89,7 +89,7 @@ Some value of power is chosen as a threshold.
 
 Reference:
 
-Kim and Kim, "Neural spike sorting under nearly 0-dB signal-to-noise ratio using nonlinear energy operator and artificial neural-network classifier," 2002
+Kim and Kim, "Neural spike sorting under nearly 0-dB signal-to-noise ratio using nonlinear energy operator and artificial neural-network classifier," 2002.
 
 ======================
 Partially Implemented
@@ -101,11 +101,11 @@ Wavelet - Multiscale Correlation of Wavelet Coefficients
 
 References:
 
-Yang, Chenhui and Olson, Byron and Si, Jennie. A multiscale correlation of wavelet coefficients approach to spike detection. 2011
+Yang, Chenhui and Olson, Byron and Si, Jennie. A multiscale correlation of wavelet coefficients approach to spike detection. 2011.
 
 Yuan, Yuan and Yang, Chenhui and Si, Jennie. The M-Sorter: an automatic and robust spike detection and classification system. 2012.
 
-Yang, Chenhui and Yuan, Yuan and Si, Jennie. Robust spike classification based on frequency domain neural waveform features. 2013
+Yang, Chenhui and Yuan, Yuan and Si, Jennie. Robust spike classification based on frequency domain neural waveform features. 2013.
 
 ==========
 To Do
@@ -117,7 +117,15 @@ Amplitude detection - Multiple
 
 Reference:
 
-Kamboh, Awais M. and Mason, Andrew J. Computationally efficient neural feature extraction for spike sorting in implantable high-density recording systems. 2013
+Kamboh, Awais M. and Mason, Andrew J. Computationally efficient neural feature extraction for spike sorting in implantable high-density recording systems. 2013.
+
+---------------------
+EC-PC Spike Detection
+---------------------
+
+Reference:
+
+Yang, Zhi et al. A new EC–PC threshold estimation method for in vivo neural spike detection. 2012.
 
 ----------------------------
 Dynamic Multiphasic Detector
@@ -191,8 +199,8 @@ Wavelet - Wavelet Footprints
 
 Reference:
 
-Kwon, and Oweiss. Wavelet footprints for detection and sorting of extracellular neural action potentials. 2011
+Kwon, and Oweiss. Wavelet footprints for detection and sorting of extracellular neural action potentials. 2011.
 
-Kwon, Ki Yong and Eldawlatly, Seif and Oweiss, Karim. NeuroQuest: a comprehensive analysis tool for extracellular neural ensemble recordings. 2012
+Kwon, Ki Yong and Eldawlatly, Seif and Oweiss, Karim. NeuroQuest: a comprehensive analysis tool for extracellular neural ensemble recordings. 2012.
 
 

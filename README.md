@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/paulmthompson/SpikeSorting.jl.svg?branch=master)](https://travis-ci.org/paulmthompson/SpikeSorting.jl)
+[![codecov.io](http://codecov.io/github/paulmthompson/SpikeSorting.jl/coverage.svg?branch=master)](http://codecov.io/github/paulmthompson/SpikeSorting.jl?branch=master)
+
 # SpikeSorting.jl
 Online spike sorting methods in Julia
 

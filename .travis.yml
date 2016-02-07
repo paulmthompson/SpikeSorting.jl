@@ -10,6 +10,6 @@ notifications:
   email: false
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("SpikeSorting.jl"); Pkg.test("SpikeSorting.jl"; coverage=true)'
+  - julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("SpikeSorting"); Pkg.test("SpikeSorting"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("SpikeSorting.jl")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'cd(Pkg.dir("SpikeSorting")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

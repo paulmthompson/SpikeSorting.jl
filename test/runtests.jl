@@ -1,5 +1,7 @@
-using SpikeSorting
-using Base.Test
+module TestSetup
 
-# write your own tests here
-@test 1 == 1
+using SpikeSorting
+
+include("detect_test.jl")
+
+end

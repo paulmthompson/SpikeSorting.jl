@@ -63,7 +63,6 @@ function detectprepare(d::DetectPower,sort::Sorting,v::AbstractArray{Int64,2})
     end
 
     nothing
-
 end
 
 #=
@@ -77,7 +76,7 @@ end
 
 function detect(d::DetectSignal,sort::Sorting,i::Int64,v::AbstractArray{Int64,2})
 
-    abs(v[i,sort.id])
+    convert(Float64,abs(v[i,sort.id]))
     
 end
 

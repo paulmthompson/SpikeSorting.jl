@@ -6,25 +6,43 @@ Alignment methods. Each method needs
 3) any other necessary functions for alignment algorithm
 =#
 
-export AlignMax, AlignFFT
+export AlignMax, AlignMin, AlignFFT
 
 #= 
 Maximum signal
 =#
 type AlignMax <: Align
-
 end
 
 function align(a::AlignMax, sort::Sorting)
     j=indmax(sub(sort.p_temp,window_half:(window+window_half)))+window_half
-    sort.waveform=sub(sort.p_temp,j-window_half:j+window_half-1)
-    
+    sort.waveform=sub(sort.p_temp,j-window_half:j+window_half-1)  
     return j
 end
 
 function mysize(align::AlignMax)
     window
 end
+
+#=
+Minimum signal
+=#
+type AlignMin <: Align
+end
+
+function align(a::AlignMin,sort::Sorting)
+    j=indmin(sub(sort.p_temp,window_half:(window+window_half)))+window_half
+    sort.waveform=sub(sort.p_temp,j-window_half:j+window_half-1)
+    return j
+end
+
+function mysize(align::AlignMin)
+    window
+end
+
+#=
+Maximum Magnitude
+=#
 
 #=
 FFT upsampling

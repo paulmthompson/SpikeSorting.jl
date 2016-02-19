@@ -97,7 +97,6 @@ function main(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spik
                 
                 feature(sort.f,sort)
 
-                #println("made it!")
                 id=cluster(sort.c,sort)
 
                 #Spike time stamp

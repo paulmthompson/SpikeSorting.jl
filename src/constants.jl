@@ -7,8 +7,7 @@ Constants needed for various methods
 
 const window=50
 const window_half=div(window,2)
-const signal_length=60000
-const sigend_length=75
+const sigend_length=window_half+window
 
 #GUI
 

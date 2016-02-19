@@ -2,7 +2,7 @@
 
 
 
-function benchmark{T}(dataset::Array{T,1},s::Sorting,cal_length=30.0, sample_rate=20000)
+function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sorting,cal_length=15.0, sample_rate=20000)
 
     #Benchmark data should have first column as voltage time series
     #Every additional columnn should be 1's and 0's corresponding a particular neuron firing
@@ -11,25 +11,42 @@ function benchmark{T}(dataset::Array{T,1},s::Sorting,cal_length=30.0, sample_rat
 
     (buf,nums)=output_buffer(1);
 
-    v=zeros(Int64,round(Int,sample_rate*cal_length/2),1)
-    v[:,1]=dataset[1:size(v,1),1]
+    cal_samples=round(Int,sample_rate*cal_length)
+    v=zeros(Int64,div(cal_samples,2),1)
 
-    #Threshold calibration
+    #Threshold calibration for first half of calibration time
+    v[:,1]=dataset[1:size(v,1),1]
     cal!(s,v,buf,nums,0)
 
-    v[:,1]=dataset[(size(v,1)+1):(size(v,1)),1]
-    #Clustering / DM calibration
+    #Clustering / DM calibration for second half of calibration time
+    v[:,1]=dataset[(size(v,1)+1):(2*size(v,1)),1]
     cal!(s,v,buf,nums,2)
+
+    #Sort
+
+    spikes=Array(Spike,0)
+    v=zeros(Int64,sample_rate,1)
     
-    
-    
+    for i=cal_samples+1:sample_rate:(round(Int64,length(dataset)/sample_rate)*sample_rate-sample_rate)
+
+        v[:,1]=dataset[i:(i+sample_rate-1),1]
+        onlinesort!(s,v,buf,nums)
+
+        for k=1:nums[1]
+            push!(spikes,Spike(buf[k,1].inds+i,buf[k,1].id))
+            buf[k,1]=Spike()
+        end
+        nums[1]=0
+    end
+
     #ISI violations
 
     #Accuracy due to overlap, clustering, and detection phases
-    accuracy_bench(electrode,neuronnum,dataset,cal_length*sample_rate,sort.numSpikes)
+    #accuracy_bench()
 
     #speed calculations
-           
+
+    spikes
 end
 
 function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
@@ -44,17 +61,16 @@ function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
         else
             masterlist[i]=newstep
         end                  
-    end
-
-    
+    end 
 end
 
-function accuracy_bench(electrode::Array{Int64,1},neuronnum::Array{Int64,1},dataset::Array{Int64,2},start::Int64,numspikes::Int64)
+function accuracy_bench(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sorting,cal_length::Float64, sample_rate::Int64)
 
     #first go through detected spikes to classify as false positives or true positives
     #then go through ground truth to look for false negatives
 
     #need to figure out what cluster corresponds to what neuron
+    #This should probably be Ripley's K function
     myzeros=zeros(Float64,size(dataset,1))
     corrmat=zeros(Float64,size(dataset,2)-1,numspikes)
     
@@ -151,8 +167,6 @@ function ISI_violations(electrode::Array{Int64,1},neuronnum::Array{Int64,1},nums
 
 end
 
-
-#Generate benchmark dataset
 
 #Speed / neuron
 

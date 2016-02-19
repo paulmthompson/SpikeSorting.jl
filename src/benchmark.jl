@@ -2,41 +2,26 @@
 
 
 
-function benchmark{D<:Detect,C<:Cluster,A<:Align,F<:Feature,R<:Reduction}(dataset::Array{Int64,2},sort::Sorting{D,C,A,F,R})
+function benchmark{T}(dataset::Array{T,1},s::Sorting,cal_length=30.0, sample_rate=20000)
 
     #Benchmark data should have first column as voltage time series
     #Every additional columnn should be 1's and 0's corresponding a particular neuron firing
-
-    cal_length=30 # seconds
-    sample_rate=20000 #hertz
     
     #Calibrate
 
-    sort.rawSignal[:]=dataset[1:sample_rate,1]
-    firstrun(sort)
+    (buf,nums)=output_buffer(1);
+
+    v=zeros(Int64,round(Int,sample_rate*cal_length/2),1)
+    v[:,1]=dataset[1:size(v,1),1]
+
+    #Threshold calibration
+    cal!(s,v,buf,nums,0)
+
+    v[:,1]=dataset[(size(v,1)+1):(size(v,1)),1]
+    #Clustering / DM calibration
+    cal!(s,v,buf,nums,2)
     
-    counter=sample_rate
-    while counter<cal_length*sample_rate
-        sort.rawSignal[:]=dataset[counter:(counter+sample_rate-1),1]
-        cal(sort)
-        counter+=sample_rate
-    end
-
-    electrode=zeros(Int64,1)
-    neuronnum=zeros(Int64,1)
-    elapsedtime=zeros(Int64,1)
     
-    while (counter+sample_rate-1)<length(dataset)
-        sort.rawSignal[:]=dataset[counter:(counter+sample_rate-1),1]
-
-        tic()
-        main(sort)
-        push!(elapsedtime,tocq())
-
-        append!(electrode,sort.electrode[1:sort.numSpikes]+counter)
-        append!(neuronnum,sort.neuronnum[1:sort.numSpikes]+counter)
-
-    end
     
     #ISI violations
 

@@ -24,9 +24,7 @@ type DetectPower <: Detect
     c::Int64
 end
 
-function DetectPower()
-    DetectPower(0,0,0)
-end
+DetectPower()=DetectPower(0,0,0)
 
 function detect(d::DetectPower,sort::Sorting, i::Int64,v::AbstractArray{Int64,2})
     
@@ -40,8 +38,7 @@ function detect(d::DetectPower,sort::Sorting, i::Int64,v::AbstractArray{Int64,2}
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-    sqrt((sort.d.b - (sort.d.a^2/power_win))/power_win)
-    
+    sqrt((sort.d.b - (sort.d.a^2/power_win))/power_win)  
 end
 
 function detectprepare(d::DetectPower,sort::Sorting,v::AbstractArray{Int64,2})
@@ -76,8 +73,7 @@ end
 
 function detect(d::DetectSignal,sort::Sorting,i::Int64,v::AbstractArray{Int64,2})
 
-    convert(Float64,abs(v[i,sort.id]))
-    
+    convert(Float64,abs(v[i,sort.id]))   
 end
 
 #=
@@ -107,11 +103,9 @@ function detect(d::DetectNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2})
         else
             return psi2
         end
-
     end
 
-    psi
-    
+    psi   
 end
 
 #=
@@ -161,7 +155,6 @@ function detect(d::DetectSNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2}
         else
             return psi2
         end
-
     end
 
     psi   

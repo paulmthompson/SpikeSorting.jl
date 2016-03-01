@@ -32,13 +32,9 @@ type ReductionMD <: Reduction
     Dc::Array{Int64,1}
 end
 
-function ReductionMD(dims::Int64)
-    ReductionMD(dims,zeros(Int64,10),zeros(Float64,10),zeros(Float64,10),zeros(Int64,dims))
-end
+ReductionMD(dims::Int64)=ReductionMD(10,dims)
 
-function ReductionMD(N::Int64,dims::Int64)    
-    ReductionMD(dims,zeros(Int64,N),zeros(Float64,N),zeros(Float64,N),zeros(Int64,dims))
-end
+ReductionMD(N::Int64,dims::Int64)=ReductionMD(dims,zeros(Int64,N),zeros(Float64,N),zeros(Float64,N),zeros(Int64,dims))
 
 function reductionprepare(r::ReductionMD,sort::Sorting)
 
@@ -81,7 +77,6 @@ end
 Lilliefor's Test
 =#
 type ReductionLT <: Reduction
-    
 end
 
 #=

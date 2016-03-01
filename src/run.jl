@@ -122,8 +122,7 @@ function main(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{Spik
                    
     @inbounds sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
 
-    nothing
-    
+    nothing  
 end
 
 #=
@@ -174,7 +173,6 @@ function maincal(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{S
     @inbounds sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
 
     nothing
-
 end
 
 #=
@@ -187,12 +185,10 @@ function threscal(sort::Sorting,v::AbstractArray{Int64,2},spikes::AbstractArray{
 
         p=detect(sort.d,sort,i,v)
 
-        threshold(sort.t,sort,p)
-              
+        threshold(sort.t,sort,p)            
     end
                    
     sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
 
     nothing
-
 end

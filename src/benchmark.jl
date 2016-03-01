@@ -24,8 +24,9 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
 
     #Sort
 
-    spikes=Array(Spike,0)
+    spikes=Array(Array{Int64,1},0)
     v=zeros(Int64,sample_rate,1)
+    num_clusters=0
     
     for i=cal_samples+1:div(sample_rate,20):(round(Int64,length(dataset)/sample_rate)*sample_rate-sample_rate)
 
@@ -33,7 +34,11 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
         onlinesort!(s,v,buf,nums)
 
         for k=1:nums[1]
-            push!(spikes,Spike(buf[k,1].inds+i,buf[k,1].id))
+            if buf[k,1].id>num_clusters
+                num_clusters=buf[k,1].id
+                push!(spikes,zeros(Int64,0))
+            end
+            push!(spikes[buf[k,1].id],buf[k,1].inds[1]+i+25)
             buf[k,1]=Spike()
         end
         nums[1]=0
@@ -42,11 +47,11 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
     #ISI violations
 
     #Accuracy due to overlap, clustering, and detection phases
-    #accuracy_bench()
+    corrmat=accuracy_bench(dataset,spikes,truth,cal_length,sample_rate)
 
     #speed calculations
 
-    spikes
+    (spikes,corrmat)
 end
 
 function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
@@ -64,16 +69,58 @@ function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
     end 
 end
 
-function accuracy_bench(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sorting,cal_length::Float64, sample_rate::Int64)
+function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},truth::Array{Array{Int64,1},1},cal_length::Float64, sample_rate::Int64)
 
     #first go through detected spikes to classify as false positives or true positives
     #then go through ground truth to look for false negatives
 
     #need to figure out what cluster corresponds to what neuron
-    #This should probably be Ripley's K function
-    myzeros=zeros(Float64,size(dataset,1))
-    corrmat=zeros(Float64,size(dataset,2)-1,numspikes)
+    corrmat=zeros(Float64,length(truth),length(spikes))
+
+    data_s=zeros(Int64,length(dataset))
+    data_t=zeros(Int64,length(dataset))
+
+    for i=1:length(spikes)
+
+        data_s[:]=0
+        for k in spikes[i]
+            if k+25<length(dataset)
+                data_s[k-25:k+25]=1
+            end
+        end
+        
+        for j=1:length(truth)
+            data_t[:]=0
+            for k in truth[j]
+                if k+25<length(dataset)
+                    data_t[k-25:k+25]=1
+                end
+            end
+
+            test=data_s+data_t
+
+            l=1
+            while l<length(test)-1
+                if test[l]>1
+                    l+=1
+                    forward=true
+                    while forward
+                        if test[l]>1
+                            test[l]=0
+                            l+=1
+                        else
+                            forward=false
+                        end
+                    end
+                end
+                l+=1
+            end
+
+            corrmat[j,i]=sum(test.>1)/length(truth[j])*100.0
+        end
+    end
     
+    #=
     for i=1:numspikes
         inds=electrode[neuronnum.==i]
         myzeros[inds]=1
@@ -159,7 +206,8 @@ function accuracy_bench(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s
             end
         end
     end
-  
+    =#
+  corrmat
 end
 
 #ISI violation calculation

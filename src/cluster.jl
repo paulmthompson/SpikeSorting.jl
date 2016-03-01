@@ -30,13 +30,13 @@ type ClusterOSort <: Cluster
     s_l::Float64
 end
 
-function ClusterOSort()   
-    ClusterOSort(zeros(Float64,50,10),zeros(Int64,10),0,1.0,0.0,1,0.0,0.0,0.0)  
-end
+ClusterOSort()=ClusterOSort(50)
 
-function ClusterOSort(n::Int64)
-    ClusterOSort(zeros(Float64,n,10),zeros(Int64,10),0,1.0,0.0,1,0.0,0.0,0.0)
-end
+ClusterOSort(n::Int64)=ClusterOSort(10,n)
+
+ClusterOSort(m::Int64,n::Int64)=ClusterOSort(zeros(Float64,n,m),zeros(Int64,m),0,1.0,0.0,1,0.0,0.0,0.0)
+
+ClusterOSort(n::Int64,c::ClusterOSort)=ClusterOSort(zeros(Float64,n,size(c.clusters,2)),c.clusterWeight,c.numClusters,c.Tsm,c.m_k,c.k,c.m_l,c.s_k,c.s_l)
 
 function cluster(c::ClusterOSort,sort::Sorting)
    
@@ -87,7 +87,6 @@ function getdist(sort::Sorting)
             return 0
         end
     end
-  
 end
 
 function findmerge!(sort::Sorting,id::Int64)
@@ -121,14 +120,11 @@ function findmerge!(sort::Sorting,id::Int64)
 
             sort.c.numClusters-=1
 
-            findmerge!(sort,newid) #compare newly created cluster to existing clusters
-            
-        end
-        
+            findmerge!(sort,newid) #compare newly created cluster to existing clusters         
+        end     
     end
 
-    nothing
-    
+    nothing  
 end
 
 function clusterprepare(c::ClusterOSort,sort::Sorting,p::Int64)
@@ -156,13 +152,9 @@ No clustering
 type ClusterNone <: Cluster
 end
 
-function ClusterNone(n::Int64)
-    ClusterNone()
-end
+ClusterNone(n::Int64)=ClusterNone()
 
-function cluster(c::ClusterNone,sort::Sorting)
-    1
-end
+cluster(c::ClusterNone,sort::Sorting)=1
 
 #=
 CLASSIT

@@ -9,9 +9,7 @@ Feature extraction methods. Each method needs
 
 export FeatureTime, FeatureIT, FeatureDD, FeatureCurv
 
-function featureprepare(f::Feature,sort::Sorting)
-    nothing
-end
+featureprepare(f::Feature,sort::Sorting)=nothing
 
 #=
 Temporal Waveform
@@ -20,18 +18,14 @@ Temporal Waveform
 type FeatureTime <: Feature 
 end
 
-function FeatureTime(M::Int64,N::Int64)
-    FeatureTime()
-end
+FeatureTime(M::Int64,N::Int64)=FeatureTime()
 
 function feature(f::FeatureTime,sort::Sorting)
     sort.features=sub(sort.waveform,sort.dims)
     nothing
 end
 
-function mysize(feature::FeatureTime,wavelength::Int64)
-    wavelength
-end
+mysize(feature::FeatureTime,wavelength::Int64)=wavelength
 
 #=
 online PCA
@@ -65,7 +59,7 @@ end
 #=
 Wavelet
 =#
-
+#=
 type FeatureWPD <: Feature
 end
 
@@ -80,6 +74,7 @@ end
 
 function mysize(feature::FeatureWPD,wavelength::Int64)
 end
+=#
 
 #=
 Integral Transform
@@ -96,13 +91,9 @@ type FeatureIT <: Feature
     talpha::Int64
 end
 
-function FeatureIT()
-    FeatureIT(0,0,0.0,0,0,0)
-end
+FeatureIT()=FeatureIT(0,0,0.0,0,0,0)
 
-function FeatureIT(M::Int64,N::Int64)
-    FeatureIT()
-end
+FeatureIT(M::Int64,N::Int64)=FeatureIT()
 
 function feature(f::FeatureIT,sort::Sorting)
     
@@ -120,9 +111,7 @@ function feature(f::FeatureIT,sort::Sorting)
     nothing
 end
 
-function mysize(feature::FeatureIT,wavelength::Int64)
-    2
-end
+mysize(feature::FeatureIT,wavelength::Int64)=2
 
 function featureprepare(f::FeatureIT,sort::Sorting)
 
@@ -201,13 +190,9 @@ type FeatureDD <: Feature
     inds::Array{Int64,2}
 end
 
-function FeatureDD()
-    FeatureDD(ones(Int64,10,2))
-end
+FeatureDD()=FeatureDD(ones(Int64,10,2))
 
-function FeatureDD(M::Int64,N::Int64)
-    FeatureDD(ones(Int64,N,2))
-end
+FeatureDD(M::Int64,N::Int64)=FeatureDD(ones(Int64,N,2))
 
 function feature(f::FeatureDD,sort::Sorting)
     for i=1:length(sort.dims)
@@ -250,9 +235,7 @@ Curvature
 type FeatureCurv <: Feature
 end
 
-function FeatureCurv(M::Int64,N::Int64)
-    FeatureCurv()
-end
+FeatureCurv(M::Int64,N::Int64)=FeatureCurv()
 
 function feature(f::FeatureCurv,sort::Sorting)
     V1=0.0
@@ -267,9 +250,7 @@ function feature(f::FeatureCurv,sort::Sorting)
     nothing
 end
 
-function mysize(feature::FeatureCurv,wavelength::Int64)
-    wavelength-2
-end
+mysize(feature::FeatureCurv,wavelength::Int64)=wavelength-2
 
 function featureprepare(f::FeatureCurv,sort::Sorting)
     V1=0.0

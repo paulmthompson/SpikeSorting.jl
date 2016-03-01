@@ -20,9 +20,7 @@ function align(a::AlignMax, sort::Sorting)
     return j
 end
 
-function mysize(align::AlignMax)
-    window
-end
+mysize(align::AlignMax)=window
 
 #=
 Minimum signal
@@ -36,9 +34,7 @@ function align(a::AlignMin,sort::Sorting)
     return j
 end
 
-function mysize(align::AlignMin)
-    window
-end
+mysize(align::AlignMin)=window
 
 #=
 Maximum Magnitude
@@ -83,16 +79,14 @@ function align(a::AlignFFT, sort::Sorting)
     return j-window_half:j+window_half-1
 end
 
-function mysize(align::AlignFFT)
-    window*align.M
-end
+mysize(align::AlignFFT)=window*align.M
 
 #=
 FFT upsampling + temporal order of peaks
 
 Rutishauser 2006
 =#
-
+#=
 type AlignOsort <: Align
 
 end
@@ -105,3 +99,4 @@ end
 function mysize(align::AlignOsort)
     window*align.M
 end
+=#

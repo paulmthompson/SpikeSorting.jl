@@ -27,7 +27,7 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
     spikes=Array(Spike,0)
     v=zeros(Int64,sample_rate,1)
     
-    for i=cal_samples+1:sample_rate:(round(Int64,length(dataset)/sample_rate)*sample_rate-sample_rate)
+    for i=cal_samples+1:div(sample_rate,20):(round(Int64,length(dataset)/sample_rate)*sample_rate-sample_rate)
 
         v[:,1]=dataset[i:(i+sample_rate-1),1]
         onlinesort!(s,v,buf,nums)

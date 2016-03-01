@@ -19,10 +19,11 @@ type ThresholdMean <: Threshold
     s_k::Float64
     s_l::Float64
     mean::Float64
+    stds::Float64
 end
 
 function ThresholdMean()
-    ThresholdMean(0.0,1,0.0,0.0,0.0,0.0)
+    ThresholdMean(0.0,1,0.0,0.0,0.0,0.0,3.0)
 end
 
 function threshold(t::ThresholdMean,sort::Sorting,p::Float64)
@@ -35,9 +36,9 @@ function threshold(t::ThresholdMean,sort::Sorting,p::Float64)
     myvar=sort.t.s_k/(sort.t.k-1)
 
     sort.t.mean+=p
-    mymean=sort.t.mean/sort.t.mean
+    mymean=sort.t.mean/sort.t.k
 
-    sort.thres=mymean+4*sqrt(myvar)
+    sort.thres=mymean+sort.t.stds*sqrt(myvar)
 
     sort.t.m_l=sort.t.m_k
     sort.t.s_l=sort.t.s_k

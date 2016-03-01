@@ -18,9 +18,7 @@ immutable Spike
     id::Int64
 end
 
-function Spike()
-    Spike(0:0,0) 
-end
+Spike()=Spike(0:0,0) 
 
 function output_buffer(channels::Int64,par=false)
 
@@ -33,8 +31,7 @@ function output_buffer(channels::Int64,par=false)
         nums=convert(SharedArray{Int64,1},nums)
     end
 
-    (buf,nums)
-    
+    (buf,nums)   
 end
 
 global sorting_num = 1
@@ -81,7 +78,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             end
             F=typeof(F)(wavelength,reducedims)
             C=typeof(C)(reducedims)
-            $(symbol("Sorting_$sorting_num"))(typeof(D)(),typeof(C)(),typeof(A)(),typeof(F)(),typeof(R)(),typeof(T)(),
+            $(symbol("Sorting_$sorting_num"))(D,C,A,F,R,T,
                     1,zeros(Int64,window+window_half),0,
                     zeros(Float64,window*2),zeros(Float64,reducedims),zeros(Float64,fulllength),
                     collect(1:reducedims),1.0,zeros(Float64,wavelength))   
@@ -90,12 +87,8 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
     end
 
     sorting_num+=1
-
     nothing
-
 end
-
-
 
 function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64)
 
@@ -111,14 +104,11 @@ function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::T
         st[i].id=i
     end
 
-    st
-    
+    st  
 end
     
 function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64,cores::UnitRange{Int64})
         
     st=create_multi(d,c,a,f,r,t,num)
-
-    st=distribute(st,procs=collect(cores))
-    
+    st=distribute(st,procs=collect(cores)) 
 end

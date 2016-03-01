@@ -22,9 +22,9 @@ type ThresholdMean <: Threshold
     stds::Float64
 end
 
-function ThresholdMean()
-    ThresholdMean(0.0,1,0.0,0.0,0.0,0.0,3.0)
-end
+ThresholdMean()=ThresholdMean(0.0,1,0.0,0.0,0.0,0.0,3.0)
+
+ThresholdMean(stds::Float64)=ThresholdMean(0.0,1,0.0,0.0,0.0,0.0,stds)
 
 function threshold(t::ThresholdMean,sort::Sorting,p::Float64)
 

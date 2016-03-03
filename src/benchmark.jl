@@ -4,12 +4,9 @@
 
 function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sorting,cal_length=15.0, sample_rate=20000)
 
-    #Benchmark data should have first column as voltage time series
-    #Every additional columnn should be 1's and 0's corresponding a particular neuron firing
+    (buf,nums)=output_buffer(1);
     
     #Calibrate
-
-    (buf,nums)=output_buffer(1);
 
     cal_samples=round(Int,sample_rate*cal_length)
     v=zeros(Int64,div(cal_samples,2),1)
@@ -21,8 +18,6 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
     #Clustering / DM calibration for second half of calibration time
     v[:,1]=dataset[(size(v,1)+1):(2*size(v,1)),1]
     cal!(s,v,buf,nums,2)
-
-    #Sort
 
     iter=div(sample_rate,20)
     spikes=Array(Array{Int64,1},0)
@@ -55,6 +50,7 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
     (spikes,corrmat,assignedd,assigneds)
 end
 
+#=
 function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
 
     masterlist=Array(Any,5)
@@ -69,6 +65,7 @@ function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
         end                  
     end 
 end
+=#
 
 function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},truth::Array{Array{Int64,1},1},cal_length::Float64, sample_rate::Int64)
 
@@ -135,18 +132,27 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
     spike_totals=zeros(Int64,length(truth))
 
     for i=1:length(truth)
-        data_t[:]=0
         for k in truth[i]
             if k+25<length(dataset)
                 if k>cal_samples
-                    data_t[k-25:k+25]=1
+                    overlaps[k-25:k+25]+=1
                     spike_totals[i]+=1
                 end
             end
         end
-        overlaps[:]=data_t+overlaps
     end
 
+    mytotals=zeros(Int64,length(dataset))
+    for i=1:length(truth)
+        for k in truth[i]
+            if k+25<length(dataset)
+                if k>cal_samples
+                    mytotals[k]+=2^i
+                end
+            end
+        end
+    end
+    
     if length(truth)>=length(spikes) #fewer neurons (or equal) detected than actually exist
         while count <= length(spikes)
             myinds=ind2sub(size(corrmat),indmax(corrmat))
@@ -175,11 +181,12 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
     TP=0
     FP_C=0
     FP_O=0
+    FP_N=0
     FN_T=0
     FN_O=0
     #1 yet undetected
     #-1 detected
-    win=10
+    tol=10
 
     missed=[zeros(Int64,0) for i=1:length(truth)]
     
@@ -189,47 +196,66 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
         else
             data_t[:]=0
             for k in truth[assignedd[i]]
-                if k+win<length(dataset)
+                if k+tol<length(dataset)
                     if k>cal_samples
                         data_t[k]=k
                     end
                 end
             end
-
             for j=1:length(spikes[i])
-
                 found=false
-                for k=(spikes[i][j]-win):(spikes[i][j]+win)
+                for k=(spikes[i][j]-tol):(spikes[i][j]+tol)
                     if data_t[k]>0 #found
                         TP+=1
                         found=true
-                        data_t[k] = -1
+                        mytotals[k] -= 2^assignedd[i]
                         break
                     end
                 end
                 if found==false
                     ov=false
-                    for k=(spikes[i][j]-win):(spikes[i][j]+win)
+                    clus=false
+                    for k=(spikes[i][j]-tol):(spikes[i][j]+tol)
                         if overlaps[k]>1
-                            ov=true
-                            break
+                            ov=true      
+                        elseif overlaps[k]==1
+                            if mytotals[k]>0
+                                mytotals[k]=0
+                            end
+                            clus=true
                         end
                     end
                     if ov==true
                         FP_O+=1
-                    else
+                    elseif clus==true
                         FP_C+=1
+                    else
+                        FP_N+=1
                     end
                 end
             end
-            missed[assignedd[i]]=find(data_t.>0)
+            #missed[assignedd[i]]=find(data_t.>0)
         end
     end
 
-    for i=1:length(missed)
+    #find missed spikes
+    for i=1:length(truth)
+        for j in truth[i]
+            if j>cal_samples
+                md=digits(mytotals[j],2)
+                if length(md)>i
+                    if md[i+1]==1
+                        push!(missed[i],j)
+                    end
+                end
+            end
+        end
+    end
+
+    for i=1:length(missed)         
         for j=1:length(missed[i])
             ov=false
-            for k=(missed[i][j]-win):(missed[i][j]+win)
+            for k=(missed[i][j]-tol):(missed[i][j]+tol)
                 if overlaps[k]>1
                     ov=true
                     break
@@ -247,6 +273,7 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
     println("False Positive Total: ", FP_C+FP_O)
     println("False Positive Clustering: ", FP_C)
     println("False Positive Overlap: ", FP_O)
+    println("False Positive Noise: ", FP_N)
     println("True Positive: ", TP)
     println("Total False Negative: ", FN_O+FN_T)
     println("False Negative Overlap: ", FN_O)
@@ -256,10 +283,11 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
 end
 
 #ISI violation calculation
-function ISI_violations(electrode::Array{Int64,1},neuronnum::Array{Int64,1},numspikes::Int64)
+#=
+function ISI_violations()
 
 end
-
+=#
 
 #Speed / neuron
 

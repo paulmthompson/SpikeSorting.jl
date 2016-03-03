@@ -17,4 +17,5 @@ Contents:
    Features.rst
    Reduction.rst
    Clustering.rst
+   Benchmarking.rst
 

@@ -47,11 +47,11 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
     #ISI violations
 
     #Accuracy due to overlap, clustering, and detection phases
-    corrmat=accuracy_bench(dataset,spikes,truth,cal_length,sample_rate)
+    (corrmat,assignedd,assigneds)=accuracy_bench(dataset,spikes,truth,cal_length,sample_rate)
 
     #speed calculations
 
-    (spikes,corrmat)
+    (spikes,corrmat,assignedd,assigneds)
 end
 
 function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
@@ -77,6 +77,7 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
     #need to figure out what cluster corresponds to what neuron
     corrmat=zeros(Float64,length(truth),length(spikes))
 
+    cal_samples=round(Int,sample_rate*cal_length)
     data_s=zeros(Int64,length(dataset))
     data_t=zeros(Int64,length(dataset))
 
@@ -85,15 +86,21 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
         data_s[:]=0
         for k in spikes[i]
             if k+25<length(dataset)
-                data_s[k-25:k+25]=1
+                if k>cal_samples
+                    data_s[k-25:k+25]=1
+                end
             end
         end
         
         for j=1:length(truth)
             data_t[:]=0
+            spike_num=0
             for k in truth[j]
                 if k+25<length(dataset)
-                    data_t[k-25:k+25]=1
+                    if k>cal_samples
+                        data_t[k-25:k+25]=1
+                        spike_num+=1
+                    end
                 end
             end
 
@@ -115,47 +122,52 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
                 end
                 l+=1
             end
-
-            corrmat[j,i]=sum(test.>1)/length(truth[j])*100.0
+            corrmat[j,i]=sum(test.>1)/spike_num*100.0
         end
     end
-    
-    #=
-    for i=1:numspikes
-        inds=electrode[neuronnum.==i]
-        myzeros[inds]=1
-        for j=2:size(dataset,2)
-            corrmat[j-1,i]=cor(myzeros,dataset[start:end,j])
-        end
-        myzeros[inds]=0.0
-    end
 
-    myinds=(0,0)
-    assignedd=zeros(Int64,numspikes) #zero indicates it doesn't correspond to anything
-    assigneds=falses(size(dataset,2)-1)
+    assignedd=zeros(Int64,length(spikes)) #zero indicates it doesn't correspond to anything
+    assigneds=falses(length(truth))
     count=1
 
-    
-    if (size(dataset,2)-1)>=numspikes #fewer neurons (or equal) detected than actually exist
-        while count <= numspikes
-            myinds=ind2sub(size(corrmat),indmax(corrmat))
-            if assignedd[myinds[2]]==0 & assigneds[myinds[1]]==false
-                assignedd[myinds[2]]=myinds[1]
-                assigneds[myinds[1]]=true
-                count+=1
+    overlaps=zeros(Int64,length(dataset))
+    spike_totals=zeros(Int64,length(truth))
+
+    for i=1:length(truth)
+        data_t[:]=0
+        for k in truth[i]
+            if k+25<length(dataset)
+                if k>cal_samples
+                    data_t[k-25:k+25]=1
+                    spike_totals[i]+=1
+                end
             end
-            corrmat[myinds[1],myinds[2]]=0.0
+        end
+        overlaps[:]=data_t+overlaps
+    end
+
+    if length(truth)>=length(spikes) #fewer neurons (or equal) detected than actually exist
+        while count <= length(spikes)
+            myinds=ind2sub(size(corrmat),indmax(corrmat))
+
+            assignedd[myinds[2]]=myinds[1]
+            assigneds[myinds[1]]=true
+            count+=1
+
+            corrmat[myinds[1],:]=0.0
+            corrmat[:,myinds[2]]=0.0
         end
   
-    elseif numspikes>(size(dataset,2)-1) #more neurons detected than actually exist
-        while count < size(dataset,2)
+    else #more neurons detected than actually exist
+        while count <= length(truth)
             myinds=ind2sub(size(corrmat),indmax(corrmat))
-            if assignedd[myinds[2]]==0 & assigneds[myinds[1]]==false
-                assignedd[myinds[2]]=myinds[1]
-                assigneds[myinds[1]]=true
-                count+=1
-            end
-            corrmat[myinds[1],myinds[2]]=0.0
+
+            assignedd[myinds[2]]=myinds[1]
+            assigneds[myinds[1]]=true
+            count+=1
+
+            corrmat[myinds[1],:]=0.0
+            corrmat[:,myinds[2]]=0.0
         end
     end
 
@@ -166,48 +178,80 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
     FN_O=0
     #1 yet undetected
     #-1 detected
-    win=25
-    for i=1:length(electrode) #loop through all detected spikes
-        if assignedd[neuronnum[i]]==0 #if this cluster doesn't even exist, FP
-            FP_C+=1
+    win=10
+
+    missed=[zeros(Int64,0) for i=1:length(truth)]
+    
+    for i=1:length(spikes)
+        if assignedd[i]==0
+            FP_C+=sum(spikes[i].>cal_samples)
         else
-            found=false
-            for j=(electrode[i]-win):(electrode[i]+win)
-                if dataset[j,assignedd[neuronnum[i]]]==1 #found
-                    TP+=1
-                    found=true
-                    dataset[j,assigned[neuronnum[i]]]=-1
+            data_t[:]=0
+            for k in truth[assignedd[i]]
+                if k+win<length(dataset)
+                    if k>cal_samples
+                        data_t[k]=k
+                    end
+                end
+            end
+
+            for j=1:length(spikes[i])
+
+                found=false
+                for k=(spikes[i][j]-win):(spikes[i][j]+win)
+                    if data_t[k]>0 #found
+                        TP+=1
+                        found=true
+                        data_t[k] = -1
+                        break
+                    end
+                end
+                if found==false
+                    ov=false
+                    for k=(spikes[i][j]-win):(spikes[i][j]+win)
+                        if overlaps[k]>1
+                            ov=true
+                            break
+                        end
+                    end
+                    if ov==true
+                        FP_O+=1
+                    else
+                        FP_C+=1
+                    end
+                end
+            end
+            missed[assignedd[i]]=find(data_t.>0)
+        end
+    end
+
+    for i=1:length(missed)
+        for j=1:length(missed[i])
+            ov=false
+            for k=(missed[i][j]-win):(missed[i][j]+win)
+                if overlaps[k]>1
+                    ov=true
                     break
                 end
             end
-            if found==false #If no TP, determine if FP is from overlap or clustering
-                totalspikes=sum(abs(dataset[(electrode[i]-win):(electrode[i]+win),2:end]))
-                if totalspikes>1
-                    FP_O+=1
-                else
-                    FP_C+=1
-                end
+            if ov==true
+                FN_O+=1
             else
-            end            
-        end 
-    end
-
-    #Determine FN in real spikes that were not detected
-    for i=start:(size(dataset,1)-win)
-        for j=2:(size(dataset,2))
-            if dataset[i,j]==1 #missed spike
-                overlap=sum(abs(dataset[(i-win):(i+win),2:end]))
-                if overlap>1
-                    FN_O+=1
-                else
-                    FN_C+=1
-                end
-            else
+                FN_T+=1
             end
         end
     end
-    =#
-  corrmat
+
+    println("Spike totals: ", spike_totals)
+    println("False Positive Total: ", FP_C+FP_O)
+    println("False Positive Clustering: ", FP_C)
+    println("False Positive Overlap: ", FP_O)
+    println("True Positive: ", TP)
+    println("Total False Negative: ", FN_O+FN_T)
+    println("False Negative Overlap: ", FN_O)
+    println("False Negative Threshold: ", FN_T)
+    
+    (corrmat,assignedd,assigneds)
 end
 
 #ISI violation calculation

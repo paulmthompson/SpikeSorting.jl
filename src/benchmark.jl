@@ -24,13 +24,14 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
 
     #Sort
 
+    iter=div(sample_rate,20)
     spikes=Array(Array{Int64,1},0)
-    v=zeros(Int64,sample_rate,1)
+    v=zeros(Int64,iter,1)
     num_clusters=0
-    
-    for i=cal_samples+1:div(sample_rate,20):(round(Int64,length(dataset)/sample_rate)*sample_rate-sample_rate)
+  
+    for i=cal_samples+1:iter:(round(Int64,length(dataset)/sample_rate)*sample_rate-sample_rate)
 
-        v[:,1]=dataset[i:(i+sample_rate-1),1]
+        v[:,1]=dataset[i:(i+iter-1),1]
         onlinesort!(s,v,buf,nums)
 
         for k=1:nums[1]

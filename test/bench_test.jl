@@ -1,0 +1,45 @@
+
+module Bench_test
+
+using SpikeSorting, FactCheck, JLD
+
+a=load(string(dirname(Base.source_path()),"/data/spikes2.jld"))
+time_stamps=a["time_stamps"]
+fv=a["fv"]
+
+detect=DetectPower();
+cluster=ClusterOSort(100,50);
+align=AlignMin();
+feature=FeatureTime();
+reduce=ReductionNone();
+thres=ThresholdMean(2.0);
+s1=create_multi(detect,cluster,align,feature,reduce,thres,1)
+
+ss=SpikeSorting.benchmark(fv,time_stamps,s1[1],180.0,20000)
+
+detected_spikes=sum([length(ss[1][i]) for i=1:length(ss[1])])
+tpfp=ss[3]+sum(ss[4])
+tpfn=ss[3]+sum(ss[5])
+       
+facts() do
+    
+    @fact detected_spikes --> tpfp   
+    @fact sum(ss[2]) --> tpfn
+       
+end
+
+ss2=SpikeSorting.benchmark(fv,time_stamps,s1[1],60.0,20000)
+
+detected_spikes2=sum([length(ss2[1][i]) for i=1:length(ss2[1])])
+tpfp2=ss2[3]+sum(ss2[4])
+tpfn2=ss2[3]+sum(ss2[5])
+
+facts() do
+
+    @fact detected_spikes2 --> tpfp2   
+    @fact sum(ss2[2]) --> tpfn2
+    @fact detected_spikes --> less_than(detected_spikes2)
+
+end
+
+end

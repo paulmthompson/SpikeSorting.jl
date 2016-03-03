@@ -4,7 +4,7 @@
 
 function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sorting,cal_length=15.0, sample_rate=20000)
 
-    (buf,nums)=output_buffer(1);
+    (buf,nums)=output_buffer(1)
     
     #Calibrate
 
@@ -43,11 +43,11 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
     #ISI violations
 
     #Accuracy due to overlap, clustering, and detection phases
-    (corrmat,assignedd,assigneds)=accuracy_bench(dataset,spikes,truth,cal_length,sample_rate)
+    (spike_totals,TP,myFP,myFN)=accuracy_bench(dataset,spikes,truth,cal_length,sample_rate)
 
     #speed calculations
 
-    (spikes,corrmat,assignedd,assigneds)
+    (spikes,spike_totals,TP,myFP,myFN)
 end
 
 #=
@@ -215,13 +215,12 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
                 if found==false
                     ov=false
                     clus=false
+                    fn=false
                     for k=(spikes[i][j]-tol):(spikes[i][j]+tol)
                         if overlaps[k]>1
-                            ov=true      
-                        elseif overlaps[k]==1
-                            if mytotals[k]>0
-                                mytotals[k]=0
-                            end
+                            ov=true
+                        elseif mytotals[k]>0
+                            mytotals[k]=0
                             clus=true
                         end
                     end
@@ -234,7 +233,6 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
                     end
                 end
             end
-            #missed[assignedd[i]]=find(data_t.>0)
         end
     end
 
@@ -270,7 +268,7 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
     end
 
     println("Spike totals: ", spike_totals)
-    println("False Positive Total: ", FP_C+FP_O)
+    println("False Positive Total: ", FP_C+FP_O+FP_N)
     println("False Positive Clustering: ", FP_C)
     println("False Positive Overlap: ", FP_O)
     println("False Positive Noise: ", FP_N)
@@ -278,8 +276,11 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
     println("Total False Negative: ", FN_O+FN_T)
     println("False Negative Overlap: ", FN_O)
     println("False Negative Threshold: ", FN_T)
-    
-    (corrmat,assignedd,assigneds)
+
+myFP=[FP_C,FP_O,FP_N]
+myFN=[FN_O,FN_T]
+
+    (spike_totals,TP,myFP,myFN)
 end
 
 #ISI violation calculation

@@ -77,7 +77,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
                 reducedims=R.mydims
             end
             F=typeof(F)(wavelength,reducedims)
-            C=typeof(C)(reducedims,C)
+            C=typeof(C)(reducedims)
             $(symbol("Sorting_$sorting_num"))(D,C,A,F,R,T,
                     1,zeros(Int64,window+window_half),0,
                     zeros(Float64,window*2),zeros(Float64,reducedims),zeros(Float64,fulllength),

@@ -154,6 +154,8 @@ end
 
 ClusterNone(n::Int64)=ClusterNone()
 
+ClusterNone(n::Int64, c::ClusterNone)=ClusterNone()
+
 cluster(c::ClusterNone,sort::Sorting)=1
 
 #=

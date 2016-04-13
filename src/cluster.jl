@@ -7,7 +7,7 @@ Clustering methods. Each method needs
 
 =#
 
-export ClusterOSort, ClusterNone
+export ClusterOSort, ClusterNone, ClusterWindow
 
 function clusterprepare(c::Cluster, sort::Sorting,p::Int64)   
 end
@@ -158,6 +158,68 @@ ClusterNone(n::Int64, c::ClusterNone)=ClusterNone()
 
 cluster(c::ClusterNone,sort::Sorting)=1
 
+function clusterprepare(c::ClusterNone, sort::Sorting,p::Int64)   
+end
+
+#=
+Window Discrimination
+=#
+
+immutable mywin
+    x1::Int64
+    x2::Int64
+    y1::Float64
+    y2::Float64
+end
+
+type ClusterWindow <: Cluster
+    win::Array{Array{mywin,1},1}
+end
+
+ClusterWindow()=ClusterWindow(Array(Array{mywin,1},0))
+
+ClusterWindow(n::Int64)=ClusterWindow(Array(Array{mywin,1},0))
+
+ClusterWindow(n::Int64,c::ClusterWindow)=ClusterWindow(Array(Array{mywin,1},0))
+
+function cluster(c::ClusterWindow,sort::Sorting)
+
+    hits=zeros(Int64,length(c.win))
+    
+    for i=1:length(c.win) #Loop over all clusters
+        for j=1:length(c.win[i]) #Loop over all windows for cluster
+            a1=c.win[i][j].x1
+            a2=c.win[i][j].x2
+            b1=c.win[i][j].y1
+            b2=c.win[i][j].y2
+            for k=(c.win[i][j].x1-1):(c.win[i][j].x2+1)
+                if intersect(a1,a2,k,k+1,b1,b2,sort.features[k],sort.features[k+1])
+                    hits[i]+=1
+                    break
+                end
+            end
+        end
+    end
+
+    if length(hits)==0
+        return 1
+    else
+        myind=indmax(hits)
+        if hits[myind]==0
+            return 1
+        else
+            myind+1
+        end
+    end    
+end
+
+ccw(x1,x2,x3,y1,y2,y3)=(y3-y1) * (x2-x1) > (y2-y1) * (x3-x1)
+
+function intersect(x1,x2,x3,x4,y1,y2,y3,y4)
+    (ccw(x1,x3,x4,y1,y3,y4) != ccw(x2,x3,x4,y2,y3,y4))&&(ccw(x1,x2,x3,y1,y2,y3) != ccw(x1,x2,x4,y1,y2,y4))
+end
+    
+    
 #=
 CLASSIT
 =#
@@ -441,38 +503,3 @@ function cobweb(N::node, x::Array{Float64,1})
     return true
 end
 
-#=
-Manual Detection - Window Discriminators
-=#
-
-type ClusterManual <: Cluster
-    clusters::Array{Float64,2}
-    numClusters::Int64
-    win::Array{Float64,2}
-end
-
-function ClusterManual()   
-    ClusterOSort(zeros(Float64,5),0,zeros(Float64,4,5))  
-end
-
-function cluster(c::ClusterManual, sort::Sorting)
-
-    for i=1:sort.numClusters
-        
-        A1=(win[3,i]-win[4,i])/(win[1,i]-win[2,i])
-        b1=win[3,i]-A1*win[1,i]
-        
-        A2=(sort.waveform[win[1,i]]-sort.waveform[win[2,i]])/(win[1,i]-win[2,i])
-        b2=sort.waveform[win[1,i]]-A2*win[1,i]
-
-        Xa=(b2 - b1) / (A1 - A2)
-
-        if Xa>win[1,i] &&  Xa<win[2,i]
-            sort.neuronnum[sort.numSpikes]=i
-            sort.numSpikes+=1
-            break
-        else
-
-        end   
-    end      
-end

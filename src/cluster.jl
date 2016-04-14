@@ -224,6 +224,8 @@ end
 CLASSIT
 =#
 
+#=
+
 type attribute
     S::Float64
     SS::Float64
@@ -503,3 +505,4 @@ function cobweb(N::node, x::Array{Float64,1})
     return true
 end
 
+=#

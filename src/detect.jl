@@ -8,7 +8,7 @@ Detection methods. Each method needs
 A method may also need a "detectprepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
 
-export DetectPower, DetectSignal, DetectNEO
+export DetectPower, DetectSignal
 
 function detectprepare(d::Detect,sort::Sorting,v::AbstractArray{Int64,2})
 end
@@ -81,7 +81,7 @@ Nonlinear Energy Operator
 
 Choi et al 2006
 =#
-
+#=
 type DetectNEO <: Detect
 end
 
@@ -107,7 +107,7 @@ function detect(d::DetectNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2})
 
     psi   
 end
-
+=#
 #=
 Continuous Wavelet Transform
 
@@ -131,7 +131,7 @@ Smoothed Nonlinear Energy Operator
 
 Azami et al 2014
 =#
-
+#=
 type DetectSNEO <: Detect
 end
 
@@ -159,7 +159,7 @@ function detect(d::DetectSNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2}
 
     psi   
 end
-
+=#
 
 #=
 Multiscale Correlation of Wavelet Coefficients
@@ -167,6 +167,7 @@ Multiscale Correlation of Wavelet Coefficients
 Yang et al 2011
 =#
 
+#=
 type DetectMCWC <: Detect
     Tx::Array{Float64,1}
     rs::Array{Float64,1}
@@ -213,7 +214,7 @@ function detect(d::DetectMCWC, sort::Sorting, i::Int64, v::AbstractArray{Int64,2
     
 end
 
-
+=#
 #=
 
 =#

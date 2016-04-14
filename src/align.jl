@@ -6,7 +6,7 @@ Alignment methods. Each method needs
 3) any other necessary functions for alignment algorithm
 =#
 
-export AlignMax, AlignMin, AlignFFT
+export AlignMax, AlignMin
 
 #= 
 Maximum signal
@@ -44,6 +44,7 @@ Maximum Magnitude
 FFT upsampling
 =#
 
+#=
 type AlignFFT <: Align
     M::Int64
     x_int::Array{Complex{Float64},1}
@@ -80,7 +81,7 @@ function align(a::AlignFFT, sort::Sorting)
 end
 
 mysize(align::AlignFFT)=window*align.M
-
+=#
 #=
 FFT upsampling + temporal order of peaks
 

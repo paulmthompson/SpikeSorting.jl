@@ -7,7 +7,7 @@ Feature extraction methods. Each method needs
 
 =#
 
-export FeatureTime, FeatureIT, FeatureDD, FeatureCurv
+export FeatureTime, FeatureDD, FeatureCurv
 
 featureprepare(f::Feature,sort::Sorting)=nothing
 
@@ -81,7 +81,7 @@ Integral Transform
 
 Zviagintsev et al 2006
 =#
-
+#=
 type FeatureIT <: Feature
     N1::Int64
     N2::Int64
@@ -181,7 +181,7 @@ function featureprepare(f::FeatureIT,sort::Sorting)
     nothing
     
 end
-
+=#
 #=
 Discrete Derivatives
 =#
@@ -256,7 +256,7 @@ function featureprepare(f::FeatureCurv,sort::Sorting)
     V1=0.0
     V2=0.0
 
-    for i=2:size(sort.waveforms,1)-1
+    for i=2:size(sort.waveform,1)-1
         V1=sort.waveform[i]-sort.waveform[i-1]
         V2=sort.waveform[i+1]-2*sort.waveform[i]+sort.waveform[i-1]
         sort.fullfeature[i-1]=V2/(1+V1^2)^1.5

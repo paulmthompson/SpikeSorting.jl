@@ -32,6 +32,8 @@ type ReductionMD <: Reduction
     Dc::Array{Int64,1}
 end
 
+ReductionMD()=ReductionMD(10,4)
+
 ReductionMD(dims::Int64)=ReductionMD(10,dims)
 
 ReductionMD(N::Int64,dims::Int64)=ReductionMD(dims,zeros(Int64,N),zeros(Float64,N),zeros(Float64,N),zeros(Int64,dims))
@@ -76,17 +78,21 @@ end
 #=
 Lilliefor's Test
 =#
+#=
 type ReductionLT <: Reduction
 end
-
+=#
 #=
 Hartigan's Dip
 =#
+#=
 type ReductionHD <: Reduction
 end
-
+=#
 #=
 Uniform Sampling
 =#
+#=
 type ReductionUS <: Reduction
 end
+=#

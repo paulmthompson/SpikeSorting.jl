@@ -7,6 +7,16 @@ num_channels=1;
 (buf,nums)=output_buffer(num_channels);
 v=rand(1:1000, 1000, num_channels);
 
+count=1.0
+for i=525:550
+    v[i,1]+=count
+    count+=10
+end
+for i=551:775
+    v[i,1]+=1
+    count-=10
+end
+
 detects=subtypes(SpikeSorting.Detect)
 aligns=subtypes(SpikeSorting.Align)
 features=subtypes(SpikeSorting.Feature)

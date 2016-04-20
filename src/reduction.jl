@@ -46,7 +46,7 @@ function reductionprepare(r::ReductionMD,sort::Sorting)
 
         if sort.r.local_difference[i]>max3ind[1]
             if sort.r.local_difference[i]>max3ind[2]
-                if sort.f.local_difference[i]>max3ind[3]
+                if sort.r.local_difference[i]>max3ind[3]
                     max3ind[1]=max3ind[2]
                     max3ind[2]=max3ind[3]
                     max3ind[3]=i
@@ -63,11 +63,11 @@ function reductionprepare(r::ReductionMD,sort::Sorting)
 
     for i in max3ind
         for j=1:length(sort.r.Dc)
-            if maximum_difference[max3ind[i]]>sort.r.Dc[j]
-                if max3ind[i] != sort.dims[j]                
-                    sort.dims[j]=max3ind[i]
+            if sort.r.maximum_difference[i]>sort.r.Dc[j]
+                if i != sort.dims[j]                
+                    sort.dims[j]=i
                 end
-                sort.r.Dc[j]=maximum_difference[max3ind[i]]
+                sort.r.Dc[j]=sort.r.maximum_difference[i]
                 break
             end
         end

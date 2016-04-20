@@ -2,14 +2,14 @@
 
 
 
-function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sorting,cal_length=15.0, sample_rate=20000)
+function benchmark{D}(dataset::D,truth::Array{Array{Int64,1},1},s::Sorting,cal_length=15.0, sample_rate=20000)
 
     (buf,nums)=output_buffer(1)
     
     #Calibrate
 
     cal_samples=round(Int,sample_rate*cal_length)
-    v=zeros(Int64,div(cal_samples,2),1)
+    v=zeros(eltype(dataset),div(cal_samples,2),1)
 
     #Threshold calibration for first half of calibration time
     v[:,1]=dataset[1:size(v,1),1]
@@ -21,7 +21,7 @@ function benchmark(dataset::Array{Int64,1},truth::Array{Array{Int64,1},1},s::Sor
 
     iter=div(sample_rate,20)
     spikes=Array(Array{Int64,1},0)
-    v=zeros(Int64,iter,1)
+    v=zeros(eltype(dataset),iter,1)
     num_clusters=0
   
     for i=cal_samples+1:iter:(round(Int64,length(dataset)/sample_rate)*sample_rate-sample_rate)
@@ -67,7 +67,7 @@ function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
 end
 =#
 
-function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},truth::Array{Array{Int64,1},1},cal_length::Float64, sample_rate::Int64)
+function accuracy_bench{D}(dataset::D,spikes::Array{Array{Int64,1},1},truth::Array{Array{Int64,1},1},cal_length::Float64, sample_rate::Int64)
 
     #first go through detected spikes to classify as false positives or true positives
     #then go through ground truth to look for false negatives
@@ -76,8 +76,8 @@ function accuracy_bench(dataset::Array{Int64,1},spikes::Array{Array{Int64,1},1},
     corrmat=zeros(Float64,length(truth),length(spikes))
 
     cal_samples=round(Int,sample_rate*cal_length)
-    data_s=zeros(Int64,length(dataset))
-    data_t=zeros(Int64,length(dataset))
+    data_s=zeros(eltype(dataset),length(dataset))
+    data_t=zeros(eltype(dataset),length(dataset))
 
     for i=1:length(spikes)
 

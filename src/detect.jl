@@ -10,7 +10,7 @@ A method may also need a "detectprepare" function to use in its first iteration 
 
 export DetectPower, DetectSignal
 
-function detectprepare(d::Detect,sort::Sorting,v::AbstractArray{Int64,2})
+function detectprepare{V}(d::Detect,sort::Sorting,v::V)
 end
 
 #=
@@ -26,7 +26,7 @@ end
 
 DetectPower()=DetectPower(0,0,0)
 
-function detect(d::DetectPower,sort::Sorting, i::Int64,v::AbstractArray{Int64,2})
+function detect{V}(d::DetectPower,sort::Sorting, i::Int64,v::V)
     
     @inbounds sort.d.a += v[i,sort.id] - sort.d.c
     @inbounds sort.d.b += v[i,sort.id]^2 - sort.d.c^2   
@@ -41,7 +41,7 @@ function detect(d::DetectPower,sort::Sorting, i::Int64,v::AbstractArray{Int64,2}
     sqrt((sort.d.b - (sort.d.a^2/power_win))/power_win)  
 end
 
-function detectprepare(d::DetectPower,sort::Sorting,v::AbstractArray{Int64,2})
+function detectprepare{V}(d::DetectPower,sort::Sorting,v::V)
     
     sort.d.a=0
     sort.d.b=0
@@ -71,7 +71,7 @@ Quiroga et al 2004
 type DetectSignal <: Detect
 end
 
-function detect(d::DetectSignal,sort::Sorting,i::Int64,v::AbstractArray{Int64,2})
+function detect{V}(d::DetectSignal,sort::Sorting,i::Int64,v::V)
 
     convert(Float64,abs(v[i,sort.id]))   
 end

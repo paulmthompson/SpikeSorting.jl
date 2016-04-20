@@ -39,7 +39,7 @@ end
 #=
 Discrete Derivatives
 =#
-
+#=
 f=FeatureDD()
 s1=create_multi(d,cluster,align,f,reduce,thres,num_channels);
 
@@ -51,11 +51,11 @@ onlinesort!(s1,v,buf,nums)
 facts() do
 
 end
-
+=#
 #=
 Curvature
 =#
-
+#=
 f=FeatureCurv()
 s1=create_multi(d,cluster,align,f,reduce,thres,num_channels);
 
@@ -67,5 +67,5 @@ onlinesort!(s1,v,buf,nums)
 facts() do
 
 end
-
+=#
 end

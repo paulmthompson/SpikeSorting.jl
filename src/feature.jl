@@ -7,7 +7,7 @@ Feature extraction methods. Each method needs
 
 =#
 
-export FeatureTime, FeatureDD, FeatureCurv
+export FeatureTime
 
 featureprepare(f::Feature,sort::Sorting)=nothing
 
@@ -185,7 +185,7 @@ end
 #=
 Discrete Derivatives
 =#
-
+#=
 type FeatureDD <: Feature
     inds::Array{Int64,2}
 end
@@ -227,11 +227,12 @@ function featureprepare(f::FeatureDD,sort::Sorting)
     sort.features[:]=sort.fullfeature[sort.dims]
     nothing      
 end
-
+=#
+#=
 #=
 Curvature
 =#
-
+#=
 type FeatureCurv <: Feature
 end
 
@@ -264,4 +265,5 @@ function featureprepare(f::FeatureCurv,sort::Sorting)
     
     nothing
 end
-
+=#
+=#

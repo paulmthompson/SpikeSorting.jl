@@ -158,13 +158,13 @@ function maincal{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::Abstra
         elseif p>sort.thres
             
             if i<=sort.win
-                sort.p_temp[1:(sort.win-i+1)]=sort.sigend[end-(sort.win-i):end]
-                sort.p_temp[(sort.win-i+2):sort.win]=v[1:i-1,sort.id]  
+                @inbounds sort.p_temp[1:(sort.win-i+1)]=sort.sigend[end-(sort.win-i):end]
+                @inbounds sort.p_temp[(sort.win-i+2):sort.win]=v[1:i-1,sort.id]  
             else
-                sort.p_temp[1:sort.win]=v[(i-sort.win):(i-1),sort.id]
+                @inbounds sort.p_temp[1:sort.win]=v[(i-sort.win):(i-1),sort.id]
             end
 
-            sort.p_temp[sort.win+1]=v[i,sort.id]
+            @inbounds sort.p_temp[sort.win+1]=v[i,sort.id]
             sort.index=sort.win+2
         end
     end

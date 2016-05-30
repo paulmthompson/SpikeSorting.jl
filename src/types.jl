@@ -60,12 +60,13 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             dims::Array{Int64,1}
             thres::Float64
             waveform::Array{Float64,1}
+	    win::Int64
         end
 
-        function MakeSorting(D::($(typeof(D))),C::($(typeof(C))),A::($(typeof(A))),F::($(typeof(F))),R::($(typeof(R))),T::($(typeof(T))))
+        function MakeSorting(D::($(typeof(D))),C::($(typeof(C))),A::($(typeof(A))),F::($(typeof(F))),R::($(typeof(R))),T::($(typeof(T))),window::Int64)
     
             #determine size of alignment output
-            wavelength=mysize(A)
+            wavelength=mysize(A,window)
 
             #determine feature size
             fulllength=mysize(F,wavelength)
@@ -79,9 +80,9 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             F=typeof(F)(wavelength,reducedims)
             C=typeof(C)(reducedims)
             $(symbol("Sorting_$sorting_num"))(D,C,A,F,R,T,
-                    1,zeros(Int64,window+window_half),0,
+                    1,zeros(Int64,window+div(window,2)),0,
                     zeros(Float64,window*2),zeros(Float64,reducedims),zeros(Float64,fulllength),
-                    collect(1:reducedims),1.0,zeros(Float64,wavelength))   
+                    collect(1:reducedims),1.0,zeros(Float64,wavelength),window)   
         end
     end
 
@@ -89,25 +90,25 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
     nothing
 end
 
-function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64)
+function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64,window=50)
 
-    if method_exists(MakeSorting,(typeof(d),typeof(c),typeof(a),typeof(f),typeof(r),typeof(t)))
+    if method_exists(MakeSorting,(typeof(d),typeof(c),typeof(a),typeof(f),typeof(r),typeof(t),Int64))
     else
         gen_sorting(d,c,a,f,r,t)
     end
     
-    st=Array(typeof(MakeSorting(d,c,a,f,r,t)),num)
+    st=Array(typeof(MakeSorting(d,c,a,f,r,t,window)),num)
 
     for i=1:num
-        st[i]=MakeSorting(d,c,a,f,r,t)
+        st[i]=MakeSorting(d,c,a,f,r,t,window)
         st[i].id=i
     end
 
     st  
 end
     
-function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64,cores::UnitRange{Int64})
+function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64,cores::UnitRange{Int64},window=50)
         
-    st=create_multi(d,c,a,f,r,t,num)
+    st=create_multi(d,c,a,f,r,t,num,window)
     st=distribute(st,procs=collect(cores)) 
 end

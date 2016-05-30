@@ -3,25 +3,11 @@
 Constants needed for various methods
 =#
 
-#General
-
-const window=50
-const window_half=div(window,2)
-const sigend_length=window_half+window
-
-#GUI
-
-const colordict = Dict(0 => "gray", 1 => "red", 2 => "blue", 3 => "green")
-
 #Detection Power
 
 const power_win=20
 const power_win1=power_win+1
 const power_win0=power_win-1
-
-#Alignment Max
-
-const align_range=(window_half+1):(window+window_half)
 
 #Wavelets
 
@@ -77,7 +63,7 @@ const bigJ=20
 
 const wave_a=collect(0.5:.1:1.5);
 
-#This is REAL ugly, and edges aren't very good. Also code isn't very Julianu
+#This is REAL ugly, and edges aren't very good. Also code isn't very Julian
 
 const coiflets_scaled=zeros(Float64,length(wave_a),bigJ)
 

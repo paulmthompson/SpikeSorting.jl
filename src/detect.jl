@@ -34,7 +34,7 @@ function detect{V}(d::DetectPower,sort::Sorting, i::Int64,v::V)
     if i>=power_win
         @inbounds sort.d.c=v[i-power_win0,sort.id]
     else
-        @inbounds sort.d.c=sort.sigend[i+sigend_length-power_win0]
+        @inbounds sort.d.c=sort.sigend[i+length(sort.sigend)-power_win0]
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
@@ -53,7 +53,7 @@ function detectprepare{V}(d::DetectPower,sort::Sorting,v::V)
 
     sort.d.c=v[1,sort.id]
 
-    for i=power_win1:sigend_length
+    for i=power_win1:length(sort.sigend)
         sort.d.a += v[i,sort.id] - sort.d.c
         sort.d.b += v[i,sort.id]^2 - sort.d.c^2
         sort.d.c = v[i-power_win+1,sort.id]

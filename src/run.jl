@@ -15,8 +15,8 @@ function cal!{T}(sort::Sorting,v::T,spikes::AbstractArray{Spike,2},ns::AbstractA
         threscal(sort,v,spikes,ns)
     else #Very first run
         detectprepare(sort.d,sort,v)
-        sort.sigend[:]=v[1:75,sort.id]
-        threscal(sort,v,spikes,ns,76)
+        sort.sigend[:]=v[1:length(sort.sigend),sort.id]
+        threscal(sort,v,spikes,ns,length(sort.sigend)+1)
     end
     
     nothing
@@ -88,7 +88,7 @@ function main{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractA
             sort.index+=1
 
             #If end of spike window is reached, continue spike detection
-            if sort.index==101
+            if sort.index==length(sort.p_temp)+1
 
                 ind=align(sort.a,sort)
 
@@ -100,26 +100,26 @@ function main{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractA
 
                 #Spike time stamp
                 @inbounds ns[sort.id]+=1    
-                @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-125):(ind+i-75),id)   
+                @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-(length(sort.sigend)+sort.win)):(ind+i-length(sort.sigend)),id)   
                 sort.index=0
                   
             end
 
         elseif p>sort.thres
             
-            if i<=window
-                @inbounds sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
-                @inbounds sort.p_temp[(window-i+2):window]=v[1:i-1,sort.id]  
+            if i<=sort.win
+                @inbounds sort.p_temp[1:(sort.win-i+1)]=sort.sigend[end-(sort.win-i):end]
+                @inbounds sort.p_temp[(sort.win-i+2):sort.win]=v[1:i-1,sort.id]  
             else
-                @inbounds sort.p_temp[1:window]=v[i-window:i-1,sort.id]
+                @inbounds sort.p_temp[1:sort.win]=v[i-sort.win:i-1,sort.id]
             end
 
-            @inbounds sort.p_temp[window+1]=v[i,sort.id]
-            sort.index=window+2
+            @inbounds sort.p_temp[sort.win+1]=v[i,sort.id]
+            sort.index=sort.win+2
         end
     end
                    
-    @inbounds sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
+    @inbounds sort.sigend[:]=v[(end-length(sort.sigend)+1):end,sort.id]
 
     nothing  
 end
@@ -143,7 +143,7 @@ function maincal{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::Abstra
             sort.index+=1
 
             #If end of spike window is reached, continue spike detection
-            if sort.index==101
+            if sort.index==length(sort.p_temp)+1
 
                 align(sort.a,sort)
 
@@ -157,19 +157,19 @@ function maincal{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::Abstra
 
         elseif p>sort.thres
             
-            if i<=window
-                @inbounds sort.p_temp[1:(window-i+1)]=sort.sigend[end-(window-i):end]
-                @inbounds sort.p_temp[(window-i+2):window]=v[1:i-1,sort.id]  
+            if i<=sort.win
+                sort.p_temp[1:(sort.win-i+1)]=sort.sigend[end-(sort.win-i):end]
+                sort.p_temp[(sort.win-i+2):sort.win]=v[1:i-1,sort.id]  
             else
-                @inbounds sort.p_temp[1:window]=v[(i-window):(i-1),sort.id]
+                sort.p_temp[1:sort.win]=v[(i-sort.win):(i-1),sort.id]
             end
 
-            @inbounds sort.p_temp[window+1]=v[i,sort.id]
-            sort.index=window+2
+            sort.p_temp[sort.win+1]=v[i,sort.id]
+            sort.index=sort.win+2
         end
     end
                    
-    @inbounds sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
+    @inbounds sort.sigend[:]=v[(end-length(sort.sigend)+1):end,sort.id]
 
     nothing
 end
@@ -185,7 +185,7 @@ function threscal{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::Abstr
         threshold(sort.t,sort,p)            
     end
                    
-    sort.sigend[:]=v[(end-sigend_length+1):end,sort.id]
+    sort.sigend[:]=v[(end-length(sort.sigend)+1):end,sort.id]
 
     nothing
 end

@@ -15,12 +15,12 @@ type AlignMax <: Align
 end
 
 function align(a::AlignMax, sort::Sorting)
-    j=indmax(sub(sort.p_temp,window_half:(window+window_half)))+window_half
-    sort.waveform=sub(sort.p_temp,j-window_half:j+window_half-1)  
+    j=indmax(sub(sort.p_temp,div(sort.win,2):(length(sort.sigend))))+div(sort.win,2)
+    sort.waveform=sub(sort.p_temp,j-div(sort.win,2):j+div(sort.win,2)-1)  
     return j
 end
 
-mysize(align::AlignMax)=window
+mysize(align::AlignMax,win)=win
 
 #=
 Minimum signal
@@ -29,12 +29,12 @@ type AlignMin <: Align
 end
 
 function align(a::AlignMin,sort::Sorting)
-    j=indmin(sub(sort.p_temp,window_half:(window+window_half)))+window_half
-    sort.waveform=sub(sort.p_temp,j-window_half:j+window_half-1)
+    j=indmin(sub(sort.p_temp,div(sort.win,2):(length(sort.sigend))))+div(sort.win,2)
+    sort.waveform=sub(sort.p_temp,j-div(sort.win,2):j+div(sort.win,2)-1)
     return j
 end
 
-mysize(align::AlignMin)=window
+mysize(align::AlignMin,win)=win
 
 #=
 Maximum Magnitude

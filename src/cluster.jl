@@ -7,7 +7,7 @@ Clustering methods. Each method needs
 
 =#
 
-export ClusterOSort, ClusterNone, ClusterWindow
+export ClusterOSort, ClusterNone, ClusterWindow, ClusterTemplate
 
 function clusterprepare(c::Cluster, sort::Sorting,p)   
 end
@@ -220,6 +220,49 @@ function intersect(x1,x2,x3,x4,y1,y2,y3,y4)
 end
 
 function clusterprepare(c::ClusterWindow, sort::Sorting,p)   
+end
+
+#=
+Template matching
+=#
+
+type ClusterTemplate <: Cluster
+   templates::Array{Float64,2}
+   sigmas::Array{Float64,2}
+   misses::Int64
+   num::Int64
+end
+
+ClusterTemplate()=ClusterTemplate(48)
+
+ClusterTemplate(n::Int64)=ClusterTemplate(zeros(Float64,n,10),zeros(Float64,n,10),5,0)
+
+ClusterTemplate(n::Int64,c::ClusterTemplate)=ClusterTemplate(n)
+
+function cluster(c::ClusterTemplate,sort::Sorting)
+
+    id=0
+    
+    for i=1:c.num
+        mymisses=0
+        for j=1:size(c.templates,1)
+            if (sort.features[j]<c.templates[j,i]-c.sigmas[j,i])|(sort.features[j]>c.templates[j,i]+c.sigmas[j,i])
+                mymisses+=1
+                if mymisses>c.misses
+                    break
+                end
+            end
+        end
+        if mymisses<c.misses
+            id=i
+            break
+        end
+    end
+
+    id+1
+end
+
+function clusterprepare(c::ClusterTemplate,sort::Sorting,p)
 end
     
 #=

@@ -15,7 +15,9 @@ function cal!{T}(sort::Sorting,v::T,spikes::AbstractArray{Spike,2},ns::AbstractA
         threscal(sort,v,spikes,ns)
     else #Very first run
         detectprepare(sort.d,sort,v)
-        sort.sigend[:]=v[1:length(sort.sigend),sort.id]
+        for i=1:length(sort.sigend)
+            sort.sigend[i]=v[i,sort.id]
+        end
         threscal(sort,v,spikes,ns,length(sort.sigend)+1)
     end
     
@@ -108,18 +110,28 @@ function main{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractA
         elseif p>sort.thres
             
             if i<=sort.win
-                @inbounds sort.p_temp[1:(sort.win-i+1)]=sort.sigend[end-(sort.win-i):end]
-                @inbounds sort.p_temp[(sort.win-i+2):sort.win]=v[1:i-1,sort.id]  
+                @inbounds for j=1:(sort.win-i+1)
+                    sort.p_temp[j]=sort.sigend[length(sort.sigend)-(sort.win-i)+j-1]
+                end
+                count=1
+                @inbounds for j=(sort.win-i+2):sort.win
+                    sort.p_temp[j]=v[count,sort.id]
+                    count+=1
+                end
             else
-                @inbounds sort.p_temp[1:sort.win]=v[i-sort.win:i-1,sort.id]
+                @inbounds for j=1:sort.win
+                    sort.p_temp[j]=v[i-sort.win+j-1]
+                end
             end
 
             @inbounds sort.p_temp[sort.win+1]=v[i,sort.id]
             sort.index=sort.win+2
         end
     end
-                   
-    @inbounds sort.sigend[:]=v[(end-length(sort.sigend)+1):end,sort.id]
+
+    for j=1:length(sort.sigend)
+        sort.sigend[j]=v[size(v,1)-length(sort.sigend)+j,sort.id]
+    end
 
     nothing  
 end

@@ -7,7 +7,7 @@ Main functions for spike sorting
 export cal!,onlinesort!
 
 #Single Channel
-function cal!{T}(sort::Sorting,v::T,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=0)
+function cal!(sort::Sorting,v,spikes,ns,firstrun=0)
 
     if firstrun==2 #General Calibration
         maincal(sort,v,spikes,ns)
@@ -25,7 +25,7 @@ function cal!{T}(sort::Sorting,v::T,spikes::AbstractArray{Spike,2},ns::AbstractA
 end
 
 #Multi-channel - Single Core
-function cal!{T<:Sorting,V}(s::Array{T,1},v::V,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=0)
+function cal!{T<:Sorting}(s::Array{T,1},v,spikes,ns,firstrun=0)
 
     for i=1:length(s)
         cal!(s[i],v,spikes,ns,firstrun)
@@ -34,7 +34,7 @@ function cal!{T<:Sorting,V}(s::Array{T,1},v::V,spikes::AbstractArray{Spike,2},ns
 end
 
 #Multi-channel - Multi-Core
-function cal!{T<:Sorting,V}(s::DArray{T,1,Array{T,1}},v::V,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},firstrun=0)
+function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v,spikes,ns,firstrun=0)
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
@@ -47,21 +47,21 @@ function cal!{T<:Sorting,V}(s::DArray{T,1,Array{T,1}},v::V,spikes::AbstractArray
 end
 
 #Single channel
-function onlinesort!{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
+function onlinesort!(sort::Sorting,v,spikes,ns)
     main(sort,v,spikes,ns)    
     nothing
 end
 
 #Multi-channel - Single Core
-function onlinesort!{T<:Sorting,V}(s::Array{T,1},v::V,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
-    for i=1:length(s)
+function onlinesort!{T<:Sorting}(s::Array{T,1},v,spikes,ns)
+    @inbounds for i=1:length(s)
         onlinesort!(s[i],v,spikes,ns)
     end
     nothing
 end
 
 #Multi-channel - multi-core
-function onlinesort!{T<:Sorting,V}(s::DArray{T,1,Array{T,1}},v::V,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
+function onlinesort!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v,spikes,ns)
     @sync for p=1:length(s.pids)
 
 	@spawnat s.pids[p] begin
@@ -77,7 +77,7 @@ end
 Main processing loop for length of raw signal
 =#
 
-function main{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
+function main(sort::Sorting,v,spikes,ns)
 
     for i=1:size(v,1)
 
@@ -103,8 +103,7 @@ function main{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractA
                 #Spike time stamp
                 @inbounds ns[sort.id]+=1    
                 @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-(length(sort.sigend)+sort.win)):(ind+i-length(sort.sigend)),id)   
-                sort.index=0
-                  
+                sort.index=0               
             end
 
         elseif p>sort.thres
@@ -129,7 +128,7 @@ function main{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractA
         end
     end
 
-    for j=1:length(sort.sigend)
+    @inbounds for j=1:length(sort.sigend)
         sort.sigend[j]=v[size(v,1)-length(sort.sigend)+j,sort.id]
     end
 
@@ -140,7 +139,7 @@ end
 Main calibration loop
 =#
 
-function maincal{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},start=1)
+function maincal(sort::Sorting,v,spikes,ns,start=1)
 
     for i=start:size(v,1)
 
@@ -190,7 +189,7 @@ end
 Threshold calibration loop
 =#
 
-function threscal{V}(sort::Sorting,v::V,spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1},start=1)
+function threscal(sort::Sorting,v,spikes,ns,start=1)
 
     for i=start:size(v,1)
         p=detect(sort.d,sort,i,v)

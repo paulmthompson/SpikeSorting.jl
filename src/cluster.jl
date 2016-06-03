@@ -208,7 +208,7 @@ function cluster(c::ClusterWindow,sort::Sorting)
         if hits[myind]==0
             return 1
         else
-            myind+1
+            return myind+1
         end
     end    
 end

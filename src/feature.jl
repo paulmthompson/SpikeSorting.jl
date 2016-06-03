@@ -27,6 +27,8 @@ end
 
 mysize(feature::FeatureTime,wavelength::Int64)=wavelength
 
+feature_type(feature::FeatureTime,in_type::DataType)=in_type
+
 #=
 online PCA
 

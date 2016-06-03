@@ -15,7 +15,15 @@ type AlignMax <: Align
 end
 
 function align(a::AlignMax, sort::Sorting)
-    j=indmax(sub(sort.p_temp,div(sort.win,2):(length(sort.sigend))))+div(sort.win,2)
+    mymax=sort.p_temp[div(sort.win,2)]
+    j=div(sort.win,2)
+    @inbounds for i=(div(sort.win,2)+1):(length(sort.sigend))
+        if sort.p_temp[i]>mymax
+            j=i
+            mymax=sort.p_temp[i]
+        end
+    end
+    #j=indmax(sub(sort.p_temp,div(sort.win,2):(length(sort.sigend))))+div(sort.win,2)
     sort.waveform=sub(sort.p_temp,j-div(sort.win,2):j+div(sort.win,2)-1)  
     return j
 end

@@ -92,7 +92,7 @@ function main(sort::Sorting,v,spikes,ns)
             #If end of spike window is reached, continue spike detection
             if sort.index==length(sort.p_temp)+1
 
-                ind=align(sort.a,sort)
+                align(sort.a,sort)
 
                 #overlap detection? (probably need to do this in the time domain)
                 
@@ -102,7 +102,7 @@ function main(sort::Sorting,v,spikes,ns)
 
                 #Spike time stamp
                 @inbounds ns[sort.id]+=1    
-                @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-(sort.s.s_end+sort.s.win)):(ind+i-sort.s.s_end),id)
+                @inbounds spikes[ns[sort.id],sort.id]=Spike((sort.cent+i-(sort.s.s_end+sort.s.win)):(sort.cent+i-sort.s.s_end),id)
                 sort.index=0               
             end
 

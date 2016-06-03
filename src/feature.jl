@@ -21,7 +21,16 @@ end
 FeatureTime(M::Int64,N::Int64)=FeatureTime()
 
 function feature(f::FeatureTime,sort::Sorting)
-    sort.features=sub(sort.waveform,sort.dims)
+    #sort.features=sub(sort.waveform,sort.dims)
+    count=1
+    #@inbounds for i in sort.dims
+        #sort.features[count]=sort.waveforms[i]
+        #count+=1
+    #end
+    @inbounds for i in sort.dims
+        sort.features[count]=sort.p_temp[sort.cent-sort.s.win2+i-1]
+        count+=1
+    end
     nothing
 end
 

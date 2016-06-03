@@ -61,15 +61,16 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             f::($(typeof(F)))
             r::($(typeof(R)))
             t::($(typeof(T)))
-            id::UInt16 
+            id::Int16 
             sigend::Array{$(in_type),1} 
-            index::UInt16
+            index::Int16
             p_temp::Array{$(in_type),1}
             features::Array{$(f_type),1} 
             fullfeature::Array{$(f_type),1} 
-            dims::Array{UInt16,1}
+            dims::Array{Int16,1}
             thres::Float64
-            waveform::Array{$(in_type),1}
+            #waveform::Array{$(in_type),1}
+            cent::Int16
 	    s::s_sizes
         end
 
@@ -91,10 +92,11 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             end
             F=typeof(F)(wavelength,reducedims)
             C=typeof(C)(reducedims)
+            p_temp=zeros(in_type,window*2)
             $(symbol("Sorting_$sorting_num"))(D,C,A,F,R,T,
                     1,zeros(in_type,window+div(window,2)),0,
-                    zeros(in_type,window*2),zeros(f_type,reducedims),zeros(f_type,fulllength),
-                    collect(1:reducedims),1.0,zeros(in_type,wavelength),s_sizes(window))   
+                    p_temp,zeros(f_type,reducedims),zeros(f_type,fulllength),
+                    collect(1:reducedims),1.0,1,s_sizes(window))   
         end
     end
 

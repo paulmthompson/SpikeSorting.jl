@@ -174,17 +174,16 @@ end
 
 type ClusterWindow <: Cluster
     win::Array{Array{mywin,1},1}
+    hits::Array{UInt8,1}
 end
 
-ClusterWindow()=ClusterWindow(Array(Array{mywin,1},0))
+ClusterWindow()=ClusterWindow(Array(Array{mywin,1},0),zeros(UInt8,0))
 
-ClusterWindow(n::Int64)=ClusterWindow(Array(Array{mywin,1},0))
+ClusterWindow(n::Int64)=ClusterWindow(Array(Array{mywin,1},0),zeros(UInt8,0))
 
-ClusterWindow(n::Int64,c::ClusterWindow)=ClusterWindow(Array(Array{mywin,1},0))
+ClusterWindow(n::Int64,c::ClusterWindow)=ClusterWindow(Array(Array{mywin,1},0),zeros(UInt8,0))
 
 function cluster(c::ClusterWindow,sort::Sorting)
-
-    hits=zeros(Int64,length(c.win))
     
     @inbounds for i=1:length(c.win) #Loop over all clusters
         for j=1:length(c.win[i]) #Loop over all windows for cluster
@@ -194,20 +193,26 @@ function cluster(c::ClusterWindow,sort::Sorting)
             b2=c.win[i][j].y2
             for k=(c.win[i][j].x1-1):(c.win[i][j].x2+1)
                 if intersect(a1,a2,k,k+1,b1,b2,sort.features[k],sort.features[k+1])
-                    hits[i]+=1
+                    c.hits[i]+=1
                     break
                 end
             end
         end
     end
 
-    if length(hits)==0
+    if length(c.hits)==0
         return 1
     else
-        myind=indmax(hits)
-        if hits[myind]==0
+        myind=indmax(c.hits)
+        if c.hits[myind]==0
+            for i=1:length(c.hits)
+                c.hits[i]=0
+            end
             return 1
         else
+            for i=1:length(c.hits)
+                c.hits[i]=0
+            end
             return myind+1
         end
     end    

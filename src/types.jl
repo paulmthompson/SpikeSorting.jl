@@ -18,7 +18,15 @@ immutable Spike
     id::Int64
 end
 
-Spike()=Spike(0:0,0) 
+Spike()=Spike(0:0,0)
+
+immutable s_sizes
+    win::Int16
+    s_end::Int16
+    win2::Int16
+end
+
+s_sizes(win)=s_sizes(win,win+div(win,2),div(win,2))
 
 function output_buffer(channels::Int64,par=false)
 
@@ -62,7 +70,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             dims::Array{UInt16,1}
             thres::Float64
             waveform::Array{$(in_type),1}
-	    win::Int16
+	    s::s_sizes
         end
 
         function MakeSorting(D::($(typeof(D))),C::($(typeof(C))),A::($(typeof(A))),F::($(typeof(F))),R::($(typeof(R))),T::($(typeof(T))),window::Int64,in_type=Int16)
@@ -86,7 +94,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             $(symbol("Sorting_$sorting_num"))(D,C,A,F,R,T,
                     1,zeros(in_type,window+div(window,2)),0,
                     zeros(in_type,window*2),zeros(f_type,reducedims),zeros(f_type,fulllength),
-                    collect(1:reducedims),1.0,zeros(in_type,wavelength),window)   
+                    collect(1:reducedims),1.0,zeros(in_type,wavelength),s_sizes(window))   
         end
     end
 

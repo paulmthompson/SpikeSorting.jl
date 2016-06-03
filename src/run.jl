@@ -15,10 +15,10 @@ function cal!(sort::Sorting,v,spikes,ns,firstrun=0)
         threscal(sort,v,spikes,ns)
     else #Very first run
         detectprepare(sort.d,sort,v)
-        for i=1:length(sort.sigend)
+        for i=1:sort.s.s_end
             sort.sigend[i]=v[i,sort.id]
         end
-        threscal(sort,v,spikes,ns,length(sort.sigend)+1)
+        threscal(sort,v,spikes,ns,sort.s.s_end+1)
     end
     
     nothing
@@ -102,34 +102,34 @@ function main(sort::Sorting,v,spikes,ns)
 
                 #Spike time stamp
                 @inbounds ns[sort.id]+=1    
-                @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-(length(sort.sigend)+sort.win)):(ind+i-length(sort.sigend)),id)   
+                @inbounds spikes[ns[sort.id],sort.id]=Spike((ind+i-(sort.s.s_end+sort.s.win)):(ind+i-sort.s.s_end),id)
                 sort.index=0               
             end
 
         elseif p>sort.thres
             
-            if i<=sort.win
-                @inbounds for j=1:(sort.win-i+1)
-                    sort.p_temp[j]=sort.sigend[length(sort.sigend)-(sort.win-i)+j-1]
+            if i<=sort.s.win
+                @inbounds for j=1:(sort.s.win-i+1)
+                    sort.p_temp[j]=sort.sigend[sort.s.s_end-(sort.s.win-i)+j-1]
                 end
                 count=1
-                @inbounds for j=(sort.win-i+2):sort.win
+                @inbounds for j=(sort.s.win-i+2):sort.s.win
                     sort.p_temp[j]=v[count,sort.id]
                     count+=1
                 end
             else
-                @inbounds for j=1:sort.win
-                    sort.p_temp[j]=v[i-sort.win+j-1]
+                @inbounds for j=1:sort.s.win
+                    sort.p_temp[j]=v[i-sort.s.win+j-1]
                 end
             end
 
-            @inbounds sort.p_temp[sort.win+1]=v[i,sort.id]
-            sort.index=sort.win+2
+            @inbounds sort.p_temp[sort.s.win+1]=v[i,sort.id]
+            sort.index=sort.s.win+2
         end
     end
 
-    @inbounds for j=1:length(sort.sigend)
-        sort.sigend[j]=v[size(v,1)-length(sort.sigend)+j,sort.id]
+    @inbounds for j=1:sort.s.s_end
+        sort.sigend[j]=v[size(v,1)-sort.s.s_end+j,sort.id]
     end
 
     nothing  
@@ -168,19 +168,29 @@ function maincal(sort::Sorting,v,spikes,ns,start=1)
 
         elseif p>sort.thres
             
-            if i<=sort.win
-                @inbounds sort.p_temp[1:(sort.win-i+1)]=sort.sigend[end-(sort.win-i):end]
-                @inbounds sort.p_temp[(sort.win-i+2):sort.win]=v[1:i-1,sort.id]  
+            if i<=sort.s.win
+                @inbounds for j=1:(sort.s.win-i+1)
+                    sort.p_temp[j]=sort.sigend[sort.s.s_end-(sort.s.win-i)+j-1]
+                end
+                count=1
+                @inbounds for j=(sort.s.win-i+2):sort.s.win
+                    sort.p_temp[j]=v[count,sort.id]
+                    count+=1
+                end
             else
-                @inbounds sort.p_temp[1:sort.win]=v[(i-sort.win):(i-1),sort.id]
+                @inbounds for j=1:sort.s.win
+                    sort.p_temp[j]=v[i-sort.s.win+j-1]
+                end
             end
 
-            @inbounds sort.p_temp[sort.win+1]=v[i,sort.id]
-            sort.index=sort.win+2
+            @inbounds sort.p_temp[sort.s.win+1]=v[i,sort.id]
+            sort.index=sort.s.win+2
         end
     end
                    
-    @inbounds sort.sigend[:]=v[(end-length(sort.sigend)+1):end,sort.id]
+    @inbounds for j=1:sort.s.s_end
+        sort.sigend[j]=v[size(v,1)-sort.s.s_end+j,sort.id]
+    end
 
     nothing
 end
@@ -196,7 +206,9 @@ function threscal(sort::Sorting,v,spikes,ns,start=1)
         threshold(sort.t,sort,p)            
     end
                    
-    sort.sigend[:]=v[(end-length(sort.sigend)+1):end,sort.id]
+    @inbounds for j=1:sort.s.s_end
+        sort.sigend[j]=v[size(v,1)-sort.s.s_end+j,sort.id]
+    end
 
     nothing
 end

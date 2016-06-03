@@ -186,7 +186,7 @@ function cluster(c::ClusterWindow,sort::Sorting)
 
     hits=zeros(Int64,length(c.win))
     
-    for i=1:length(c.win) #Loop over all clusters
+    @inbounds for i=1:length(c.win) #Loop over all clusters
         for j=1:length(c.win[i]) #Loop over all windows for cluster
             a1=c.win[i][j].x1
             a2=c.win[i][j].x2

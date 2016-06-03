@@ -15,16 +15,15 @@ type AlignMax <: Align
 end
 
 function align(a::AlignMax, sort::Sorting)
-    mymax=sort.p_temp[div(sort.win,2)]
-    j=div(sort.win,2)
-    @inbounds for i=(div(sort.win,2)+1):(length(sort.sigend))
+    mymax=sort.p_temp[sort.s.win2]
+    j=sort.s.win2
+    @inbounds for i=(sort.s.win2+1):sort.s.s_end
         if sort.p_temp[i]>mymax
-            j=i
+            j=i+1
             mymax=sort.p_temp[i]
         end
     end
-    #j=indmax(sub(sort.p_temp,div(sort.win,2):(length(sort.sigend))))+div(sort.win,2)
-    sort.waveform=sub(sort.p_temp,j-div(sort.win,2):j+div(sort.win,2)-1)  
+    sort.waveform=sub(sort.p_temp,j-sort.s.win2:j+sort.s.win2-1)  
     return j
 end
 
@@ -37,8 +36,8 @@ type AlignMin <: Align
 end
 
 function align(a::AlignMin,sort::Sorting)
-    j=indmin(sub(sort.p_temp,div(sort.win,2):(length(sort.sigend))))+div(sort.win,2)
-    sort.waveform=sub(sort.p_temp,j-div(sort.win,2):j+div(sort.win,2)-1)
+    j=indmin(sub(sort.p_temp,sort.s.win2:sort.s.s_end))+sort.s.win2
+    sort.waveform=sub(sort.p_temp,j-sort.s.win2:j+sort.s.win2-1)
     return j
 end
 

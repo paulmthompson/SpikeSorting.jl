@@ -15,7 +15,7 @@ abstract Sorting
 #Data Structure to store range of a spike and cluster ID
 immutable Spike
     inds::UnitRange{Int64}
-    id::Int64
+    id::UInt8
 end
 
 Spike()=Spike(0:0,0)
@@ -30,13 +30,13 @@ s_sizes(win)=s_sizes(win,win+div(win,2),div(win,2))
 
 function output_buffer(channels::Int64,par=false)
 
-    nums=zeros(Int64,channels)
+    nums=zeros(UInt16,channels)
     
     if par==false
         buf=Spike[Spike() for i=1:100,j=1:channels]
     else
         buf=convert(SharedArray{Spike,2},Spike[Spike() for i=1:100,j=1:channels])
-        nums=convert(SharedArray{Int64,1},nums)
+        nums=convert(SharedArray{UInt16,1},nums)
     end
 
     (buf,nums)   

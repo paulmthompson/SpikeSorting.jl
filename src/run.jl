@@ -106,7 +106,7 @@ function main(sort::Sorting,v,spikes,ns)
                 sort.index=0               
             end
 
-        elseif p>sort.thres
+        elseif p
             
             if i<=sort.s.win
                 @inbounds for j=1:(sort.s.win-i+1)
@@ -166,7 +166,7 @@ function maincal(sort::Sorting,v,spikes,ns,start=1)
                            
             end
 
-        elseif p>sort.thres
+        elseif p
             
             if i<=sort.s.win
                 @inbounds for j=1:(sort.s.win-i+1)
@@ -202,8 +202,7 @@ Threshold calibration loop
 function threscal(sort::Sorting,v,spikes,ns,start=1)
 
     for i=start:size(v,1)
-        p=detect(sort.d,sort,i,v)
-        threshold(sort.t,sort,p)            
+        threshold(sort.t,sort,v,i)            
     end
                    
     @inbounds for j=1:sort.s.s_end

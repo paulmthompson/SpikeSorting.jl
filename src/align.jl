@@ -40,7 +40,7 @@ function align(a::AlignMin,sort::Sorting)
     @inbounds for i=(sort.s.win2+1):sort.s.s_end
         if sort.p_temp[i]<mymin
             sort.cent=i+1
-            mymax=sort.p_temp[i]
+            mymin=sort.p_temp[i]
         end
     end
     nothing

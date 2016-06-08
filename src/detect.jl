@@ -8,7 +8,7 @@ Detection methods. Each method needs
 A method may also need a "detectprepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
 
-export DetectPower, DetectSignal
+export DetectPower, DetectAbs, DetectNeg
 
 function detectprepare{V}(d::Detect,sort::Sorting,v::V)
 end
@@ -38,7 +38,7 @@ function detect{V}(d::DetectPower,sort::Sorting, i::Int64,v::V)
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-    sqrt((sort.d.b - (sort.d.a^2/power_win))/power_win)  
+    sort.thres < sqrt((sort.d.b - (sort.d.a^2/power_win))/power_win)  
 end
 
 function detectprepare{V}(d::DetectPower,sort::Sorting,v::V)
@@ -63,17 +63,27 @@ function detectprepare{V}(d::DetectPower,sort::Sorting,v::V)
 end
 
 #=
-Raw Signal
+Absolute Value
 
 Quiroga et al 2004
 =#
 
-type DetectSignal <: Detect
+type DetectAbs <: Detect
 end
 
-function detect{V}(d::DetectSignal,sort::Sorting,i::Int64,v::V)
+function detect(d::DetectAbs,sort::Sorting,i::Int64,v)
+    @inbounds sort.thres < abs(v[i,sort.id])   
+end
 
-    convert(Float64,abs(v[i,sort.id]))   
+#=
+Negative Value
+=#
+
+type DetectNeg <: Detect
+end
+
+function detect(d::DetectNeg,sort::Sorting,i::Int64,v)
+    @inbounds return sort.thres > v[i,sort.id]
 end
 
 #=

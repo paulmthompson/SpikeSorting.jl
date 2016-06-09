@@ -10,7 +10,7 @@ const power_win1=power_win+1
 const power_win0=power_win-1
 
 #Wavelets
-
+#=
 const coiflets_five=[0.00021208083980379827
 0.00035858968789573785
 -0.0021782363581090178
@@ -65,6 +65,7 @@ const wave_a=collect(0.5:.1:1.5);
 
 #This is REAL ugly, and edges aren't very good. Also code isn't very Julian
 
+
 const coiflets_scaled=zeros(Float64,length(wave_a),bigJ)
 
 coif_intp=interpolate(coiflets_five,BSpline(Quadratic(Line())),OnCell())
@@ -79,7 +80,7 @@ for i=1:length(wave_a)
 end
 
 const onesquarea=Float64[1/sqrt(wave_a[i]) for i=1:11]
-
+=#
 #=
 CLASSIT clustering algorithm
 =#

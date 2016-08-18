@@ -7,12 +7,12 @@ a=load(string(dirname(Base.source_path()),"/data/spikes2.jld"))
 time_stamps=a["time_stamps"]
 fv=a["fv"]
 
-detect=DetectPower()
+detect=DetectNeg()
 cluster=ClusterOSort(100,50)
 align=AlignMin()
 feature=FeatureTime()
 reduce=ReductionNone()
-thres=ThresholdMean(2.0)
+thres=ThresholdMeanN(2.0)
 s1=create_multi(detect,cluster,align,feature,reduce,thres,1)
 
 ss=SpikeSorting.benchmark(fv,time_stamps,s1[1],180.0,20000)

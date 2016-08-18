@@ -7,7 +7,7 @@ cluster=ClusterOSort();
 align=AlignMax();
 feature=FeatureTime();
 reduce=ReductionNone();
-thres=ThresholdMean();
+thres=ThresholdMeanN();
 num_channels=1;
 
 (buf,nums)=output_buffer(num_channels);
@@ -18,7 +18,7 @@ Power
 
 Rutishauser et al 2006
 =#
-
+#=
 d=DetectPower()
 s1=create_multi(d,cluster,align,feature,reduce,thres,num_channels);
 
@@ -32,14 +32,14 @@ facts() do
     @fact s1[1].d.a --> less_than(s1[1].d.b)
     @fact s1[1].d.a --> greater_than(s1[1].d.c)
 end
+=#
 
 #=
 Raw Signal
 
-Quiroga et al 2004
 =#
 
-d=DetectSignal()
+d=DetectNeg()
 s1=create_multi(d,cluster,align,feature,reduce,thres,num_channels);
 
 cal!(s1,v,buf,nums,0)

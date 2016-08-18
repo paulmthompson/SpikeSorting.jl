@@ -8,7 +8,7 @@ Detection methods. Each method needs
 A method may also need a "detectprepare" function to use in its first iteration if the detection method uses a sliding window that depends on previous iterations (see power for an example)
 =#
 
-export DetectPower, DetectAbs, DetectNeg
+export DetectAbs, DetectNeg
 
 function detectprepare{V}(d::Detect,sort::Sorting,v::V)
 end
@@ -18,6 +18,7 @@ Power
 
 Rutishauser et al 2006
 =#
+#=
 type DetectPower <: Detect
     a::Int64
     b::Int64
@@ -61,7 +62,7 @@ function detectprepare{V}(d::DetectPower,sort::Sorting,v::V)
 
     nothing
 end
-
+=#
 #=
 Absolute Value
 
@@ -72,7 +73,7 @@ type DetectAbs <: Detect
 end
 
 function detect(d::DetectAbs,sort::Sorting,i::Int64,v)
-    @inbounds sort.thres < abs(v[i,sort.id])   
+    @inbounds return sort.thres < abs(v[i,sort.id])   
 end
 
 #=

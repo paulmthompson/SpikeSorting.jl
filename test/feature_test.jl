@@ -2,11 +2,11 @@ module Feature_Test
 
 using FactCheck,SpikeSorting
 
-d=DetectSignal()
+d=DetectNeg()
 cluster=ClusterOSort();
 align=AlignMax();
 reduce=ReductionNone();
-thres=ThresholdMean();
+thres=ThresholdMeanN();
 num_channels=1;
 
 (buf,nums)=output_buffer(num_channels);

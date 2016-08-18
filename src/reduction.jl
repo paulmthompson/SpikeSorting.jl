@@ -7,7 +7,7 @@ Dimensionality Reduction methods. Each method needs
 3) any other necessary functions for alignment algorithm
 =#
 
-export ReductionNone, ReductionMD
+export ReductionNone
 
 function reductionprepare(r::Reduction,sort::Sorting)
     nothing
@@ -24,6 +24,7 @@ Maximum Difference
 
 Gibson et al 2010
 =#
+#=
 type ReductionMD <: Reduction
     mydims::Int64
     maximum_difference::Array{Int64,1}
@@ -74,7 +75,7 @@ function reductionprepare(r::ReductionMD,sort::Sorting)
     end   
     nothing
 end
-
+=#
 #=
 Lilliefor's Test
 =#

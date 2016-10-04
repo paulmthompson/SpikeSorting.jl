@@ -54,7 +54,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
     f_type=feature_type(F,in_type)
     
     @eval begin
-        type $(symbol("Sorting_$sorting_num")) <: Sorting
+        type $(Symbol("Sorting_$sorting_num")) <: Sorting
             d::($(typeof(D)))
             c::($(typeof(C)))
             a::($(typeof(A)))
@@ -93,7 +93,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             F=typeof(F)(wavelength,reducedims)
             C=typeof(C)(reducedims)
             p_temp=zeros(in_type,window*2)
-            $(symbol("Sorting_$sorting_num"))(D,C,A,F,R,T,
+            $(Symbol("Sorting_$sorting_num"))(D,C,A,F,R,T,
                     1,zeros(in_type,window+div(window,2)),0,
                     p_temp,zeros(f_type,reducedims),zeros(f_type,fulllength),
                     collect(1:reducedims),1.0,1,s_sizes(window))   

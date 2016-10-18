@@ -251,7 +251,7 @@ function cluster(c::ClusterTemplate,sort::Sorting)
     for i=1:c.num
         mymisses=0
         for j=1:size(c.templates,1)
-            if (sort.features[j]<c.templates[j,i]-c.sigmas[j,i])|(sort.features[j]>c.templates[j,i]+c.sigmas[j,i])
+            if (sort.features[j]<(c.templates[j,i]-c.sigmas[j,i]))|(sort.features[j]>(c.templates[j,i]+c.sigmas[j,i]))
                 mymisses+=1
                 if mymisses>c.misses
                     break

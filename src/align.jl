@@ -32,7 +32,10 @@ mysize(align::AlignMax,win)=win
 Minimum signal
 =#
 type AlignMin <: Align
+    shift::Int64
 end
+
+AlignMin()=AlignMin(10)
 
 function align(a::AlignMin,sort::Sorting)
     mymin=sort.p_temp[sort.s.win2]
@@ -43,6 +46,7 @@ function align(a::AlignMin,sort::Sorting)
             mymin=sort.p_temp[i]
         end
     end
+    sort.cent += a.shift
     nothing
 end
 

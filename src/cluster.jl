@@ -232,15 +232,17 @@ Template matching
 =#
 
 type ClusterTemplate <: Cluster
-   templates::Array{Float64,2}
-   sigmas::Array{Float64,2}
-   misses::Int64
-   num::Int64
+    templates::Array{Float64,2}
+    sig_min::Array{Float64,2}
+    sig_max::Array{Float64,2}
+    misses::Int64
+    num::Int64
+    tol::Array{Float64,1}
 end
 
 ClusterTemplate()=ClusterTemplate(48)
 
-ClusterTemplate(n::Int64)=ClusterTemplate(zeros(Float64,n,10),zeros(Float64,n,10),5,0)
+ClusterTemplate(n::Int64)=ClusterTemplate(zeros(Float64,n,10),zeros(Float64,n,10),zeros(Float64,n,10),5,0,ones(Float64,10))
 
 ClusterTemplate(n::Int64,c::ClusterTemplate)=ClusterTemplate(n)
 
@@ -251,7 +253,7 @@ function cluster(c::ClusterTemplate,sort::Sorting)
     for i=1:c.num
         mymisses=0
         for j=1:size(c.templates,1)
-            if (sort.features[j]<(c.templates[j,i]-c.sigmas[j,i]))|(sort.features[j]>(c.templates[j,i]+c.sigmas[j,i]))
+            if (sort.features[j]<(c.templates[j,i]-c.sig_min[j,i])*c.tol[i])|(sort.features[j]>(c.templates[j,i]+c.sig_max[j,i])*c.tol[i])
                 mymisses+=1
                 if mymisses>c.misses
                     break

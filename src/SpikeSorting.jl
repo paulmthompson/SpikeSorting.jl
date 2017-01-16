@@ -1,11 +1,12 @@
 module SpikeSorting
 
-using Interpolations, DistributedArrays, ArrayViews
+using Interpolations, DistributedArrays, ArrayViews, Gtk.ShortNames, Cairo, MultivariateStats
 
-export Sorting,Spike,create_multi,output_buffer,benchmark
+export Sorting,Spike,create_multi,output_buffer,benchmark, SortView
 
 include("types.jl")
 include("constants.jl")
+include("gui.jl")
 include("detect.jl")
 include("align.jl")
 include("feature.jl")

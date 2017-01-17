@@ -21,9 +21,10 @@ type SortView
     popup_axis::Gtk.GtkMenuLeaf
 
     selected_plot::Int64
-    selected_axis::Int64
+    selected_axis::Int64 #1 = x ; 2 = y 
 
     axes::Array{Bool,2}
+    axes_name::Array{String,2}
     
 end
 
@@ -77,7 +78,7 @@ function sort_gui()
 
     win = @Window(grid,"Sort View") |> showall
     
-    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,1,falses(10,2))
+    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,1,falses(10,2),["Non" for i=1:20,j=1:2])
 
     signal_connect(b1_cb,b1,"clicked",Void,(),false,(handles,))
 
@@ -93,6 +94,8 @@ function b1_cb(widget::Ptr,user_data::Tuple{SortView})
 
     han, = user_data
 
+    replot_sort(han)
+
     nothing
 end
 
@@ -106,14 +109,18 @@ function pca_calc(han::SortView,num::Int64)
         han.pca_calced
     end
 
-
     han.features[:,han.selected_axis,han.selected_plot] = han.pca.proj[:,num]' * han.spike_buf
 
     han.axes[han.selected_plot,han.selected_axis]=true
+    han.axes_name[han.selected_plot,han.selected_axis]=string("PCA-",num)
 
     replot_sort(han)
-    
+
     nothing
+end
+
+function name_axis(han::SortView,myname)
+
 end
 
 function canvas_press(widget::Ptr,param_tuple,user_data::Tuple{SortView})
@@ -136,7 +143,6 @@ function canvas_press(widget::Ptr,param_tuple,user_data::Tuple{SortView})
         
     end
         
-
     nothing
 end
 
@@ -154,12 +160,12 @@ function get_axis_bounds(han::SortView,x,y)
     for xx=1:length(xbounds)-1, yy=2:length(ybounds)
         if (x<xbounds[xx]+50.0)&(x>xbounds[xx])
             han.selected_plot=count
-            han.selected_axis=1
+            han.selected_axis=2
             inaxis=true
             break
         elseif (y>ybounds[yy]-50.0)&(y<ybounds[yy])
             han.selected_plot=count
-            han.selected_axis=2
+            han.selected_axis=1
             inaxis=true
             break
         end
@@ -183,15 +189,29 @@ function replot_sort(han::SortView)
         xscale=maximum(han.features[:,1,han.selected_plot])-xmin
         yscale=maximum(han.features[:,2,han.selected_plot])-ymin
 
-        set_source_rgb(ctx,1.0,1.0,1.0)
         Cairo.translate(ctx,50,20)
         Cairo.scale(ctx,(mywidth-70)/xscale,(myheight-50)/yscale)
-        
-        for i=1:size(han.features,1)
-            move_to(ctx,han.features[i,1,han.selected_plot]-xmin,han.features[i,2,han.selected_plot]-ymin)
-            line_to(ctx,han.features[i,1,han.selected_plot]+10.0-xmin,han.features[i,2,han.selected_plot]+10.0-ymin)
+
+        for ii=1:(maximum(han.buf_clus)+1)
+            for i=1:size(han.features,1)
+                if (han.buf_clus[i]+1 == ii)
+                    move_to(ctx,han.features[i,1,han.selected_plot]-xmin,han.features[i,2,han.selected_plot]-ymin)
+                    line_to(ctx,han.features[i,1,han.selected_plot]+10.0-xmin,han.features[i,2,han.selected_plot]+10.0-ymin)
+                end
+            end
+            mselect_color(ctx,ii)
+            stroke(ctx)
         end
-        stroke(ctx)
+
+        midentity_matrix(ctx)
+
+        set_source_rgb(ctx,1.0,1.0,1.0)
+        move_to(ctx,mywidth/2,myheight-10.0)
+        show_text(ctx,han.axes_name[han.selected_plot,1])
+
+        move_to(ctx,10.0,myheight/2)
+        rotate(ctx,-pi/2)
+        show_text(ctx,han.axes_name[han.selected_plot,2])
 
         midentity_matrix(ctx)
 

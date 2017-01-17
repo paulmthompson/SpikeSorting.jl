@@ -1,4 +1,11 @@
 
+type FeaturePlot
+    xmin::Float64
+    ywin::Float64
+    xscale::Float64
+    yscale::Float64
+end
+
 type SortView
     win::Gtk.GtkWindowLeaf
 
@@ -27,7 +34,6 @@ type SortView
     axes_name::Array{String,2}
 
     col_sb::Gtk.GtkSpinButtonLeaf
-    
     
 end
 
@@ -71,10 +77,23 @@ function sort_gui()
     #Event
     popup_axis = @Menu()
 
-    popup_pca1=@MenuItem("PCA1")
-    push!(popup_axis,popup_pca1)
-    popup_pca2=@MenuItem("PCA2")
-    push!(popup_axis,popup_pca2)
+    popup_x = @MenuItem("X Axis")
+    push!(popup_axis,popup_x)
+    popup_x_menu=@Menu(popup_x)
+    popup_y = @MenuItem("Y Axis")
+    push!(popup_axis,popup_y)
+    popup_y_menu=@Menu(popup_y)
+
+    popup_pca1_x=@MenuItem("PCA1")
+    push!(popup_x_menu,popup_pca1_x)
+    popup_pca2_x=@MenuItem("PCA2")
+    push!(popup_x_menu,popup_pca2_x)
+
+
+    popup_pca1_y=@MenuItem("PCA1")
+    push!(popup_y_menu,popup_pca1_y)
+    popup_pca2_y=@MenuItem("PCA2")
+    push!(popup_y_menu,popup_pca2_y)
 
     showall(popup_axis)
 
@@ -88,8 +107,11 @@ function sort_gui()
 
     signal_connect(canvas_press,c_sort,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 
-    signal_connect(popup_pca1_cb,popup_pca1,"activate",Void,(),false,(handles,))
-    signal_connect(popup_pca2_cb,popup_pca2,"activate",Void,(),false,(handles,))
+    signal_connect(popup_pca1_cb_x,popup_pca1_x,"activate",Void,(),false,(handles,))
+    signal_connect(popup_pca2_cb_x,popup_pca2_x,"activate",Void,(),false,(handles,))
+    signal_connect(popup_pca1_cb_y,popup_pca1_y,"activate",Void,(),false,(handles,))
+    signal_connect(popup_pca2_cb_y,popup_pca2_y,"activate",Void,(),false,(handles,))
+
 
     handles
 end
@@ -114,20 +136,22 @@ function col_sb_cb(widget::Ptr,user_data::Tuple{SortView})
     nothing
 end
 
-popup_pca1_cb(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],1)
-popup_pca2_cb(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],2)
+popup_pca1_cb_x(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],1,1)
+popup_pca2_cb_x(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],2,1)
+popup_pca1_cb_y(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],1,2)
+popup_pca2_cb_y(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],2,2)
 
-function pca_calc(han::SortView,num::Int64)
+function pca_calc(han::SortView,num::Int64,myaxis::Int64)
 
     if !han.pca_calced
         han.pca = fit(PCA,convert(Array{Float64,2},han.spike_buf))
         han.pca_calced
     end
 
-    han.features[:,han.selected_axis,han.selected_plot] = han.pca.proj[:,num]' * han.spike_buf
+    han.features[:,myaxis,han.selected_plot] = han.pca.proj[:,num]' * han.spike_buf
 
-    han.axes[han.selected_plot,han.selected_axis]=true
-    han.axes_name[han.selected_plot,han.selected_axis]=string("PCA-",num)
+    han.axes[han.selected_plot,myaxis]=true
+    han.axes_name[han.selected_plot,myaxis]=string("PCA-",num)
 
     replot_sort(han)
 
@@ -152,10 +176,7 @@ function canvas_press(widget::Ptr,param_tuple,user_data::Tuple{SortView})
 
     elseif event.button==3
 
-        if inaxis
-            popup(han.popup_axis,event)
-        end
-        
+        popup(han.popup_axis,event)
     end
         
     nothing
@@ -171,23 +192,15 @@ function get_axis_bounds(han::SortView,x,y)
     ybounds=linspace(0.0,myheight,han.n_row+1)
 
     count=1
-    inaxis=false
-    for xx=1:length(xbounds)-1, yy=2:length(ybounds)
-        if (x<xbounds[xx]+50.0)&(x>xbounds[xx])
+    for yy=2:length(ybounds), xx=2:length(xbounds)
+        if (x<xbounds[xx])&(y<ybounds[yy])
             han.selected_plot=count
-            han.selected_axis=2
-            inaxis=true
-            break
-        elseif (y>ybounds[yy]-50.0)&(y<ybounds[yy])
-            han.selected_plot=count
-            han.selected_axis=1
-            inaxis=true
             break
         end
         count+=1
     end
 
-    inaxis
+    nothing
 end
 
 function replot_sort(han::SortView)
@@ -209,7 +222,7 @@ function replot_sort(han::SortView)
             xscale=maximum(han.features[:,1,jj])-xmin
             yscale=maximum(han.features[:,2,jj])-ymin
             
-            Cairo.translate(ctx,50+mywidth/(han.n_col)*(jj-1),20+myheight/(han.n_row)*(jj-1))
+            Cairo.translate(ctx,50+mywidth/(han.n_col)*(jj-1),1)
             Cairo.scale(ctx,(mywidth/(han.n_col)-70)/xscale,(myheight/(han.n_row)-50)/yscale)
             
             for ii=1:(maximum(han.buf_clus)+1)

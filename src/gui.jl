@@ -25,6 +25,9 @@ type SortView
 
     axes::Array{Bool,2}
     axes_name::Array{String,2}
+
+    col_sb::Gtk.GtkSpinButtonLeaf
+    
     
 end
 
@@ -65,6 +68,9 @@ function sort_gui()
     push!(mb, clusteropts)
     grid[1,1]=mb
 
+    col_sb=@SpinButton(1:3)
+    panel_grid[1,3]=col_sb
+
     #Event
     popup_axis = @Menu()
 
@@ -78,9 +84,10 @@ function sort_gui()
 
     win = @Window(grid,"Sort View") |> showall
     
-    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,1,falses(10,2),["Non" for i=1:20,j=1:2])
+    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb)
 
     signal_connect(b1_cb,b1,"clicked",Void,(),false,(handles,))
+    signal_connect(col_sb_cb,col_sb,"value-changed",Void,(),false,(handles,))
 
     signal_connect(canvas_press,c_sort,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 
@@ -93,6 +100,17 @@ end
 function b1_cb(widget::Ptr,user_data::Tuple{SortView})
 
     han, = user_data
+
+    replot_sort(han)
+
+    nothing
+end
+
+function col_sb_cb(widget::Ptr,user_data::Tuple{SortView})
+
+    han, = user_data
+
+    han.n_col=getproperty(han.col_sb,:value,Int)
 
     replot_sort(han)
 
@@ -177,20 +195,21 @@ end
 
 function replot_sort(han::SortView)
 
+    ctx=getgc(han.c)
+    set_source_rgb(ctx,0.0,0.0,0.0)
+    paint(ctx)
+    mywidth=width(ctx)
+    myheight=height(ctx)
+    
     if han.axes[han.selected_plot,1]&han.axes[han.selected_plot,2]
-        
-        ctx=getgc(han.c)
-        set_source_rgb(ctx,0.0,0.0,0.0)
-        paint(ctx)
-        mywidth=width(ctx)
-        myheight=height(ctx)
+              
         xmin=minimum(han.features[:,1,han.selected_plot])
         ymin=minimum(han.features[:,2,han.selected_plot])
         xscale=maximum(han.features[:,1,han.selected_plot])-xmin
         yscale=maximum(han.features[:,2,han.selected_plot])-ymin
 
-        Cairo.translate(ctx,50,20)
-        Cairo.scale(ctx,(mywidth-70)/xscale,(myheight-50)/yscale)
+        Cairo.translate(ctx,50+mywidth/(han.n_col)*(han.selected_plot-1),20+myheight/(han.n_row)*(han.selected_plot-1))
+        Cairo.scale(ctx,(mywidth/(han.n_col)-70)/xscale,(myheight/(han.n_row)-50)/yscale)
 
         for ii=1:(maximum(han.buf_clus)+1)
             for i=1:size(han.features,1)
@@ -206,17 +225,18 @@ function replot_sort(han::SortView)
         midentity_matrix(ctx)
 
         set_source_rgb(ctx,1.0,1.0,1.0)
-        move_to(ctx,mywidth/2,myheight-10.0)
+        move_to(ctx,mywidth/(han.n_col*2)+mywidth/(han.n_col)*(han.selected_plot-1),myheight-10.0)
         show_text(ctx,han.axes_name[han.selected_plot,1])
 
-        move_to(ctx,10.0,myheight/2)
+        move_to(ctx,10.0+mywidth/han.n_col*(han.selected_plot-1),myheight/2)
         rotate(ctx,-pi/2)
         show_text(ctx,han.axes_name[han.selected_plot,2])
 
-        midentity_matrix(ctx)
-
-        reveal(han.c)
+        midentity_matrix(ctx)  
     end
+
+    reveal(han.c)
+    
     nothing
 end
 

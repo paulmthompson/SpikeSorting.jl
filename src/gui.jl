@@ -88,12 +88,16 @@ function sort_gui()
     push!(popup_x_menu,popup_pca1_x)
     popup_pca2_x=@MenuItem("PCA2")
     push!(popup_x_menu,popup_pca2_x)
+    popup_pca3_x=@MenuItem("PCA3")
+    push!(popup_x_menu,popup_pca3_x)
 
 
     popup_pca1_y=@MenuItem("PCA1")
     push!(popup_y_menu,popup_pca1_y)
     popup_pca2_y=@MenuItem("PCA2")
     push!(popup_y_menu,popup_pca2_y)
+    popup_pca3_y=@MenuItem("PCA3")
+    push!(popup_y_menu,popup_pca3_y)
 
     showall(popup_axis)
 
@@ -111,6 +115,8 @@ function sort_gui()
     signal_connect(popup_pca2_cb_x,popup_pca2_x,"activate",Void,(),false,(handles,))
     signal_connect(popup_pca1_cb_y,popup_pca1_y,"activate",Void,(),false,(handles,))
     signal_connect(popup_pca2_cb_y,popup_pca2_y,"activate",Void,(),false,(handles,))
+    signal_connect(popup_pca3_cb_x,popup_pca3_x,"activate",Void,(),false,(handles,))
+    signal_connect(popup_pca3_cb_y,popup_pca3_y,"activate",Void,(),false,(handles,))
 
 
     handles
@@ -138,8 +144,10 @@ end
 
 popup_pca1_cb_x(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],1,1)
 popup_pca2_cb_x(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],2,1)
+popup_pca3_cb_x(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],3,1)
 popup_pca1_cb_y(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],1,2)
 popup_pca2_cb_y(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],2,2)
+popup_pca3_cb_y(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],3,2)
 
 function pca_calc(han::SortView,num::Int64,myaxis::Int64)
 
@@ -173,7 +181,7 @@ function canvas_press(widget::Ptr,param_tuple,user_data::Tuple{SortView})
     inaxis = get_axis_bounds(han,event.x,event.y)
 
     if event.button==1
-
+        rubberband_start(han.c,event.x,event.y)
     elseif event.button==3
 
         popup(han.popup_axis,event)
@@ -294,5 +302,82 @@ function mselect_color(ctx,clus,alpha=1.0)
         set_source_rgba(ctx,1.0,1.0,0.0,alpha)
     end
     
+    nothing
+end
+
+#=
+Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
+=#
+
+immutable Vec2
+    x::Float64
+    y::Float64
+end
+
+type RubberBand
+    pos0::Vec2
+    pos1::Vec2
+    pos2::Vec2
+    polygon::Array{Vec2,1}
+    moved::Bool
+    minpixels::Int
+end
+
+function rb_draw(r::Cairo.CairoContext, rb::RubberBand)
+    rb_set(r, rb)
+    set_line_width(r, 1)
+
+    set_source_rgb(r, 1, 1, 1)
+    stroke_preserve(r)
+end
+
+function rb_set(r::Cairo.CairoContext, rb::RubberBand)
+    move_to(r, rb.pos1.x, rb.pos1.y)
+    rel_line_to(r,rb.pos2.x-rb.pos1.x, rb.pos2.y-rb.pos1.y)
+end
+
+function rubberband_start(c::Canvas, x, y; minpixels::Int=2)
+    r = getgc(c)
+    Cairo.save(r)
+    ctxcopy = copy(r)
+    rb = RubberBand(Vec2(x,y),Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, minpixels)
+    push!((c.mouse, :button1motion),  (c, event) -> rubberband_move(c, rb, event.x, event.y, ctxcopy))
+    push!((c.mouse, :motion), Gtk.default_mouse_cb)
+    push!((c.mouse, :button1release), (c, event) -> rubberband_stop(c, rb, event.x, event.y, ctxcopy))
+    nothing
+end
+
+function rubberband_move(c::Canvas, rb::RubberBand, x, y, ctxcopy)
+    r = getgc(c)
+    if rb.moved
+        #rb_erase(r, ctxcopy)
+    end
+    rb.moved = true
+    
+    # Draw the new rubberband
+    rb.pos2 = Vec2(x, y)
+    push!(rb.polygon,rb.pos2)
+    rb_draw(r, rb)
+    rb.pos1=rb.pos2
+    reveal(c, false)
+end
+
+function rubberband_stop(c::Canvas, rb::RubberBand, x, y, ctxcopy)
+    pop!((c.mouse, :button1motion))
+    pop!((c.mouse, :motion))
+    pop!((c.mouse, :button1release))
+    if !rb.moved
+        return
+    end
+    r = getgc(c)
+    rb_set(r, rb)
+    restore(r)
+    set_line_width(r,3.0)
+    move_to(r,rb.polygon[1].x,rb.polygon[1].y)
+    for i=2:length(rb.polygon)
+        line_to(r,rb.polygon[i].x,rb.polygon[i].y)
+    end
+    stroke(r)
+    reveal(c, false)
     nothing
 end

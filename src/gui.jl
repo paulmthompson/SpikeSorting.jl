@@ -31,9 +31,6 @@ type SortView
     
 end
 
-
-
-
 function sort_gui()
 
     grid = @Grid()
@@ -200,43 +197,69 @@ function replot_sort(han::SortView)
     paint(ctx)
     mywidth=width(ctx)
     myheight=height(ctx)
-    
-    if han.axes[han.selected_plot,1]&han.axes[han.selected_plot,2]
+
+    prepare_plots(han)
+
+    for jj=1:(han.n_col*han.n_row)
+        
+        if han.axes[jj,1]&han.axes[jj,2]
               
-        xmin=minimum(han.features[:,1,han.selected_plot])
-        ymin=minimum(han.features[:,2,han.selected_plot])
-        xscale=maximum(han.features[:,1,han.selected_plot])-xmin
-        yscale=maximum(han.features[:,2,han.selected_plot])-ymin
-
-        Cairo.translate(ctx,50+mywidth/(han.n_col)*(han.selected_plot-1),20+myheight/(han.n_row)*(han.selected_plot-1))
-        Cairo.scale(ctx,(mywidth/(han.n_col)-70)/xscale,(myheight/(han.n_row)-50)/yscale)
-
-        for ii=1:(maximum(han.buf_clus)+1)
-            for i=1:size(han.features,1)
-                if (han.buf_clus[i]+1 == ii)
-                    move_to(ctx,han.features[i,1,han.selected_plot]-xmin,han.features[i,2,han.selected_plot]-ymin)
-                    line_to(ctx,han.features[i,1,han.selected_plot]+10.0-xmin,han.features[i,2,han.selected_plot]+10.0-ymin)
+            xmin=minimum(han.features[:,1,jj])
+            ymin=minimum(han.features[:,2,jj])
+            xscale=maximum(han.features[:,1,jj])-xmin
+            yscale=maximum(han.features[:,2,jj])-ymin
+            
+            Cairo.translate(ctx,50+mywidth/(han.n_col)*(jj-1),20+myheight/(han.n_row)*(jj-1))
+            Cairo.scale(ctx,(mywidth/(han.n_col)-70)/xscale,(myheight/(han.n_row)-50)/yscale)
+            
+            for ii=1:(maximum(han.buf_clus)+1)
+                for i=1:size(han.features,1)
+                    if (han.buf_clus[i]+1 == ii)
+                        move_to(ctx,han.features[i,1,jj]-xmin,han.features[i,2,jj]-ymin)
+                        line_to(ctx,han.features[i,1,jj]+10.0-xmin,han.features[i,2,jj]+10.0-ymin)
+                    end
                 end
+                mselect_color(ctx,ii)
+                stroke(ctx)
             end
-            mselect_color(ctx,ii)
-            stroke(ctx)
+            
+            midentity_matrix(ctx)
+            
+            set_source_rgb(ctx,1.0,1.0,1.0)
+            move_to(ctx,mywidth/(han.n_col*2)+mywidth/(han.n_col)*(jj-1),myheight-10.0)
+            show_text(ctx,han.axes_name[jj,1])
+            
+            move_to(ctx,10.0+mywidth/han.n_col*(jj-1),myheight/2)
+            rotate(ctx,-pi/2)
+            show_text(ctx,han.axes_name[jj,2])
+
+            midentity_matrix(ctx)  
         end
-
-        midentity_matrix(ctx)
-
-        set_source_rgb(ctx,1.0,1.0,1.0)
-        move_to(ctx,mywidth/(han.n_col*2)+mywidth/(han.n_col)*(han.selected_plot-1),myheight-10.0)
-        show_text(ctx,han.axes_name[han.selected_plot,1])
-
-        move_to(ctx,10.0+mywidth/han.n_col*(han.selected_plot-1),myheight/2)
-        rotate(ctx,-pi/2)
-        show_text(ctx,han.axes_name[han.selected_plot,2])
-
-        midentity_matrix(ctx)  
     end
-
     reveal(han.c)
     
+    nothing
+end
+
+function prepare_plots(han::SortView)
+
+    ctx=getgc(han.c)
+    mywidth=width(ctx)
+    myheight=height(ctx)
+
+    xbounds=linspace(0.0,mywidth,han.n_col+1)
+    ybounds=linspace(0.0,myheight,han.n_row+1)
+
+    for i=2:length(ybounds)-1
+        move_to(ctx,0.0,ybounds[i])
+        line_to(ctx,mywidth,ybounds[i])
+    end
+
+    for i=2:length(xbounds)-1
+        move_to(ctx,xbounds[i],0.0)
+        line_to(ctx,xbounds[i],myheight)
+    end
+
     nothing
 end
 

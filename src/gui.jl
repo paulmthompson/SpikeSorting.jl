@@ -422,8 +422,8 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
         end
     end
 
-    xmin=xmin*han.plots[han.selected_plot].xscale/mywidth+han.plots[han.selected_plot].xmin
-    xmax=xmax*han.plots[han.selected_plot].xscale/mywidth+han.plots[han.selected_plot].xmin
+    xmin=(xmin-(mywidth/(han.n_col))*(han.selected_plot-1))*han.plots[han.selected_plot].xscale/(mywidth/(han.n_col))+han.plots[han.selected_plot].xmin
+    xmax=(xmax-(mywidth/(han.n_col))*(han.selected_plot-1))*han.plots[han.selected_plot].xscale/(mywidth/(han.n_col))+han.plots[han.selected_plot].xmin
 
     ymin=ymin*han.plots[han.selected_plot].yscale/myheight+han.plots[han.selected_plot].ymin
     ymax=ymax*han.plots[han.selected_plot].yscale/myheight+han.plots[han.selected_plot].ymin

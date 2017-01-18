@@ -1,15 +1,19 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
+dist: trusty
+sudo: required
 language: julia
 os:
   - linux
-  - osx
 julia:
-  - release
-  - nightly
+  - 0.5
 notifications:
-  email: false
+  email: false       
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libgtk-3-dev xvfb xauth
 script:
+  - sudo ln -sf /lib/x86_64-linux-gnu/libudev.so.1 /lib/x86_64-linux-gnu/libudev.so.0
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("SpikeSorting"); Pkg.test("SpikeSorting"; coverage=true)'
+  - xvfb-run julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("SpikeSorting"); Pkg.test("SpikeSorting"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("SpikeSorting")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

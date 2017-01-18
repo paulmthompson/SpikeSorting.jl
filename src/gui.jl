@@ -103,6 +103,8 @@ function sort_gui()
     push!(popup_x_menu,popup_valley_x)
     popup_pv_x=@MenuItem("Peak-Valley")
     push!(popup_x_menu,popup_pv_x)
+    popup_area_x=@MenuItem("Area")
+    push!(popup_x_menu,popup_area_x)
 
     popup_pca1_y=@MenuItem("PCA1")
     push!(popup_y_menu,popup_pca1_y)
@@ -116,6 +118,8 @@ function sort_gui()
     push!(popup_y_menu,popup_valley_y)
     popup_pv_y=@MenuItem("Peak-Valley")
     push!(popup_y_menu,popup_pv_y)
+    popup_area_y=@MenuItem("Area")
+    push!(popup_y_menu,popup_area_y)
 
     showall(popup_axis)
 
@@ -141,6 +145,9 @@ function sort_gui()
     signal_connect(popup_valley_cb_y,popup_valley_y,"activate",Void,(),false,(handles,))
     signal_connect(popup_pv_cb_x,popup_pv_x,"activate",Void,(),false,(handles,))
     signal_connect(popup_pv_cb_y,popup_pv_y,"activate",Void,(),false,(handles,))
+
+    signal_connect(popup_area_cb_x,popup_area_x,"activate",Void,(),false,(handles,))
+    signal_connect(popup_area_cb_y,popup_area_y,"activate",Void,(),false,(handles,))
 
     id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,))
     
@@ -198,6 +205,9 @@ popup_valley_cb_y(widget::Ptr,han::Tuple{SortView})=valley_calc(han[1],2)
 popup_pv_cb_x(widget::Ptr,han::Tuple{SortView})=pv_calc(han[1],1)
 popup_pv_cb_y(widget::Ptr,han::Tuple{SortView})=pv_calc(han[1],2)
 
+popup_area_cb_x(widget::Ptr,han::Tuple{SortView})=area_calc(han[1],1)
+popup_area_cb_y(widget::Ptr,han::Tuple{SortView})=area_calc(han[1],2)
+
 function pca_calc(han::SortView,num::Int64,myaxis::Int64)
 
     if !han.pca_calced
@@ -247,6 +257,19 @@ function pv_calc(han::SortView,myaxis::Int64)
 
     replot_sort(han)
     nothing
+end
+
+function area_calc(han::SortView,myaxis::Int64)
+    for i=1:size(han.features,1)
+        for j=1:size(han.spike_buf,1)
+            han.features[i,myaxis,han.selected_plot]+=abs(han.spike_buf[j,i])
+        end
+    end
+
+    scale_axis(han,myaxis)
+    han.axes_name[han.selected_plot,myaxis]=string("Area")
+
+    replot_sort(han)
 end
 
 function scale_axis(han::SortView,myaxis::Int64)

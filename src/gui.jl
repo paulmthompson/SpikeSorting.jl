@@ -4,9 +4,10 @@ type FeaturePlot
     ymin::Float64
     xscale::Float64
     yscale::Float64
+    xc_i::Float64
 end
 
-FeaturePlot()=FeaturePlot(0.0,0.0,1.0,1.0)
+FeaturePlot()=FeaturePlot(0.0,0.0,1.0,1.0,1.0)
 
 type SortView
     win::Gtk.GtkWindowLeaf
@@ -30,7 +31,6 @@ type SortView
     popup_axis::Gtk.GtkMenuLeaf
 
     selected_plot::Int64
-    selected_axis::Int64 #1 = x ; 2 = y 
 
     axes::Array{Bool,2}
     axes_name::Array{String,2}
@@ -38,6 +38,9 @@ type SortView
     col_sb::Gtk.GtkSpinButtonLeaf
 
     plots::Array{FeaturePlot,1}
+
+    h::Float64
+    w::Float64
     
 end
 
@@ -45,8 +48,8 @@ function sort_gui()
 
     grid = @Grid()
 
-    c_sort = @Canvas()
-
+    c_sort = @Canvas(100,100)
+    
     @guarded draw(c_sort) do widget
         ctx = getgc(c_sort)
         set_source_rgb(ctx,0.0,0.0,0.0)
@@ -107,8 +110,8 @@ function sort_gui()
 
 
     win = @Window(grid,"Sort View") |> showall
-    
-    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb,[FeaturePlot() for i=1:10])
+
+    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb,[FeaturePlot() for i=1:10],100.0,100.0)
 
     signal_connect(b1_cb,b1,"clicked",Void,(),false,(handles,))
     signal_connect(col_sb_cb,col_sb,"value-changed",Void,(),false,(handles,))
@@ -122,23 +125,39 @@ function sort_gui()
     signal_connect(popup_pca3_cb_x,popup_pca3_x,"activate",Void,(),false,(handles,))
     signal_connect(popup_pca3_cb_y,popup_pca3_y,"activate",Void,(),false,(handles,))
 
-
+    id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,))
+    
     handles
 end
 
 function b1_cb(widget::Ptr,user_data::Tuple{SortView})
 
     han, = user_data
-
     replot_sort(han)
 
     nothing
 end
 
+function b2_cb(widget::Ptr,user_data::Tuple{SortView})
+
+    han, = user_data
+    recalc_features(han)
+    replot_sort(han)
+
+    nothing
+end
+
+function recalc_features(han::SortView)
+
+    han, = user_data
+    
+    nothing
+end
+
+
 function col_sb_cb(widget::Ptr,user_data::Tuple{SortView})
 
     han, = user_data
-
     han.n_col=getproperty(han.col_sb,:value,Int)
 
     replot_sort(han)
@@ -157,7 +176,7 @@ function pca_calc(han::SortView,num::Int64,myaxis::Int64)
 
     if !han.pca_calced
         han.pca = fit(PCA,convert(Array{Float64,2},han.spike_buf))
-        han.pca_calced
+        han.pca_calced=true
     end
 
     han.features[:,myaxis,han.selected_plot] = han.pca.proj[:,num]' * han.spike_buf
@@ -188,14 +207,11 @@ function canvas_press(widget::Ptr,param_tuple,user_data::Tuple{SortView})
 
     event = unsafe_load(param_tuple)
 
-    ctx=getgc(han.c)
-
     inaxis = get_axis_bounds(han,event.x,event.y)
 
     if event.button==1
         rubberband_start(han,event.x,event.y)
     elseif event.button==3
-
         popup(han.popup_axis,event)
     end
         
@@ -204,12 +220,8 @@ end
 
 function get_axis_bounds(han::SortView,x,y)
 
-    ctx=getgc(han.c)
-    myheight=height(ctx)
-    mywidth=width(ctx)
-
-    xbounds=linspace(0.0,mywidth,han.n_col+1)
-    ybounds=linspace(0.0,myheight,han.n_row+1)
+    xbounds=linspace(0.0,han.w,han.n_col+1)
+    ybounds=linspace(0.0,han.h,han.n_row+1)
 
     count=1
     for yy=2:length(ybounds), xx=2:length(xbounds)
@@ -228,8 +240,6 @@ function replot_sort(han::SortView)
     ctx=getgc(han.c)
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
-    mywidth=width(ctx)
-    myheight=height(ctx)
 
     prepare_plots(han)
 
@@ -242,8 +252,8 @@ function replot_sort(han::SortView)
             xscale=han.plots[jj].xscale
             yscale=han.plots[jj].yscale
             
-            Cairo.translate(ctx,50+mywidth/(han.n_col)*(jj-1),1)
-            Cairo.scale(ctx,(mywidth/(han.n_col)-70)/xscale,(myheight/(han.n_row)-50)/yscale)
+            Cairo.translate(ctx,50+han.w/(han.n_col)*(jj-1),1)
+            Cairo.scale(ctx,(han.w/(han.n_col)-70)/xscale,(han.h/(han.n_row)-50)/yscale)
             
             for ii=1:(maximum(han.buf_clus)+1)
                 for i=1:size(han.features,1)
@@ -259,10 +269,10 @@ function replot_sort(han::SortView)
             identity_matrix(ctx)
             
             set_source_rgb(ctx,1.0,1.0,1.0)
-            move_to(ctx,mywidth/(han.n_col*2)+mywidth/(han.n_col)*(jj-1),myheight-10.0)
+            move_to(ctx,han.w/(han.n_col*2)+han.w/(han.n_col)*(jj-1),han.h-10.0)
             show_text(ctx,han.axes_name[jj,1])
             
-            move_to(ctx,10.0+mywidth/han.n_col*(jj-1),myheight/2)
+            move_to(ctx,10.0+han.w/han.n_col*(jj-1),han.h/2)
             rotate(ctx,-pi/2)
             show_text(ctx,han.axes_name[jj,2])
 
@@ -277,20 +287,18 @@ end
 function prepare_plots(han::SortView)
 
     ctx=getgc(han.c)
-    mywidth=width(ctx)
-    myheight=height(ctx)
 
-    xbounds=linspace(0.0,mywidth,han.n_col+1)
-    ybounds=linspace(0.0,myheight,han.n_row+1)
+    xbounds=linspace(0.0,han.w,han.n_col+1)
+    ybounds=linspace(0.0,han.h,han.n_row+1)
 
     for i=2:length(ybounds)-1
         move_to(ctx,0.0,ybounds[i])
-        line_to(ctx,mywidth,ybounds[i])
+        line_to(ctx,han.w,ybounds[i])
     end
 
     for i=2:length(xbounds)-1
         move_to(ctx,xbounds[i],0.0)
-        line_to(ctx,xbounds[i],myheight)
+        line_to(ctx,xbounds[i],han.h)
     end
 
     nothing
@@ -399,10 +407,6 @@ end
 
 function inside_polygon(xy::Array{Vec2,1},han::SortView)
 
-    ctx=getgc(han.c)
-    mywidth=width(ctx)
-    myheight=height(ctx)
-    
     xmin=xy[1].x
     ymin=xy[1].y
     xmax=xy[1].x
@@ -422,11 +426,11 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
         end
     end
 
-    xmin=(xmin-(mywidth/(han.n_col))*(han.selected_plot-1))*han.plots[han.selected_plot].xscale/(mywidth/(han.n_col))+han.plots[han.selected_plot].xmin
-    xmax=(xmax-(mywidth/(han.n_col))*(han.selected_plot-1))*han.plots[han.selected_plot].xscale/(mywidth/(han.n_col))+han.plots[han.selected_plot].xmin
+    xmin=(xmin-(han.w/(han.n_col))*(han.selected_plot-1))*han.plots[han.selected_plot].xscale/(han.w/(han.n_col))+han.plots[han.selected_plot].xmin
+    xmax=(xmax-(han.w/(han.n_col))*(han.selected_plot-1))*han.plots[han.selected_plot].xscale/(han.w/(han.n_col))+han.plots[han.selected_plot].xmin
 
-    ymin=ymin*han.plots[han.selected_plot].yscale/myheight+han.plots[han.selected_plot].ymin
-    ymax=ymax*han.plots[han.selected_plot].yscale/myheight+han.plots[han.selected_plot].ymin
+    ymin=ymin*han.plots[han.selected_plot].yscale/han.h+han.plots[han.selected_plot].ymin
+    ymax=ymax*han.plots[han.selected_plot].yscale/han.h+han.plots[han.selected_plot].ymin
 
     for i=1:size(han.features,1)
 
@@ -435,7 +439,17 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
         if ((px>xmin)&(px<xmax))&((py>ymin)&(py<ymax))
             han.buf_clus[i]=3
         end
-        
     end
+    nothing
+end
+
+function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{SortView})
+
+    han, = user_data
+
+    ctx=getgc(han.c)
+    han.h=height(ctx)
+    han.w=width(ctx)
+    
     nothing
 end

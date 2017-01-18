@@ -97,6 +97,10 @@ function sort_gui()
     push!(popup_x_menu,popup_pca2_x)
     popup_pca3_x=@MenuItem("PCA3")
     push!(popup_x_menu,popup_pca3_x)
+    popup_peak_x=@MenuItem("Peak")
+    push!(popup_x_menu,popup_peak_x)
+    popup_valley_x=@MenuItem("Valley")
+    push!(popup_x_menu,popup_valley_x)
     popup_pv_x=@MenuItem("Peak-Valley")
     push!(popup_x_menu,popup_pv_x)
 
@@ -106,6 +110,10 @@ function sort_gui()
     push!(popup_y_menu,popup_pca2_y)
     popup_pca3_y=@MenuItem("PCA3")
     push!(popup_y_menu,popup_pca3_y)
+    popup_peak_y=@MenuItem("Peak")
+    push!(popup_y_menu,popup_peak_y)
+    popup_valley_y=@MenuItem("Valley")
+    push!(popup_y_menu,popup_valley_y)
     popup_pv_y=@MenuItem("Peak-Valley")
     push!(popup_y_menu,popup_pv_y)
 
@@ -127,6 +135,10 @@ function sort_gui()
     signal_connect(popup_pca2_cb_y,popup_pca2_y,"activate",Void,(),false,(handles,))
     signal_connect(popup_pca3_cb_x,popup_pca3_x,"activate",Void,(),false,(handles,))
     signal_connect(popup_pca3_cb_y,popup_pca3_y,"activate",Void,(),false,(handles,))
+    signal_connect(popup_peak_cb_x,popup_peak_x,"activate",Void,(),false,(handles,))
+    signal_connect(popup_peak_cb_y,popup_peak_y,"activate",Void,(),false,(handles,))
+    signal_connect(popup_valley_cb_x,popup_valley_x,"activate",Void,(),false,(handles,))
+    signal_connect(popup_valley_cb_y,popup_valley_y,"activate",Void,(),false,(handles,))
     signal_connect(popup_pv_cb_x,popup_pv_x,"activate",Void,(),false,(handles,))
     signal_connect(popup_pv_cb_y,popup_pv_y,"activate",Void,(),false,(handles,))
 
@@ -177,6 +189,12 @@ popup_pca1_cb_y(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],1,2)
 popup_pca2_cb_y(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],2,2)
 popup_pca3_cb_y(widget::Ptr,han::Tuple{SortView})=pca_calc(han[1],3,2)
 
+popup_peak_cb_x(widget::Ptr,han::Tuple{SortView})=peak_calc(han[1],1)
+popup_peak_cb_y(widget::Ptr,han::Tuple{SortView})=peak_calc(han[1],2)
+
+popup_valley_cb_x(widget::Ptr,han::Tuple{SortView})=valley_calc(han[1],1)
+popup_valley_cb_y(widget::Ptr,han::Tuple{SortView})=valley_calc(han[1],2)
+
 popup_pv_cb_x(widget::Ptr,han::Tuple{SortView})=pv_calc(han[1],1)
 popup_pv_cb_y(widget::Ptr,han::Tuple{SortView})=pv_calc(han[1],2)
 
@@ -194,6 +212,28 @@ function pca_calc(han::SortView,num::Int64,myaxis::Int64)
 
     replot_sort(han)
     nothing
+end
+
+function peak_calc(han::SortView,myaxis::Int64)
+    for i=1:size(han.features,1)
+        han.features[i,myaxis,han.selected_plot]=maximum(han.spike_buf[:,i])
+    end
+
+    scale_axis(han,myaxis)
+    han.axes_name[han.selected_plot,myaxis]=string("Peak")
+
+    replot_sort(han)
+end
+
+function valley_calc(han::SortView,myaxis::Int64)
+    for i=1:size(han.features,1)
+        han.features[i,myaxis,han.selected_plot]=minimum(han.spike_buf[:,i])
+    end
+
+    scale_axis(han,myaxis)
+    han.axes_name[han.selected_plot,myaxis]=string("Valley")
+
+    replot_sort(han)
 end
 
 function pv_calc(han::SortView,myaxis::Int64)

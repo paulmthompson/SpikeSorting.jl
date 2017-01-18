@@ -252,11 +252,11 @@ function replot_sort(han::SortView)
                         line_to(ctx,han.features[i,1,jj]+10.0-xmin,han.features[i,2,jj]+10.0-ymin)
                     end
                 end
-                mselect_color(ctx,ii)
+                select_color(ctx,ii)
                 stroke(ctx)
             end
             
-            midentity_matrix(ctx)
+            identity_matrix(ctx)
             
             set_source_rgb(ctx,1.0,1.0,1.0)
             move_to(ctx,mywidth/(han.n_col*2)+mywidth/(han.n_col)*(jj-1),myheight-10.0)
@@ -266,7 +266,7 @@ function replot_sort(han::SortView)
             rotate(ctx,-pi/2)
             show_text(ctx,han.axes_name[jj,2])
 
-            midentity_matrix(ctx)  
+            identity_matrix(ctx)  
         end
     end
     reveal(han.c)
@@ -296,9 +296,9 @@ function prepare_plots(han::SortView)
     nothing
 end
 
-midentity_matrix(ctx)=ccall((:cairo_identity_matrix,Cairo._jl_libcairo),Void, (Ptr{Void},), ctx.ptr)
+identity_matrix(ctx)=ccall((:cairo_identity_matrix,Cairo._jl_libcairo),Void, (Ptr{Void},), ctx.ptr)
 
-function mselect_color(ctx,clus,alpha=1.0)
+function select_color(ctx,clus,alpha=1.0)
 
     if clus==1
         set_source_rgba(ctx,1.0,1.0,1.0,alpha) # white

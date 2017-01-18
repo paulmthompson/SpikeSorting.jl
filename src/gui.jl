@@ -1,10 +1,12 @@
 
 type FeaturePlot
     xmin::Float64
-    ywin::Float64
+    ymin::Float64
     xscale::Float64
     yscale::Float64
 end
+
+FeaturePlot()=FeaturePlot(0.0,0.0,1.0,1.0)
 
 type SortView
     win::Gtk.GtkWindowLeaf
@@ -34,6 +36,8 @@ type SortView
     axes_name::Array{String,2}
 
     col_sb::Gtk.GtkSpinButtonLeaf
+
+    plots::Array{FeaturePlot,1}
     
 end
 
@@ -104,7 +108,7 @@ function sort_gui()
 
     win = @Window(grid,"Sort View") |> showall
     
-    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb)
+    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb,[FeaturePlot() for i=1:10])
 
     signal_connect(b1_cb,b1,"clicked",Void,(),false,(handles,))
     signal_connect(col_sb_cb,col_sb,"value-changed",Void,(),false,(handles,))
@@ -158,6 +162,14 @@ function pca_calc(han::SortView,num::Int64,myaxis::Int64)
 
     han.features[:,myaxis,han.selected_plot] = han.pca.proj[:,num]' * han.spike_buf
 
+    if myaxis==1
+        han.plots[han.selected_plot].xmin=minimum(han.features[:,1,han.selected_plot])
+        han.plots[han.selected_plot].xscale=maximum(han.features[:,1,han.selected_plot])-han.plots[han.selected_plot].xmin
+    else
+        han.plots[han.selected_plot].ymin=minimum(han.features[:,2,han.selected_plot])
+        han.plots[han.selected_plot].yscale=maximum(han.features[:,2,han.selected_plot])-han.plots[han.selected_plot].ymin
+    end
+
     han.axes[han.selected_plot,myaxis]=true
     han.axes_name[han.selected_plot,myaxis]=string("PCA-",num)
 
@@ -181,7 +193,7 @@ function canvas_press(widget::Ptr,param_tuple,user_data::Tuple{SortView})
     inaxis = get_axis_bounds(han,event.x,event.y)
 
     if event.button==1
-        rubberband_start(han.c,event.x,event.y)
+        rubberband_start(han,event.x,event.y)
     elseif event.button==3
 
         popup(han.popup_axis,event)
@@ -225,10 +237,10 @@ function replot_sort(han::SortView)
         
         if han.axes[jj,1]&han.axes[jj,2]
               
-            xmin=minimum(han.features[:,1,jj])
-            ymin=minimum(han.features[:,2,jj])
-            xscale=maximum(han.features[:,1,jj])-xmin
-            yscale=maximum(han.features[:,2,jj])-ymin
+            xmin=han.plots[jj].xmin
+            ymin=han.plots[jj].ymin
+            xscale=han.plots[jj].xscale
+            yscale=han.plots[jj].yscale
             
             Cairo.translate(ctx,50+mywidth/(han.n_col)*(jj-1),1)
             Cairo.scale(ctx,(mywidth/(han.n_col)-70)/xscale,(myheight/(han.n_row)-50)/yscale)
@@ -336,14 +348,14 @@ function rb_set(r::Cairo.CairoContext, rb::RubberBand)
     rel_line_to(r,rb.pos2.x-rb.pos1.x, rb.pos2.y-rb.pos1.y)
 end
 
-function rubberband_start(c::Canvas, x, y; minpixels::Int=2)
-    r = getgc(c)
+function rubberband_start(han::SortView, x, y; minpixels::Int=2)
+    r = getgc(han.c)
     Cairo.save(r)
     ctxcopy = copy(r)
     rb = RubberBand(Vec2(x,y),Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, minpixels)
-    push!((c.mouse, :button1motion),  (c, event) -> rubberband_move(c, rb, event.x, event.y, ctxcopy))
-    push!((c.mouse, :motion), Gtk.default_mouse_cb)
-    push!((c.mouse, :button1release), (c, event) -> rubberband_stop(c, rb, event.x, event.y, ctxcopy))
+    push!((han.c.mouse, :button1motion),  (c, event) -> rubberband_move(han.c, rb, event.x, event.y, ctxcopy))
+    push!((han.c.mouse, :motion), Gtk.default_mouse_cb)
+    push!((han.c.mouse, :button1release), (c, event) -> rubberband_stop(han, rb, event.x, event.y, ctxcopy))
     nothing
 end
 
@@ -362,14 +374,14 @@ function rubberband_move(c::Canvas, rb::RubberBand, x, y, ctxcopy)
     reveal(c, false)
 end
 
-function rubberband_stop(c::Canvas, rb::RubberBand, x, y, ctxcopy)
-    pop!((c.mouse, :button1motion))
-    pop!((c.mouse, :motion))
-    pop!((c.mouse, :button1release))
+function rubberband_stop(han::SortView, rb::RubberBand, x, y, ctxcopy)
+    pop!((han.c.mouse, :button1motion))
+    pop!((han.c.mouse, :motion))
+    pop!((han.c.mouse, :button1release))
     if !rb.moved
         return
     end
-    r = getgc(c)
+    r = getgc(han.c)
     rb_set(r, rb)
     restore(r)
     set_line_width(r,3.0)
@@ -378,6 +390,52 @@ function rubberband_stop(c::Canvas, rb::RubberBand, x, y, ctxcopy)
         line_to(r,rb.polygon[i].x,rb.polygon[i].y)
     end
     stroke(r)
-    reveal(c, false)
+
+    inside_polygon(rb.polygon,han)
+    replot_sort(han)
+    reveal(han.c, false)
+    nothing
+end
+
+function inside_polygon(xy::Array{Vec2,1},han::SortView)
+
+    ctx=getgc(han.c)
+    mywidth=width(ctx)
+    myheight=height(ctx)
+    
+    xmin=xy[1].x
+    ymin=xy[1].y
+    xmax=xy[1].x
+    ymax=xy[1].y
+
+    for i=2:length(xy)
+        if xy[i].x<xmin
+            xmin=xy[i].x
+        elseif xy[i].x>xmax
+            xmax=xy[i].x
+        end
+
+        if xy[i].y<ymin
+            ymin=xy[i].y
+        elseif xy[i].y>ymax
+            ymax=xy[i].y
+        end
+    end
+
+    xmin=xmin*han.plots[han.selected_plot].xscale/mywidth+han.plots[han.selected_plot].xmin
+    xmax=xmax*han.plots[han.selected_plot].xscale/mywidth+han.plots[han.selected_plot].xmin
+
+    ymin=ymin*han.plots[han.selected_plot].yscale/myheight+han.plots[han.selected_plot].ymin
+    ymax=ymax*han.plots[han.selected_plot].yscale/myheight+han.plots[han.selected_plot].ymin
+
+    for i=1:size(han.features,1)
+
+        px=han.features[i,1,han.selected_plot]
+        py=han.features[i,2,han.selected_plot]
+        if ((px>xmin)&(px<xmax))&((py>ymin)&(py<ymax))
+            han.buf_clus[i]=3
+        end
+        
+    end
     nothing
 end

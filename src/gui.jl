@@ -46,9 +46,9 @@ end
 
 function sort_gui()
 
-    grid = @Grid()
+    grid = Grid()
 
-    c_sort = @Canvas(100,100)
+    c_sort = Canvas(100,100)
     
     @guarded draw(c_sort) do widget
         ctx = getgc(c_sort)
@@ -60,71 +60,71 @@ function sort_gui()
     setproperty!(c_sort,:hexpand,true)
     setproperty!(c_sort,:vexpand,true)
 
-    panel_grid = @Grid()
+    panel_grid = Grid()
     grid[2,2] = panel_grid
     
-    b1 = @Button("Plot")
+    b1 = Button("Plot")
 
     panel_grid[1,1]=b1
 
-    clusteropts = @MenuItem("_Cluster")
-    clustermenu = @Menu(clusteropts)
-    cluster_km = @MenuItem("K means")
+    clusteropts = MenuItem("_Cluster")
+    clustermenu = Menu(clusteropts)
+    cluster_km = MenuItem("K means")
     push!(clustermenu,cluster_km)
-    cluster_dbscan = @MenuItem("DBSCAN")
+    cluster_dbscan = MenuItem("DBSCAN")
     push!(clustermenu,cluster_dbscan)
 
-    mb = @MenuBar()
+    mb = MenuBar()
     push!(mb, clusteropts)
     grid[1,1]=mb
 
-    col_sb=@SpinButton(1:3)
+    col_sb=SpinButton(1:3)
     panel_grid[1,3]=col_sb
 
     #Event
-    popup_axis = @Menu()
+    popup_axis = Menu()
 
-    popup_x = @MenuItem("X Axis")
+    popup_x = MenuItem("X Axis")
     push!(popup_axis,popup_x)
-    popup_x_menu=@Menu(popup_x)
-    popup_y = @MenuItem("Y Axis")
+    popup_x_menu=Menu(popup_x)
+    popup_y = MenuItem("Y Axis")
     push!(popup_axis,popup_y)
-    popup_y_menu=@Menu(popup_y)
+    popup_y_menu=Menu(popup_y)
 
-    popup_pca1_x=@MenuItem("PCA1")
+    popup_pca1_x=MenuItem("PCA1")
     push!(popup_x_menu,popup_pca1_x)
-    popup_pca2_x=@MenuItem("PCA2")
+    popup_pca2_x=MenuItem("PCA2")
     push!(popup_x_menu,popup_pca2_x)
-    popup_pca3_x=@MenuItem("PCA3")
+    popup_pca3_x=MenuItem("PCA3")
     push!(popup_x_menu,popup_pca3_x)
-    popup_peak_x=@MenuItem("Peak")
+    popup_peak_x=MenuItem("Peak")
     push!(popup_x_menu,popup_peak_x)
-    popup_valley_x=@MenuItem("Valley")
+    popup_valley_x=MenuItem("Valley")
     push!(popup_x_menu,popup_valley_x)
-    popup_pv_x=@MenuItem("Peak-Valley")
+    popup_pv_x=MenuItem("Peak-Valley")
     push!(popup_x_menu,popup_pv_x)
-    popup_area_x=@MenuItem("Area")
+    popup_area_x=MenuItem("Area")
     push!(popup_x_menu,popup_area_x)
 
-    popup_pca1_y=@MenuItem("PCA1")
+    popup_pca1_y=MenuItem("PCA1")
     push!(popup_y_menu,popup_pca1_y)
-    popup_pca2_y=@MenuItem("PCA2")
+    popup_pca2_y=MenuItem("PCA2")
     push!(popup_y_menu,popup_pca2_y)
-    popup_pca3_y=@MenuItem("PCA3")
+    popup_pca3_y=MenuItem("PCA3")
     push!(popup_y_menu,popup_pca3_y)
-    popup_peak_y=@MenuItem("Peak")
+    popup_peak_y=MenuItem("Peak")
     push!(popup_y_menu,popup_peak_y)
-    popup_valley_y=@MenuItem("Valley")
+    popup_valley_y=MenuItem("Valley")
     push!(popup_y_menu,popup_valley_y)
-    popup_pv_y=@MenuItem("Peak-Valley")
+    popup_pv_y=MenuItem("Peak-Valley")
     push!(popup_y_menu,popup_pv_y)
-    popup_area_y=@MenuItem("Area")
+    popup_area_y=MenuItem("Area")
     push!(popup_y_menu,popup_area_y)
 
     showall(popup_axis)
 
 
-    win = @Window(grid,"Sort View") |> showall
+    win = Window(grid,"Sort View") |> showall
 
     handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb,[FeaturePlot() for i=1:10],100.0,100.0)
 

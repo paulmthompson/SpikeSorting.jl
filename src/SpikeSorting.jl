@@ -1,6 +1,6 @@
 module SpikeSorting
 
-using Interpolations, DistributedArrays, ArrayViews, Gtk.ShortNames, Cairo, MultivariateStats
+using Interpolations, DistributedArrays, Gtk.ShortNames, Cairo, MultivariateStats
 
 export Sorting,Spike,create_multi,output_buffer,benchmark, SortView
 

@@ -6,7 +6,7 @@ Alignment methods. Each method needs
 3) any other necessary functions for alignment algorithm
 =#
 
-export AlignMax, AlignMin
+export AlignMax, AlignMin, AlignMinMax
 
 #= 
 Maximum signal
@@ -51,6 +51,36 @@ function align(a::AlignMin,sort::Sorting)
 end
 
 mysize(align::AlignMin,win)=win
+
+#=
+Middle of Minimum and Max
+=#
+type AlignMinMax <: Align
+    shift::Int64
+end
+
+AlignMinMax()=AlignMinMax(5)
+
+function align(a::AlignMinMax,sort::Sorting)
+    mymin=sort.p_temp[sort.s.win2]
+    mymax=sort.p_temp[sort.s.win2]
+    minind=sort.s.win2
+    maxind=sort.s.win2
+    @inbounds for i=(sort.s.win2+1):sort.s.s_end
+        if sort.p_temp[i]<mymin
+            minind=i+1
+            mymin=sort.p_temp[i]
+        end
+        if sort.p_temp[i]>mymax
+            maxind=i+1
+            mymax=sort.p_temp[i]
+        end
+    end
+    sort.cent = a.shift+round(Int64,(minind+maxind)/2)
+    nothing
+end
+
+mysize(align::AlignMinMax,win)=win
 
 #=
 Maximum Magnitude

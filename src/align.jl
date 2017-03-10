@@ -97,7 +97,7 @@ function align(a::AlignCOM,sort::Sorting)
     com=0.0
     mysum=0.0
     
-    for i=1:length(sort.p_temp)
+    for i=(sort.s.win2+1):sort.s.s_end
         com += i*abs(sort.p_temp[i])
         mysum += abs(sort.p_temp[i])
     end
@@ -105,6 +105,8 @@ function align(a::AlignCOM,sort::Sorting)
     sort.cent = a.shift + round(Int64, com/mysum)
 
 end
+
+mysize(align::AlignCOM,win)=win
 
 #=
 Maximum Magnitude

@@ -6,7 +6,7 @@ Alignment methods. Each method needs
 3) any other necessary functions for alignment algorithm
 =#
 
-export AlignMax, AlignMin, AlignMinMax, AlignCOM
+export AlignMax, AlignMin, AlignMinMax, AlignCOM, AlignProm
 
 #= 
 Maximum signal
@@ -107,6 +107,40 @@ function align(a::AlignCOM,sort::Sorting)
 end
 
 mysize(align::AlignCOM,win)=win
+
+#=
+Prominence Alignment
+=#
+
+type AlignProm <: Align
+    shift::Int64
+end
+
+AlignProm()=AlignProm(5)
+
+function align(a::AlignProm,sort::Sorting)
+
+    indprom=sort.s.win2+1
+    prom=sort.p_temp[indprom]
+
+    for i=(sort.s.win2+1):sort.s.s_end
+
+        test = (sort.p_temp[i-1]-sort.p_temp[i-2])
+        test += (sort.p_temp[i]-sort.p_temp[i-1])
+        test += (sort.p_temp[i]-sort.p_temp[i+1])
+        test += (sort.p_temp[i+1]-sort.p_temp[i+2])
+        
+        if abs(test) > prom
+            prom=abs(test)
+            indprom=i
+        end
+    end
+
+    sort.cent = a.shift + indprom
+    
+end
+
+mysize(align::AlignProm,win)=win
 
 #=
 Maximum Magnitude

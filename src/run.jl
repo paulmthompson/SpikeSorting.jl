@@ -35,13 +35,11 @@ end
 
 #Multi-channel - Multi-Core
 function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v,spikes,ns,firstrun=0)
-    @sync for p=1:length(s.pids)
 
-	@spawnat s.pids[p] begin
-		for i in s.indexes[p][1]
-		    cal!(s[i],v,spikes,ns,firstrun)
-		end
-	end   
+    @sync begin
+        for p in procs(s)
+            @async remotecall_wait((ss)->cal!(localpart(ss),v,spikes,ns),p,s)
+        end
     end
     nothing
 end
@@ -62,13 +60,10 @@ end
 
 #Multi-channel - multi-core
 function onlinesort!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v,spikes,ns)
-    @sync for p=1:length(s.pids)
-
-	@spawnat s.pids[p] begin
-		for i in s.indexes[p][1]
-		    onlinesort!(s[i],v,spikes,ns)
-		end
-	end   
+    @sync begin
+        for p in procs(s)
+            @async remotecall_wait((ss)->onlinesort!(localpart(ss),v,spikes,ns),p,s)
+        end
     end
     nothing
 end

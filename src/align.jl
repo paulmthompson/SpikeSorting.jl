@@ -135,9 +135,7 @@ function align(a::AlignProm,sort::Sorting)
             indprom=i
         end
     end
-
     sort.cent = a.shift + indprom
-    
 end
 
 mysize(align::AlignProm,win)=win

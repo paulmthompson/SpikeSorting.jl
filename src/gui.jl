@@ -539,6 +539,8 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{SortView})
     ctx=getgc(han.c)
     han.h=height(ctx)
     han.w=width(ctx)
+
+    replot_sort(han)
     
     nothing
 end

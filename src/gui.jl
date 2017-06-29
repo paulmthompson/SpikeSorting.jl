@@ -177,7 +177,14 @@ function recalc_features(han::SortView)
 
     han, = user_data
 
-    
+    han.pca_calced=false
+    reset_pca(han,1)
+    reset_pca(han,2)
+    reset_pca(han,3)
+    reset_peak(han)
+    reset_valley(han)
+    reset_pv(han)
+    reset_area(han)
     
     nothing
 end
@@ -212,15 +219,19 @@ popup_pv_cb_y(widget::Ptr,han::Tuple{SortView})=pv_calc(han[1],2)
 popup_area_cb_x(widget::Ptr,han::Tuple{SortView})=area_calc(han[1],1)
 popup_area_cb_y(widget::Ptr,han::Tuple{SortView})=area_calc(han[1],2)
 
-function pca_calc(han::SortView,num::Int64,myaxis::Int64)
-
+function reset_pca(han::SortView,num::Int64)
     if !han.pca_calced
         han.pca = fit(PCA,convert(Array{Float64,2},han.spike_buf))
         han.pca_calced=true
     end
 
     han.features[string("PCA-",num)] = squeeze(han.pca.proj[:,num]' * han.spike_buf,1)
+    nothing
+end
 
+function pca_calc(han::SortView,num::Int64,myaxis::Int64)
+
+    reset_pca(han,num)
     han.axes_name[han.selected_plot,myaxis]=string("PCA-",num)
     scale_axis(han,myaxis)
    
@@ -228,38 +239,51 @@ function pca_calc(han::SortView,num::Int64,myaxis::Int64)
     nothing
 end
 
-function peak_calc(han::SortView,myaxis::Int64)
-
+function reset_peak(han::SortView)
     han.features["Peak"]=zeros(Float64,size(han.spike_buf,2))
     for i=1:size(han.spike_buf,2)
         han.features["Peak"][i]=maximum(han.spike_buf[:,i])
     end
+    nothing
+end
+
+function peak_calc(han::SortView,myaxis::Int64)
+
+    reset_peak(han)
     han.axes_name[han.selected_plot,myaxis]=string("Peak")
     scale_axis(han,myaxis)
     
     replot_sort(han)
 end
 
-function valley_calc(han::SortView,myaxis::Int64)
-
+function reset_valley(han::SortView)
     han.features["Valley"]=zeros(Float64,size(han.spike_buf,2))
     for i=1:size(han.spike_buf,2)
         han.features["Valley"][i]=minimum(han.spike_buf[:,i])
     end
+    nothing
+end
 
+function valley_calc(han::SortView,myaxis::Int64)
+
+    reset_valley(han)
     han.axes_name[han.selected_plot,myaxis]=string("Valley")
     scale_axis(han,myaxis)
 
     replot_sort(han)
 end
 
-function pv_calc(han::SortView,myaxis::Int64)
-
+function reset_pv(han::SortView)
     han.features["Peak-Valley"]=zeros(Float64,size(han.spike_buf,2))
     for i=1:size(han.spike_buf,2)
         han.features["Peak-Valley"][i]=maximum(han.spike_buf[:,i])-minimum(han.spike_buf[:,i])
     end
+    nothing
+end
 
+function pv_calc(han::SortView,myaxis::Int64)
+
+    reset_pv(han)
     han.axes_name[han.selected_plot,myaxis]=string("Peak-Valley")
     scale_axis(han,myaxis)
 
@@ -267,15 +291,19 @@ function pv_calc(han::SortView,myaxis::Int64)
     nothing
 end
 
-function area_calc(han::SortView,myaxis::Int64)
-
+function reset_area(han::SortView)
     han.features["Area"]=zeros(Float64,size(han.spike_buf,2))
     for i=1:size(han.spike_buf,2)
         for j=1:size(han.spike_buf,1)
             han.features["Area"][i]+=maximum(han.spike_buf[j,i])
         end
     end
+    nothing
+end
 
+function area_calc(han::SortView,myaxis::Int64)
+
+    reset_area(han)
     han.axes_name[han.selected_plot,myaxis]=string("Area")
     scale_axis(han,myaxis)
 

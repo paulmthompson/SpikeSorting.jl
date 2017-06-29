@@ -175,8 +175,6 @@ end
 
 function recalc_features(han::SortView)
 
-    han, = user_data
-
     han.pca_calced=false
     reset_pca(han,1)
     reset_pca(han,2)

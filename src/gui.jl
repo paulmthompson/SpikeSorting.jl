@@ -16,9 +16,10 @@ type Buffer
     clus::Array{UInt8,1}
     mask::Array{Bool,1}
     selected_clus::UInt8
+    replot::Bool
 end
 
-Buffer(wave_points)=Buffer(500,1,zeros(Int16,wave_points,500),zeros(UInt8,500),trues(500),1)
+Buffer(wave_points)=Buffer(500,1,zeros(Int16,wave_points,500),zeros(UInt8,500),trues(500),1,false)
 
 type SortView
     win::Gtk.GtkWindowLeaf
@@ -405,7 +406,7 @@ function replot_sort(han::SortView)
             
             for ii=1:(maximum(han.buf.clus)+1)
                 for i=1:han.buf.count
-                    if (han.buf.clus[i]+1 == ii)
+                    if (han.buf.clus[i]+1 == ii)&(han.buf.mask[i])
 
                         move_to(ctx,xdata[i]-xmin,ydata[i]-ymin)
                         
@@ -593,6 +594,8 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
             han.buf.clus[i]=han.buf.selected_clus
         end
     end
+
+    han.buf.replot=true
     nothing
 end
 

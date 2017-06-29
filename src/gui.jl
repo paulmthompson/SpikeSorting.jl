@@ -9,16 +9,23 @@ end
 
 FeaturePlot()=FeaturePlot(0.0,0.0,1.0,1.0,1.0)
 
+type Buffer
+    count::Int64
+    ind::Int64
+    spikes::Array{Int16,2}
+    clus::Array{UInt8,1}
+    mask::Array{Bool,1}
+    selected_clus::UInt8
+end
+
+Buffer(wave_points)=Buffer(500,1,zeros(Int16,wave_points,500),zeros(UInt8,500),trues(500),1)
+
 type SortView
     win::Gtk.GtkWindowLeaf
 
     c::Gtk.GtkCanvasLeaf
 
     b1::Gtk.GtkButtonLeaf
-
-    spike_buf::Array{Int16,2}
-    buf_count::Int64
-    buf_clus::Array{Int64,1}
 
     features::Dict{String,Array{Float64,1}}
 
@@ -41,10 +48,11 @@ type SortView
 
     h::Float64
     w::Float64
-    
+
+    buf::Buffer 
 end
 
-function sort_gui()
+function sort_gui(wave_points)
 
     grid = Grid()
 
@@ -128,7 +136,7 @@ function sort_gui()
 
     myfeatures=Dict{String,Array{Float64,1}}("PCA-1"=>zeros(Float64,0),"PCA-2"=>zeros(Float64,0),"PCA-3"=>zeros(Float64,0),"Peak"=>zeros(Float64,0),"Valley"=>zeros(Float64,0),"Peak-Valley"=>zeros(Float64,0),"Area"=>zeros(Float64,0))
 
-    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),myfeatures,fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb,[FeaturePlot() for i=1:10],100.0,100.0)
+    handles = SortView(win,c_sort,b1,myfeatures,fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb,[FeaturePlot() for i=1:10],100.0,100.0,Buffer(wave_points))
 
     signal_connect(b1_cb,b1,"clicked",Void,(),false,(handles,))
     signal_connect(col_sb_cb,col_sb,"value-changed",Void,(),false,(handles,))
@@ -223,11 +231,11 @@ popup_area_cb_y(widget::Ptr,han::Tuple{SortView})=area_calc(han[1],2)
 
 function reset_pca(han::SortView,num::Int64)
     if !han.pca_calced
-        han.pca = fit(PCA,convert(Array{Float64,2},han.spike_buf))
+        han.pca = fit(PCA,convert(Array{Float64,2},han.buf.spikes[:,1:han.buf.count]))
         han.pca_calced=true
     end
 
-    han.features[string("PCA-",num)] = squeeze(han.pca.proj[:,num]' * han.spike_buf,1)
+    han.features[string("PCA-",num)] = squeeze(han.pca.proj[:,num]' * han.buf.spikes[:,1:han.buf.count],1)
     nothing
 end
 
@@ -242,9 +250,9 @@ function pca_calc(han::SortView,num::Int64,myaxis::Int64)
 end
 
 function reset_peak(han::SortView)
-    han.features["Peak"]=zeros(Float64,size(han.spike_buf,2))
-    for i=1:size(han.spike_buf,2)
-        han.features["Peak"][i]=maximum(han.spike_buf[:,i])
+    han.features["Peak"]=zeros(Float64,han.buf.count)
+    for i=1:han.buf.count
+        han.features["Peak"][i]=maximum(han.buf.spikes[:,i])
     end
     nothing
 end
@@ -259,9 +267,9 @@ function peak_calc(han::SortView,myaxis::Int64)
 end
 
 function reset_valley(han::SortView)
-    han.features["Valley"]=zeros(Float64,size(han.spike_buf,2))
-    for i=1:size(han.spike_buf,2)
-        han.features["Valley"][i]=minimum(han.spike_buf[:,i])
+    han.features["Valley"]=zeros(Float64,han.buf.count)
+    for i=1:han.buf.count
+        han.features["Valley"][i]=minimum(han.buf.spikes[:,i])
     end
     nothing
 end
@@ -276,9 +284,9 @@ function valley_calc(han::SortView,myaxis::Int64)
 end
 
 function reset_pv(han::SortView)
-    han.features["Peak-Valley"]=zeros(Float64,size(han.spike_buf,2))
-    for i=1:size(han.spike_buf,2)
-        han.features["Peak-Valley"][i]=maximum(han.spike_buf[:,i])-minimum(han.spike_buf[:,i])
+    han.features["Peak-Valley"]=zeros(Float64,han.buf.count)
+    for i=1:han.buf.count
+        han.features["Peak-Valley"][i]=maximum(han.buf.spikes[:,i])-minimum(han.buf.spikes[:,i])
     end
     nothing
 end
@@ -294,10 +302,10 @@ function pv_calc(han::SortView,myaxis::Int64)
 end
 
 function reset_area(han::SortView)
-    han.features["Area"]=zeros(Float64,size(han.spike_buf,2))
-    for i=1:size(han.spike_buf,2)
-        for j=1:size(han.spike_buf,1)
-            han.features["Area"][i]+=maximum(han.spike_buf[j,i])
+    han.features["Area"]=zeros(Float64,han.buf.count)
+    for i=1:han.buf.count
+        for j=1:size(han.buf.spikes,1)
+            han.features["Area"][i]+=maximum(han.buf.spikes[j,i])
         end
     end
     nothing
@@ -395,9 +403,9 @@ function replot_sort(han::SortView)
             Cairo.translate(ctx,50+han.w/(han.n_col)*(jj-1),1)
             Cairo.scale(ctx,(han.w/(han.n_col)-70)/xscale,(han.h/(han.n_row)-50)/yscale)
             
-            for ii=1:(maximum(han.buf_clus)+1)
-                for i=1:size(han.spike_buf,2)
-                    if (han.buf_clus[i]+1 == ii)
+            for ii=1:(maximum(han.buf.clus)+1)
+                for i=1:han.buf.count
+                    if (han.buf.clus[i]+1 == ii)
 
                         move_to(ctx,xdata[i]-xmin,ydata[i]-ymin)
                         
@@ -577,12 +585,12 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
     xdata = han.features[han.axes_name[han.selected_plot,1]]
     ydata = han.features[han.axes_name[han.selected_plot,2]]
 
-    for i=1:size(han.spike_buf,2)
+    for i=1:han.buf.count
 
         px=xdata[i]
         py=ydata[i]
         if ((px>xmin)&(px<xmax))&((py>ymin)&(py<ymax))
-            han.buf_clus[i]=3
+            han.buf.clus[i]=han.buf.selected_clus
         end
     end
     nothing

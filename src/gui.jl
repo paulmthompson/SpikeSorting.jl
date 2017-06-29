@@ -183,10 +183,14 @@ function recalc_features(han::SortView)
     reset_valley(han)
     reset_pv(han)
     reset_area(han)
+
+    for i=han.n_col*han.n_row
+        scale_xaxis(han,i)
+        scale_yaxis(han,i)
+    end
     
     nothing
 end
-
 
 function col_sb_cb(widget::Ptr,user_data::Tuple{SortView})
 
@@ -308,14 +312,22 @@ function area_calc(han::SortView,myaxis::Int64)
     replot_sort(han)
 end
 
+function scale_xaxis(han::SortView,myplot::Int64)
+    han.plots[myplot].xmin=minimum(han.features[han.axes_name[myplot,1]])
+    han.plots[myplot].xscale=maximum(han.features[han.axes_name[myplot,1]])-han.plots[myplot].xmin
+end
+
+function scale_yaxis(han::SortView,myplot::Int64)
+    han.plots[myplot].ymin=minimum(han.features[han.axes_name[myplot,2]])
+    han.plots[myplot].yscale=maximum(han.features[han.axes_name[myplot,2]])-han.plots[myplot].ymin
+end
+
 function scale_axis(han::SortView,myaxis::Int64)
 
     if myaxis==1
-        han.plots[han.selected_plot].xmin=minimum(han.features[han.axes_name[han.selected_plot,myaxis]])
-        han.plots[han.selected_plot].xscale=maximum(han.features[han.axes_name[han.selected_plot,myaxis]])-han.plots[han.selected_plot].xmin
+        scale_xaxis(han,han.selected_plot)
     else
-        han.plots[han.selected_plot].ymin=minimum(han.features[han.axes_name[han.selected_plot,myaxis]])
-        han.plots[han.selected_plot].yscale=maximum(han.features[han.axes_name[han.selected_plot,myaxis]])-han.plots[han.selected_plot].ymin
+        scale_yaxis(han,han.selected_plot)
     end
 
     han.axes[han.selected_plot,myaxis]=true

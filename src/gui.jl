@@ -20,7 +20,7 @@ type SortView
     buf_count::Int64
     buf_clus::Array{Int64,1}
 
-    features::Array{Float64,3}
+    features::Dict{String,Array{Float64,1}}
 
     pca::PCA{Float64}
     pca_calced::Bool
@@ -126,7 +126,9 @@ function sort_gui()
 
     win = Window(grid,"Sort View") |> showall
 
-    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),zeros(Float64,500,2,10),fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb,[FeaturePlot() for i=1:10],100.0,100.0)
+    myfeatures=Dict{String,Array{Float64,1}}("PCA-1"=>zeros(Float64,0),"PCA-2"=>zeros(Float64,0),"PCA-3"=>zeros(Float64,0),"Peak"=>zeros(Float64,0),"Valley"=>zeros(Float64,0),"Peak-Valley"=>zeros(Float64,0),"Area"=>zeros(Float64,0))
+
+    handles = SortView(win,c_sort,b1,zeros(Int16,500,49),500,zeros(Int64,500),myfeatures,fit(PCA,rand(Float64,10,10)),false,1,1,popup_axis,1,falses(10,2),["Non" for i=1:20,j=1:2],col_sb,[FeaturePlot() for i=1:10],100.0,100.0)
 
     signal_connect(b1_cb,b1,"clicked",Void,(),false,(handles,))
     signal_connect(col_sb_cb,col_sb,"value-changed",Void,(),false,(handles,))
@@ -174,6 +176,8 @@ end
 function recalc_features(han::SortView)
 
     han, = user_data
+
+    
     
     nothing
 end
@@ -215,59 +219,65 @@ function pca_calc(han::SortView,num::Int64,myaxis::Int64)
         han.pca_calced=true
     end
 
-    han.features[:,myaxis,han.selected_plot] = han.pca.proj[:,num]' * han.spike_buf
+    han.features[string("PCA-",num)] = squeeze(han.pca.proj[:,num]' * han.spike_buf,1)
 
-    scale_axis(han,myaxis)
     han.axes_name[han.selected_plot,myaxis]=string("PCA-",num)
-
+    scale_axis(han,myaxis)
+   
     replot_sort(han)
     nothing
 end
 
 function peak_calc(han::SortView,myaxis::Int64)
-    for i=1:size(han.features,1)
-        han.features[i,myaxis,han.selected_plot]=maximum(han.spike_buf[:,i])
+
+    han.features["Peak"]=zeros(Float64,size(han.spike_buf,2))
+    for i=1:size(han.spike_buf,2)
+        han.features["Peak"][i]=maximum(han.spike_buf[:,i])
     end
-
-    scale_axis(han,myaxis)
     han.axes_name[han.selected_plot,myaxis]=string("Peak")
-
+    scale_axis(han,myaxis)
+    
     replot_sort(han)
 end
 
 function valley_calc(han::SortView,myaxis::Int64)
-    for i=1:size(han.features,1)
-        han.features[i,myaxis,han.selected_plot]=minimum(han.spike_buf[:,i])
+
+    han.features["Valley"]=zeros(Float64,size(han.spike_buf,2))
+    for i=1:size(han.spike_buf,2)
+        han.features["Valley"][i]=minimum(han.spike_buf[:,i])
     end
 
-    scale_axis(han,myaxis)
     han.axes_name[han.selected_plot,myaxis]=string("Valley")
+    scale_axis(han,myaxis)
 
     replot_sort(han)
 end
 
 function pv_calc(han::SortView,myaxis::Int64)
 
-    for i=1:size(han.features,1)
-        han.features[i,myaxis,han.selected_plot]=maximum(han.spike_buf[:,i])-minimum(han.spike_buf[:,i])
+    han.features["Peak-Valley"]=zeros(Float64,size(han.spike_buf,2))
+    for i=1:size(han.spike_buf,2)
+        han.features["Peak-Valley"][i]=maximum(han.spike_buf[:,i])-minimum(han.spike_buf[:,i])
     end
 
-    scale_axis(han,myaxis)
     han.axes_name[han.selected_plot,myaxis]=string("Peak-Valley")
+    scale_axis(han,myaxis)
 
     replot_sort(han)
     nothing
 end
 
 function area_calc(han::SortView,myaxis::Int64)
-    for i=1:size(han.features,1)
+
+    han.features["Area"]=zeros(Float64,size(han.spike_buf,2))
+    for i=1:size(han.spike_buf,2)
         for j=1:size(han.spike_buf,1)
-            han.features[i,myaxis,han.selected_plot]+=abs(han.spike_buf[j,i])
+            han.features["Area"][i]+=maximum(han.spike_buf[j,i])
         end
     end
 
-    scale_axis(han,myaxis)
     han.axes_name[han.selected_plot,myaxis]=string("Area")
+    scale_axis(han,myaxis)
 
     replot_sort(han)
 end
@@ -275,11 +285,11 @@ end
 function scale_axis(han::SortView,myaxis::Int64)
 
     if myaxis==1
-        han.plots[han.selected_plot].xmin=minimum(han.features[:,1,han.selected_plot])
-        han.plots[han.selected_plot].xscale=maximum(han.features[:,1,han.selected_plot])-han.plots[han.selected_plot].xmin
+        han.plots[han.selected_plot].xmin=minimum(han.features[han.axes_name[han.selected_plot,myaxis]])
+        han.plots[han.selected_plot].xscale=maximum(han.features[han.axes_name[han.selected_plot,myaxis]])-han.plots[han.selected_plot].xmin
     else
-        han.plots[han.selected_plot].ymin=minimum(han.features[:,2,han.selected_plot])
-        han.plots[han.selected_plot].yscale=maximum(han.features[:,2,han.selected_plot])-han.plots[han.selected_plot].ymin
+        han.plots[han.selected_plot].ymin=minimum(han.features[han.axes_name[han.selected_plot,myaxis]])
+        han.plots[han.selected_plot].yscale=maximum(han.features[han.axes_name[han.selected_plot,myaxis]])-han.plots[han.selected_plot].ymin
     end
 
     han.axes[han.selected_plot,myaxis]=true
@@ -340,15 +350,20 @@ function replot_sort(han::SortView)
             ymin=han.plots[jj].ymin
             xscale=han.plots[jj].xscale
             yscale=han.plots[jj].yscale
+
+            xdata = han.features[han.axes_name[jj,1]]
+            ydata = han.features[han.axes_name[jj,2]]
             
             Cairo.translate(ctx,50+han.w/(han.n_col)*(jj-1),1)
             Cairo.scale(ctx,(han.w/(han.n_col)-70)/xscale,(han.h/(han.n_row)-50)/yscale)
             
             for ii=1:(maximum(han.buf_clus)+1)
-                for i=1:size(han.features,1)
+                for i=1:size(han.spike_buf,2)
                     if (han.buf_clus[i]+1 == ii)
-                        move_to(ctx,han.features[i,1,jj]-xmin,han.features[i,2,jj]-ymin)
-                        line_to(ctx,han.features[i,1,jj]+10.0-xmin,han.features[i,2,jj]+10.0-ymin)
+
+                        move_to(ctx,xdata[i]-xmin,ydata[i]-ymin)
+                        
+                        line_to(ctx,xdata[i]-xmin+10.0,ydata[i]-ymin+10.0)
                     end
                 end
                 select_color(ctx,ii)
@@ -521,10 +536,13 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
     ymin=ymin*han.plots[han.selected_plot].yscale/han.h+han.plots[han.selected_plot].ymin
     ymax=ymax*han.plots[han.selected_plot].yscale/han.h+han.plots[han.selected_plot].ymin
 
-    for i=1:size(han.features,1)
+    xdata = han.features[han.axes_name[han.selected_plot,1]]
+    ydata = han.features[han.axes_name[han.selected_plot,2]]
 
-        px=han.features[i,1,han.selected_plot]
-        py=han.features[i,2,han.selected_plot]
+    for i=1:size(han.spike_buf,2)
+
+        px=xdata[i]
+        py=ydata[i]
         if ((px>xmin)&(px<xmax))&((py>ymin)&(py<ymax))
             han.buf_clus[i]=3
         end

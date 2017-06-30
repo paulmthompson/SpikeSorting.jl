@@ -407,7 +407,7 @@ function replot_sort(han::SortView)
             Cairo.scale(ctx,(han.w/(han.n_col)-70)/xscale,(han.h/(han.n_row)-50)/yscale)
             
             for ii=1:(maximum(han.buf.clus)+1)
-                for i=1:han.buf.count
+                for i=1:han.buf.ind
                     if (han.buf.clus[i]+1 == ii)&(han.buf.mask[i])
 
                         move_to(ctx,xdata[i]-xmin,ydata[i]-ymin)
@@ -603,14 +603,13 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
     xdata = han.features[han.axes_name[han.selected_plot,1]]
     ydata = han.features[han.axes_name[han.selected_plot,2]]
 
-    han.buf.selected=trues(han.buf.count)
+    han.buf.selected=trues(han.buf.ind)
 
-    for i=1:han.buf.count
+    for i=1:han.buf.ind
 
         px=xdata[i]
         py=ydata[i]
         if ((px>xmin)&(px<xmax))&((py>ymin)&(py<ymax))
-            han.buf.clus[i]=han.buf.selected_clus
             han.buf.selected[i]=false
         end
     end

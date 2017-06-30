@@ -17,9 +17,11 @@ type Buffer
     mask::Array{Bool,1}
     selected_clus::UInt8
     replot::Bool
+    selected::Array{Bool,1}
+    c_changed::Bool
 end
 
-Buffer(wave_points)=Buffer(500,1,zeros(Int16,wave_points,500),zeros(UInt8,500),trues(500),1,false)
+Buffer(wave_points)=Buffer(500,1,zeros(Int16,wave_points,500),zeros(UInt8,500),trues(500),1,false,falses(500),false)
 
 type SortView
     win::Gtk.GtkWindowLeaf
@@ -550,8 +552,10 @@ function rubberband_stop(han::SortView, rb::RubberBand, x, y, ctxcopy)
     end
     stroke(r)
 
-    inside_polygon(rb.polygon,han)
-    replot_sort(han)
+    if han.buf.selected_clus>0
+        inside_polygon(rb.polygon,han)
+        replot_sort(han)
+    end
     reveal(han.c, false)
     nothing
 end
@@ -586,15 +590,19 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
     xdata = han.features[han.axes_name[han.selected_plot,1]]
     ydata = han.features[han.axes_name[han.selected_plot,2]]
 
+    han.buf.selected=trues(han.buf.count)
+
     for i=1:han.buf.count
 
         px=xdata[i]
         py=ydata[i]
         if ((px>xmin)&(px<xmax))&((py>ymin)&(py<ymax))
             han.buf.clus[i]=han.buf.selected_clus
+            han.buf.selected[i]=false
         end
     end
 
+    han.buf.c_changed=true
     han.buf.replot=true
     nothing
 end

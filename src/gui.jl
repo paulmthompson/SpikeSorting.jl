@@ -553,11 +553,25 @@ function rubberband_stop(han::SortView, rb::RubberBand, x, y, ctxcopy)
     stroke(r)
 
     if han.buf.selected_clus>0
-        inside_polygon(rb.polygon,han)
-        replot_sort(han)
+        inside_polygon(rb.polygon,han)      
     end
+    replot_sort(han)
     reveal(han.c, false)
     nothing
+end
+
+function canvas_to_feature(han,x1,y1,myplot)
+    
+    xtrans=50+han.w/(han.n_col)*(myplot-1)
+    ytrans=0
+
+    xscale=(han.w/han.n_col-70)/han.plots[myplot].xscale
+    yscale=(han.h/han.n_row-50)/han.plots[myplot].yscale
+
+    x1=(x1 - xtrans)/(xscale)+han.plots[myplot].xmin
+    y1=(y1 - ytrans)/(yscale)+han.plots[myplot].ymin
+    
+    (x1,y1)
 end
 
 function inside_polygon(xy::Array{Vec2,1},han::SortView)
@@ -567,6 +581,7 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
     xmax=xy[1].x
     ymax=xy[1].y
 
+    #Find bounds of lasso
     for i=2:length(xy)
         if xy[i].x<xmin
             xmin=xy[i].x
@@ -581,11 +596,9 @@ function inside_polygon(xy::Array{Vec2,1},han::SortView)
         end
     end
 
-    xmin=(xmin-(han.w/(han.n_col))*(han.selected_plot-1))*han.plots[han.selected_plot].xscale/(han.w/(han.n_col))+han.plots[han.selected_plot].xmin
-    xmax=(xmax-(han.w/(han.n_col))*(han.selected_plot-1))*han.plots[han.selected_plot].xscale/(han.w/(han.n_col))+han.plots[han.selected_plot].xmin
-
-    ymin=ymin*han.plots[han.selected_plot].yscale/han.h+han.plots[han.selected_plot].ymin
-    ymax=ymax*han.plots[han.selected_plot].yscale/han.h+han.plots[han.selected_plot].ymin
+    #Convert canvas coordinates to PCA space coordinates
+    (xmin,ymin)=canvas_to_feature(han,xmin,ymin,han.selected_plot)
+    (xmax,ymax)=canvas_to_feature(han,xmax,ymax,han.selected_plot)
 
     xdata = han.features[han.axes_name[han.selected_plot,1]]
     ydata = han.features[han.axes_name[han.selected_plot,2]]

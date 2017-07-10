@@ -6,7 +6,8 @@ export Sorting,Spike,create_multi,output_buffer,benchmark, SortView
 
 include("types.jl")
 include("constants.jl")
-include("gui.jl")
+include("gui/gui_types.jl")
+include("gui/multi_dim_view.jl")
 include("detect.jl")
 include("align.jl")
 include("feature.jl")

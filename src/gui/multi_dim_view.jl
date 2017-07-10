@@ -450,20 +450,6 @@ end
 Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
 =#
 
-immutable Vec2
-    x::Float64
-    y::Float64
-end
-
-type RubberBand
-    pos0::Vec2
-    pos1::Vec2
-    pos2::Vec2
-    polygon::Array{Vec2,1}
-    moved::Bool
-    minpixels::Int
-end
-
 function rb_draw(r::Cairo.CairoContext, rb::RubberBand)
     rb_set(r, rb)
     set_line_width(r, 1)

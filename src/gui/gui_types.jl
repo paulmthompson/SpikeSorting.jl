@@ -23,6 +23,20 @@ end
 
 Buffer(wave_points)=Buffer(500,1,zeros(Int16,wave_points,500),zeros(UInt8,500),trues(500),1,false,falses(500),false)
 
+immutable Vec2
+    x::Float64
+    y::Float64
+end
+
+type RubberBand
+    pos0::Vec2
+    pos1::Vec2
+    pos2::Vec2
+    polygon::Array{Vec2,1}
+    moved::Bool
+    minpixels::Int
+end
+
 type SortView
     win::Gtk.GtkWindowLeaf
 
@@ -53,4 +67,32 @@ type SortView
     w::Float64
 
     buf::Buffer 
+end
+
+type Single_Channel
+    c2::Gtk.GtkCanvasLeaf
+    c3::Gtk.GtkCanvasLeaf
+    ctx2::Cairo.CairoContext
+    ctx2s::Cairo.CairoContext
+    rb_active::Bool
+    rb::RubberBand
+    click_button::Int64 
+    selected::Array{Bool,1}
+    plotted::Array{Bool,1}
+    hold::Bool
+    pause::Bool
+    pause_button::Gtk.GtkToggleButtonLeaf
+    rb_button::Gtk.GtkToggleButtonLeaf
+    draw_button::Gtk.GtkToggleButtonLeaf
+    selection_button::Gtk.GtkToggleButtonLeaf
+    mi::NTuple{2,Float64} #saved x,y position of mouse input
+    show_thres::Bool
+    w2::Int64
+    h2::Int64
+    wave_points::Int64
+    s::Float64
+    o::Float64
+    buf::SpikeSorting.Buffer
+    thres::Float64
+    old_thres::Float64
 end

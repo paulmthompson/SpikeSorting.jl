@@ -236,3 +236,41 @@ function plot_thres(sc::Single_Channel)
     sc.old_thres=sc.thres
     nothing
 end
+
+function clear_c2(myc::Gtk.GtkCanvas,num)
+        
+    ctx = getgc(myc)
+    myheight=height(ctx)
+    mywidth=width(ctx)
+
+    set_source_rgb(ctx,0.0,0.0,0.0)
+    paint(ctx)
+
+    dashes = [10.0,10.0,10.0]
+    set_dash(ctx, dashes, 0.0)
+    
+    for y = [myheight/6, myheight/3, myheight/2, myheight/6*4, myheight/6*5]
+        line(ctx,1,mywidth,y,y)
+    end
+
+    for x = [.2*mywidth, .4*mywidth, .6*mywidth, .8*mywidth]
+        line(ctx,x,x,1,myheight)
+    end
+
+    set_source_rgba(ctx,1.0,1.0,1.0,.5)
+    stroke(ctx) 
+    
+    set_dash(ctx,Float64[])
+
+    line(ctx,1,mywidth,myheight,myheight)
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    stroke(ctx)
+
+    line(ctx,1,mywidth,myheight/2,myheight/2)
+    stroke(ctx)
+
+    move_to(ctx,10,10)
+    show_text(ctx,string(num))
+    
+    nothing
+end

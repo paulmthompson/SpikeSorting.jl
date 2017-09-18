@@ -82,9 +82,10 @@ type Single_Channel
     hold::Bool
     pause::Bool
     pause_button::Gtk.GtkToggleButtonLeaf
-    rb_button::Gtk.GtkToggleButtonLeaf
-    draw_button::Gtk.GtkToggleButtonLeaf
-    selection_button::Gtk.GtkToggleButtonLeaf
+    #rb_button::Gtk.GtkToggleButtonLeaf
+    #draw_button::Gtk.GtkToggleButtonLeaf
+    #selection_button::Gtk.GtkToggleButtonLeaf
+    rb_buttons::Array{Gtk.GtkRadioButton,1}
     mi::NTuple{2,Float64} #saved x,y position of mouse input
     show_thres::Bool
     w2::Int64

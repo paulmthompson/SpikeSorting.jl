@@ -82,26 +82,32 @@ function draw_rb(sc::Single_Channel)
 
     if sc.rb.moved
 
-        ctx = sc.ctx2
-        clear_rb(sc)
+        if sc.pause_state == 1
 
-        line(ctx,sc.rb.pos0.x,sc.rb.pos2.x,sc.rb.pos0.y,sc.rb.pos2.y)
-        set_line_width(ctx,1.0)
-        set_source_rgb(ctx,1.0,1.0,1.0)
-        stroke(ctx)   
+            ctx = sc.ctx2
+            clear_rb(sc)
 
-        #Find selected waveforms and plot
-        if (sc.buf.selected_clus>0)&((sc.buf.count>0)&(sc.pause))
-            get_selected_waveforms(sc,sc.buf.spikes)
-            mycolor=1
-            if sc.click_button==1
-                mycolor=sc.buf.selected_clus+1
-            elseif sc.click_button==3
+            line(ctx,sc.rb.pos0.x,sc.rb.pos2.x,sc.rb.pos0.y,sc.rb.pos2.y)
+            set_line_width(ctx,1.0)
+            set_source_rgb(ctx,1.0,1.0,1.0)
+            stroke(ctx)   
+
+            #Find selected waveforms and plot
+            if (sc.buf.selected_clus>0)&((sc.buf.count>0)&(sc.pause))
+                get_selected_waveforms(sc,sc.buf.spikes)
                 mycolor=1
+                if sc.click_button==1
+                    mycolor=sc.buf.selected_clus+1
+                elseif sc.click_button==3
+                    mycolor=1
+                end
+                plot_selected_waveforms(sc,sc.buf.spikes,mycolor)
             end
-            plot_selected_waveforms(sc,sc.buf.spikes,mycolor)
+            sc.rb.pos1=sc.rb.pos2 
+        elseif sc.pause_state == 2
+            draw_template(sc)
         end
-        sc.rb.pos1=sc.rb.pos2 
+
     end
     
     nothing
@@ -114,6 +120,136 @@ function clear_rb(sc::Single_Channel)
     set_source(sc.ctx2,sc.ctx2s)
     stroke(sc.ctx2)
     
+    nothing
+end
+
+#=
+Canvas Draw Templates
+=#
+
+function draw_start(sc::Single_Channel, x, y, temp,button_num=1)
+
+    vec_list=Array(Vec2,0)
+
+    clus = sc.buf.selected_clus
+    for i=1:size(temp.templates,1)
+        push!(vec_list,Vec2(temp.templates[i,clus]-temp.sig_min[i,clus],temp.templates[i,clus]+temp.sig_max[i,clus]))
+    end
+    
+    sc.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y),vec_list,false, 2)
+    sc.selected=falses(500)
+    sc.plotted=falses(500)
+
+    if button_num==1
+        push!((sc.c2.mouse, :button1motion),  (c, event) -> draw_move(sc,event.x, event.y))
+        push!((sc.c2.mouse, :motion), Gtk.default_mouse_cb)
+        push!((sc.c2.mouse, :button1release), (c, event) -> draw_stop(sc,event.x, event.y,temp,button_num))
+    elseif button_num==3
+        push!((sc.c2.mouse, :motion),  (c, event) -> draw_move(sc,event.x, event.y))
+        push!((sc.c2.mouse, :button3release), (c, event) -> draw_stop(sc,event.x, event.y,temp,button_num))
+    end
+    sc.rb_active=true
+    nothing
+end
+
+function draw_move(sc::Single_Channel, x, y)
+    
+    sc.rb.moved = true
+    sc.rb.pos2 = Vec2(x ,y)
+    nothing
+end
+
+function draw_stop(sc::Single_Channel, x, y,temp,button_num)
+
+    if button_num==1
+        pop!((sc.c2.mouse, :button1motion))
+        pop!((sc.c2.mouse, :motion))
+        pop!((sc.c2.mouse, :button1release))
+    elseif button_num==3
+        pop!((sc.c2.mouse, :motion))
+        pop!((sc.c2.mouse, :button3release))
+    end
+        
+    sc.rb.moved = false
+    sc.rb_active=false
+
+    clus = sc.buf.selected_clus
+    for i=1:length(sc.rb.polygon)
+        temp.templates[i,clus] = (sc.rb.polygon[i].x + sc.rb.polygon[i].y) / 2
+        temp.sig_min[i,clus] = temp.templates[i,clus] - sc.rb.polygon[i].x
+        temp.sig_max[i,clus] = sc.rb.polygon[i].y - temp.templates[i,clus]
+    end
+    nothing
+end
+
+function draw_template(sc::Single_Channel)
+    
+    (x1,x2,y1,y2)=coordinate_transform(sc,sc.rb.pos2.x,sc.rb.pos2.y,sc.rb.pos2.x,sc.rb.pos2.y)
+
+    if x1 != sc.rb.pos1.x
+        sc.rb.pos1 = Vec2(x1,x1)
+        
+
+        myline=0 #0 for bottom, 1 for top
+        
+        mymean=(sc.rb.polygon[x1].x+sc.rb.polygon[x1].y)/2
+        
+        if y1 < mymean
+            myline = 0
+        else
+            myline = 1
+        end
+        
+        s=sc.s
+        ctx = sc.ctx2
+        wave_points=length(sc.rb.polygon)
+        Cairo.translate(ctx,0.0,sc.h2/2)
+        scale(ctx,sc.w2/wave_points,s)
+        clus = sc.buf.selected_clus + 1
+        
+        if myline == 0
+            move_to(ctx,1,sc.rb.polygon[1].x)
+            for i=2:wave_points
+                line_to(ctx,i,sc.rb.polygon[i].x)
+            end
+            sc.rb.polygon[x1] = Vec2(y1,sc.rb.polygon[x1].y)
+        else
+            move_to(ctx,1,sc.rb.polygon[1].y)
+            for i=2:wave_points
+                line_to(ctx,i,sc.rb.polygon[i].y)
+            end
+            sc.rb.polygon[x1] = Vec2(sc.rb.polygon[x1].x,y1)
+        end
+
+        identity_matrix(ctx)
+        
+        set_line_width(ctx,2.0)
+        set_source(ctx,sc.ctx2s)
+        stroke(ctx)
+
+        Cairo.translate(ctx,0.0,sc.h2/2)
+        scale(ctx,sc.w2/wave_points,s)
+        
+        if myline == 0
+            move_to(ctx,1,sc.rb.polygon[1].x)
+            for i=2:wave_points
+                line_to(ctx,i,sc.rb.polygon[i].x)
+            end
+        else
+            move_to(ctx,1,sc.rb.polygon[1].y)
+            for i=2:wave_points
+                line_to(ctx,i,sc.rb.polygon[i].y)
+            end
+        end
+        
+        set_line_width(ctx,1.0)
+        select_color(ctx,clus)
+        stroke(ctx)
+
+        identity_matrix(ctx)
+        
+    end
+
     nothing
 end
 

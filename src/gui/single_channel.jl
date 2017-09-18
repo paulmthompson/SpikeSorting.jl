@@ -284,3 +284,12 @@ function clear_c3(c3,num)
     
     nothing
 end
+
+function pause_state_cb(widgetptr::Ptr,user_data::Tuple{Single_Channel,Int64})
+
+    han, myid = user_data
+
+    han.pause_state = myid
+
+    nothing
+end

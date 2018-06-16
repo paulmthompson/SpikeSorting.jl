@@ -375,7 +375,7 @@ end
 
 function clear_c2(myc::Gtk.GtkCanvas,num)
         
-    ctx = getgc(myc)
+    ctx = Gtk.getgc(myc)
     myheight=height(ctx)
     mywidth=width(ctx)
 

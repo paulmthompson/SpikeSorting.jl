@@ -1,16 +1,16 @@
 
 export Algorithm
 
-abstract Algorithm
+abstract type Algorithm end
 
-abstract Detect <: Algorithm
-abstract Align <:Algorithm
-abstract Cluster <:Algorithm
-abstract Feature <:Algorithm
-abstract Reduction <:Algorithm
-abstract Threshold <:Algorithm
+abstract type Detect <: Algorithm end
+abstract type Align <:Algorithm end
+abstract type Cluster <:Algorithm end
+abstract type Feature <:Algorithm end
+abstract type Reduction <:Algorithm end
+abstract type Threshold <:Algorithm end
 
-abstract Sorting
+abstract type Sorting end
 
 #Data Structure to store range of a spike and cluster ID
 immutable Spike
@@ -96,7 +96,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             $(Symbol("Sorting_$sorting_num"))(D,C,A,F,R,T,
                     1,zeros(in_type,window+div(window,2)),0,
                     p_temp,zeros(f_type,reducedims),zeros(f_type,fulllength),
-                    collect(1:reducedims),1.0,1,s_sizes(window))   
+                    collect(1:reducedims),1.0,1,s_sizes(window))
         end
     end
 
@@ -111,10 +111,10 @@ function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::T
         gen_sorting(d,c,a,f,r,t,in_type)
     end
     
-    st=Array(typeof(MakeSorting(d,c,a,f,r,t,window,in_type)),num)
+    st=Array(typeof(Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type)),num)
 
     for i=1:num
-        st[i]=MakeSorting(d,c,a,f,r,t,window,in_type)
+        st[i]=Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type)
         st[i].id=i
     end
 

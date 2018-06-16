@@ -12,8 +12,8 @@ function coordinate_transform(sc::Single_Channel,xi1::Float64,yi1::Float64,xi2::
     ctx=sc.ctx2
 
     myx=[1.0;collect(2:(sc.wave_points-1)).*(sc.w2/sc.wave_points)]
-    x1=indmin(abs(myx-xi1))
-    x2=indmin(abs(myx-xi2))
+    x1=indmin(abs.(myx-xi1))
+    x2=indmin(abs.(myx-xi2))
     s=sc.s
     o=sc.o
     y1=(yi1-sc.h2/2+o)/s
@@ -204,7 +204,7 @@ function draw_template(sc::Single_Channel)
         ctx = sc.ctx2
         wave_points=length(sc.rb.polygon)
         Cairo.translate(ctx,0.0,sc.h2/2)
-        scale(ctx,sc.w2/wave_points,s)
+        Gtk.scale(ctx,sc.w2/wave_points,s)
         clus = sc.buf.selected_clus + 1
         
         if myline == 0
@@ -228,7 +228,7 @@ function draw_template(sc::Single_Channel)
         stroke(ctx)
 
         Cairo.translate(ctx,0.0,sc.h2/2)
-        scale(ctx,sc.w2/wave_points,s)
+        Gtk.scale(ctx,sc.w2/wave_points,s)
         
         if myline == 0
             move_to(ctx,1,sc.rb.polygon[1].x)
@@ -314,7 +314,7 @@ function plot_selected_waveforms{T<:Real}(sc::Single_Channel,input::Array{T,2},m
     set_line_width(ctx,2.0)
     set_source(ctx,sc.ctx2s)
     Cairo.translate(ctx,0.0,sc.h2/2)
-    scale(ctx,sc.w2/sc.wave_points,s)
+    Gtk.scale(ctx,sc.w2/sc.wave_points,s)
 
     #=
     Reset waveforms that have changed since the start but are
@@ -375,7 +375,7 @@ end
 
 function clear_c2(myc::Gtk.GtkCanvas,num)
         
-    ctx = getgc(myc)
+    ctx = Gtk.getgc(myc)
     myheight=height(ctx)
     mywidth=width(ctx)
 
@@ -413,7 +413,7 @@ end
 
 function clear_c3(c3,num)
 
-    ctx = getgc(c3)
+    ctx = Gtk.getgc(c3)
 
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)

@@ -1,16 +1,16 @@
 
 export Algorithm
 
-abstract Algorithm
+abstract type Algorithm end
 
-abstract Detect <: Algorithm
-abstract Align <:Algorithm
-abstract Cluster <:Algorithm
-abstract Feature <:Algorithm
-abstract Reduction <:Algorithm
-abstract Threshold <:Algorithm
+abstract type Detect <: Algorithm end
+abstract type Align <:Algorithm end
+abstract type Cluster <:Algorithm end
+abstract type Feature <:Algorithm end
+abstract type Reduction <:Algorithm end
+abstract type Threshold <:Algorithm end
 
-abstract Sorting
+abstract type Sorting end
 
 #Data Structure to store range of a spike and cluster ID
 immutable Spike

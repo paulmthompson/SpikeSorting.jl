@@ -12,8 +12,8 @@ function coordinate_transform(sc::Single_Channel,xi1::Float64,yi1::Float64,xi2::
     ctx=sc.ctx2
 
     myx=[1.0;collect(2:(sc.wave_points-1)).*(sc.w2/sc.wave_points)]
-    x1=indmin(abs(myx-xi1))
-    x2=indmin(abs(myx-xi2))
+    x1=indmin(abs.(myx-xi1))
+    x2=indmin(abs.(myx-xi2))
     s=sc.s
     o=sc.o
     y1=(yi1-sc.h2/2+o)/s

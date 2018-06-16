@@ -413,7 +413,7 @@ end
 
 function clear_c3(c3,num)
 
-    ctx = getgc(c3)
+    ctx = Gtk.getgc(c3)
 
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)

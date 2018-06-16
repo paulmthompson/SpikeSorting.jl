@@ -204,7 +204,7 @@ function draw_template(sc::Single_Channel)
         ctx = sc.ctx2
         wave_points=length(sc.rb.polygon)
         Cairo.translate(ctx,0.0,sc.h2/2)
-        scale(ctx,sc.w2/wave_points,s)
+        Gtk.scale(ctx,sc.w2/wave_points,s)
         clus = sc.buf.selected_clus + 1
         
         if myline == 0
@@ -228,7 +228,7 @@ function draw_template(sc::Single_Channel)
         stroke(ctx)
 
         Cairo.translate(ctx,0.0,sc.h2/2)
-        scale(ctx,sc.w2/wave_points,s)
+        Gtk.scale(ctx,sc.w2/wave_points,s)
         
         if myline == 0
             move_to(ctx,1,sc.rb.polygon[1].x)
@@ -314,7 +314,7 @@ function plot_selected_waveforms{T<:Real}(sc::Single_Channel,input::Array{T,2},m
     set_line_width(ctx,2.0)
     set_source(ctx,sc.ctx2s)
     Cairo.translate(ctx,0.0,sc.h2/2)
-    scale(ctx,sc.w2/sc.wave_points,s)
+    Gtk.scale(ctx,sc.w2/sc.wave_points,s)
 
     #=
     Reset waveforms that have changed since the start but are

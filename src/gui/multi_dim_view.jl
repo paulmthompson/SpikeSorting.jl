@@ -7,7 +7,7 @@ function sort_gui(wave_points)
     c_sort = Canvas(100,100)
     
     @guarded draw(c_sort) do widget
-        ctx = getgc(c_sort)
+        ctx = Gtk.getgc(c_sort)
         set_source_rgb(ctx,0.0,0.0,0.0)
         paint(ctx)
     end
@@ -346,7 +346,7 @@ end
 
 function replot_sort(han::SortView)
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
 
@@ -407,7 +407,7 @@ end
 
 function prepare_plots(han::SortView)
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
 
     xbounds=linspace(0.0,han.w,han.n_col+1)
     ybounds=linspace(0.0,han.h,han.n_row+1)
@@ -464,7 +464,7 @@ function rb_set(r::Cairo.CairoContext, rb::RubberBand)
 end
 
 function rubberband_start(han::SortView, x, y; minpixels::Int=2)
-    r = getgc(han.c)
+    r = Gtk.getgc(han.c)
     Cairo.save(r)
     ctxcopy = copy(r)
     rb = RubberBand(Vec2(x,y),Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, minpixels)
@@ -475,7 +475,7 @@ function rubberband_start(han::SortView, x, y; minpixels::Int=2)
 end
 
 function rubberband_move(c::Canvas, rb::RubberBand, x, y, ctxcopy)
-    r = getgc(c)
+    r = Gtk.getgc(c)
     if rb.moved
         #rb_erase(r, ctxcopy)
     end
@@ -496,7 +496,7 @@ function rubberband_stop(han::SortView, rb::RubberBand, x, y, ctxcopy)
     if !rb.moved
         return
     end
-    r = getgc(han.c)
+    r = Gtk.getgc(han.c)
     rb_set(r, rb)
     restore(r)
     set_line_width(r,3.0)
@@ -577,7 +577,7 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{SortView})
 
     han, = user_data
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
     han.h=height(ctx)
     han.w=width(ctx)
 

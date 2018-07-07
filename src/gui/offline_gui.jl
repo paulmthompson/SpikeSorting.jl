@@ -22,24 +22,27 @@ function make_offline_gui(s)
     add_button_label(button_restore,"Restore")
     vbox_hold[3,2]=button_restore
 
-    button_rb=ToggleButton()
-    add_button_label(button_rb,"RubberBand")
-    vbox_hold[1,3]=button_rb
-    Gtk.GAccessor.active(button_rb,true)
+    button_rb=Array(RadioButton,3)
+    button_rb[1]=RadioButton(active=true)
+    button_rb[2]=RadioButton(button_rb[1])
+    button_rb[3]=RadioButton(button_rb[2])  
 
-    button_draw=ToggleButton()
-    add_button_label(button_draw,"Draw")
-    vbox_hold[2,3]=button_draw
+    vbox_hold[1,3]=button_rb[1]
+    Gtk.GAccessor.mode(button_rb[1],false)
+    add_button_label(button_rb[1],"RubberBand")
+    vbox_hold[2,3]=button_rb[2]
+    Gtk.GAccessor.mode(button_rb[2],false)
+    add_button_label(button_rb[2],"Draw")
+    vbox_hold[3,3]=button_rb[3]
+    Gtk.GAccessor.mode(button_rb[3],false)
+    add_button_label(button_rb[3],"Selection")
 
-    button_selection=ToggleButton()
-    add_button_label(button_selection,"Selection")
-    vbox_hold[3,3]=button_selection
 
     c_grid=Grid()
     
     c2 = Canvas()
     @guarded draw(c2) do widget
-        ctx = getgc(c2)
+        ctx = Gtk.getgc(c2)
         SpikeSorting.clear_c2(c2,1)
     end
 
@@ -50,7 +53,7 @@ function make_offline_gui(s)
 
     c3=Canvas(-1,200)     
     @guarded draw(c3) do widget
-        ctx = getgc(c3)
+        ctx = Gtk.getgc(c3)
         clear_c3(c3,1)
     end
     show(c3)
@@ -65,7 +68,7 @@ function make_offline_gui(s)
     
     sleep(5.0)
 
-    sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,button_draw,button_selection,(0.0,0.0),false,width(getgc(c2)),height(getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
+    sc_widgets=Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),height(Gtk.getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
 
     
     win

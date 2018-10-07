@@ -31,7 +31,7 @@ s_sizes(win)=s_sizes(win,win+div(win,2),div(win,2))
 function output_buffer(channels::Int64,par=false)
 
     nums=zeros(UInt16,channels)
-    
+
     if par==false
         buf=Spike[Spike() for i=1:100,j=1:channels]
     else
@@ -39,7 +39,7 @@ function output_buffer(channels::Int64,par=false)
         nums=convert(SharedArray{UInt16,1},nums)
     end
 
-    (buf,nums)   
+    (buf,nums)
 end
 
 global sorting_num = 1
@@ -52,7 +52,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
     global sorting_num
 
     f_type=feature_type(F,in_type)
-    
+
     @eval begin
         type $(Symbol("Sorting_$sorting_num")) <: Sorting
             d::($(typeof(D)))
@@ -61,12 +61,12 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
             f::($(typeof(F)))
             r::($(typeof(R)))
             t::($(typeof(T)))
-            id::Int16 
-            sigend::Array{$(in_type),1} 
+            id::Int16
+            sigend::Array{$(in_type),1}
             index::Int16
             p_temp::Array{$(in_type),1}
-            features::Array{$(f_type),1} 
-            fullfeature::Array{$(f_type),1} 
+            features::Array{$(f_type),1}
+            fullfeature::Array{$(f_type),1}
             dims::Array{Int16,1}
             thres::Float64
             #waveform::Array{$(in_type),1}
@@ -75,7 +75,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
         end
 
         function MakeSorting(D::($(typeof(D))),C::($(typeof(C))),A::($(typeof(A))),F::($(typeof(F))),R::($(typeof(R))),T::($(typeof(T))),window::Int64,in_type=Int16)
-    
+
             #determine size of alignment output
             wavelength=mysize(A,window)
 
@@ -110,19 +110,19 @@ function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::T
     else
         gen_sorting(d,c,a,f,r,t,in_type)
     end
-    
-    st=Array(typeof(Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type)),num)
+
+    st=Array{typeof(Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type))}(num)
 
     for i=1:num
         st[i]=Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type)
         st[i].id=i
     end
 
-    st  
+    st
 end
-    
+
 function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::Threshold,num::Int64,cores::UnitRange{Int64},window=50,in_type=Int16)
-        
+
     st=create_multi(d,c,a,f,r,t,num,window,in_type)
-    st=distribute(st,procs=collect(cores)) 
+    st=distribute(st,procs=collect(cores))
 end

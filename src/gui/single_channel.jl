@@ -8,7 +8,7 @@ function coordinate_transform(sc::Single_Channel,event)
 end
 
 function coordinate_transform(sc::Single_Channel,xi1::Float64,yi1::Float64,xi2::Float64,yi2::Float64)
-    
+
     ctx=sc.ctx2
 
     myx=[1.0;collect(2:(sc.wave_points-1)).*(sc.w2/sc.wave_points)]
@@ -18,7 +18,7 @@ function coordinate_transform(sc::Single_Channel,xi1::Float64,yi1::Float64,xi2::
     o=sc.o
     y1=(yi1-sc.h2/2+o)/s
     y2=(yi2-sc.h2/2+o)/s
-    
+
     #ensure that left most point is first
     if x1>x2
         x=x1
@@ -55,7 +55,7 @@ function rubberband_start(sc::Single_Channel, x, y, button_num=1)
 end
 
 function rubberband_move(sc::Single_Channel, x, y)
-    
+
     sc.rb.moved = true
     sc.rb.pos2 = Vec2(x ,y)
     nothing
@@ -71,7 +71,7 @@ function rubberband_stop(sc::Single_Channel, x, y,button_num)
         pop!((sc.c2.mouse, :motion))
         pop!((sc.c2.mouse, :button3release))
     end
-        
+
     sc.rb.moved = false
     sc.rb_active=false
     clear_rb(sc)
@@ -90,7 +90,7 @@ function draw_rb(sc::Single_Channel)
             line(ctx,sc.rb.pos0.x,sc.rb.pos2.x,sc.rb.pos0.y,sc.rb.pos2.y)
             set_line_width(ctx,1.0)
             set_source_rgb(ctx,1.0,1.0,1.0)
-            stroke(ctx)   
+            stroke(ctx)
 
             #Find selected waveforms and plot
             if (sc.buf.selected_clus>0)&((sc.buf.count>0)&(sc.pause))
@@ -103,13 +103,13 @@ function draw_rb(sc::Single_Channel)
                 end
                 plot_selected_waveforms(sc,sc.buf.spikes,mycolor)
             end
-            sc.rb.pos1=sc.rb.pos2 
+            sc.rb.pos1=sc.rb.pos2
         elseif sc.pause_state == 2
             draw_template(sc)
         end
 
     end
-    
+
     nothing
 end
 
@@ -119,7 +119,7 @@ function clear_rb(sc::Single_Channel)
     set_line_width(sc.ctx2,2.0)
     set_source(sc.ctx2,sc.ctx2s)
     stroke(sc.ctx2)
-    
+
     nothing
 end
 
@@ -135,7 +135,7 @@ function draw_start(sc::Single_Channel, x, y, temp,button_num=1)
     for i=1:size(temp.templates,1)
         push!(vec_list,Vec2(temp.templates[i,clus]-temp.sig_min[i,clus],temp.templates[i,clus]+temp.sig_max[i,clus]))
     end
-    
+
     sc.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y),vec_list,false, 2)
     sc.selected=falses(500)
     sc.plotted=falses(500)
@@ -153,7 +153,7 @@ function draw_start(sc::Single_Channel, x, y, temp,button_num=1)
 end
 
 function draw_move(sc::Single_Channel, x, y)
-    
+
     sc.rb.moved = true
     sc.rb.pos2 = Vec2(x ,y)
     nothing
@@ -169,7 +169,7 @@ function draw_stop(sc::Single_Channel, x, y,temp,button_num)
         pop!((sc.c2.mouse, :motion))
         pop!((sc.c2.mouse, :button3release))
     end
-        
+
     sc.rb.moved = false
     sc.rb_active=false
 
@@ -183,30 +183,30 @@ function draw_stop(sc::Single_Channel, x, y,temp,button_num)
 end
 
 function draw_template(sc::Single_Channel)
-    
+
     (x1,x2,y1,y2)=coordinate_transform(sc,sc.rb.pos2.x,sc.rb.pos2.y,sc.rb.pos2.x,sc.rb.pos2.y)
 
     if x1 != sc.rb.pos1.x
         sc.rb.pos1 = Vec2(x1,x1)
-        
+
 
         myline=0 #0 for bottom, 1 for top
-        
+
         mymean=(sc.rb.polygon[x1].x+sc.rb.polygon[x1].y)/2
-        
+
         if y1 < mymean
             myline = 0
         else
             myline = 1
         end
-        
+
         s=sc.s
         ctx = sc.ctx2
         wave_points=length(sc.rb.polygon)
         Cairo.translate(ctx,0.0,sc.h2/2)
         Gtk.scale(ctx,sc.w2/wave_points,s)
         clus = sc.buf.selected_clus + 1
-        
+
         if myline == 0
             move_to(ctx,1,sc.rb.polygon[1].x)
             for i=2:wave_points
@@ -222,14 +222,14 @@ function draw_template(sc::Single_Channel)
         end
 
         identity_matrix(ctx)
-        
+
         set_line_width(ctx,2.0)
         set_source(ctx,sc.ctx2s)
         stroke(ctx)
 
         Cairo.translate(ctx,0.0,sc.h2/2)
         Gtk.scale(ctx,sc.w2/wave_points,s)
-        
+
         if myline == 0
             move_to(ctx,1,sc.rb.polygon[1].x)
             for i=2:wave_points
@@ -241,13 +241,13 @@ function draw_template(sc::Single_Channel)
                 line_to(ctx,i,sc.rb.polygon[i].y)
             end
         end
-        
+
         set_line_width(ctx,1.0)
         select_color(ctx,clus)
         stroke(ctx)
 
         identity_matrix(ctx)
-        
+
     end
 
     nothing
@@ -260,8 +260,8 @@ function find_intersected_waveforms{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
 
     #Bounds check
     x1 = x1 < 2 ? 2 : x1
-    x2 = x2 > size(input,2)-2 ? size(input,2)-2 : x2 
-    
+    x2 = x2 > size(input,2)-2 ? size(input,2)-2 : x2
+
     for i=1:count
         for j=(x1-1):(x2+1)
             if SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i])
@@ -270,7 +270,7 @@ function find_intersected_waveforms{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
             end
         end
     end
-    
+
     nothing
 end
 
@@ -332,7 +332,7 @@ function plot_selected_waveforms{T<:Real}(sc::Single_Channel,input::Array{T,2},m
     stroke(ctx)
 
     #=
-    Plot selected waveforms in new color that have not 
+    Plot selected waveforms in new color that have not
     yet been plotting in new color
     =#
     for i=1:sc.buf.count
@@ -357,7 +357,7 @@ Show threshold on canvas
 =#
 
 function plot_thres(sc::Single_Channel)
-    
+
     ctx = sc.ctx2
 
     line(ctx,1,sc.w2,sc.h2/2-sc.old_thres,sc.h2/2-sc.old_thres)
@@ -374,7 +374,7 @@ function plot_thres(sc::Single_Channel)
 end
 
 function clear_c2(myc::Gtk.GtkCanvas,num)
-        
+
     ctx = Gtk.getgc(myc)
     myheight=height(ctx)
     mywidth=width(ctx)
@@ -384,7 +384,7 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
 
     dashes = [10.0,10.0,10.0]
     set_dash(ctx, dashes, 0.0)
-    
+
     for y = [myheight/6, myheight/3, myheight/2, myheight/6*4, myheight/6*5]
         line(ctx,1,mywidth,y,y)
     end
@@ -394,8 +394,8 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     end
 
     set_source_rgba(ctx,1.0,1.0,1.0,.5)
-    stroke(ctx) 
-    
+    stroke(ctx)
+
     set_dash(ctx,Float64[])
 
     line(ctx,1,mywidth,myheight,myheight)
@@ -407,7 +407,7 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
 
     move_to(ctx,10,10)
     show_text(ctx,string(num))
-    
+
     nothing
 end
 
@@ -417,7 +417,7 @@ function clear_c3(c3,num)
 
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
-    
+
     nothing
 end
 
@@ -426,6 +426,170 @@ function pause_state_cb(widgetptr::Ptr,user_data::Tuple{Single_Channel,Int64})
     han, myid = user_data
 
     han.pause_state = myid
+
+    nothing
+end
+
+function draw_templates(sc::Single_Channel)
+
+    ctx = sc.ctx2s
+    mywidth=width(ctx)
+    myheight=height(ctx)
+
+    s=sc.s
+    o=sc.o
+
+    Cairo.translate(ctx,0.0,myheight/2)
+    Gtk.scale(ctx,mywidth/sc.wave_points,s)
+
+    for clus=1:sc.total_clus
+
+        move_to(ctx,1.0,(sc.temp.templates[1,clus])-o)
+
+        for i=2:size(sc.temp.sig_max,1)
+            y=sc.temp.templates[i,clus]-o
+            line_to(ctx,i,y)
+        end
+
+        select_color(ctx,clus+1)
+        set_line_width(ctx,3.0)
+        stroke(ctx)
+    end
+    identity_matrix(ctx)
+    nothing
+end
+
+#=
+Callback for how mouse interacts with canvas
+=#
+function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Single_Channel})
+
+    sc, = user_data
+    event = unsafe_load(param_tuple)
+
+    sc.click_button=event.button
+
+    if event.button == 1 #left click captures window
+        sc.mi=(event.x,event.y)
+        if sc.pause_state==1
+            rubberband_start(sc,event.x,event.y)
+        elseif sc.pause_state == 2
+            if sc.pause
+                draw_start(sc,event.x,event.y,sc.temp)
+            end
+        end
+    elseif event.button == 3 #right click refreshes window
+        if !sc.pause
+            clear_c2(sc.c2,sc.spike)
+            sc.ctx2=Gtk.getgc(sc.c2)
+            sc.ctx2s=copy(sc.ctx2)
+            sc.buf.ind=1
+            sc.buf.count=1
+            if sc.sort_cb
+                draw_templates(sc)
+            end
+        else
+            sc.mi=(event.x,event.y)
+            if sc.pause_state==1
+                rubberband_start(sc,event.x,event.y,3)
+            elseif sc.pause_state == 2
+
+            end
+        end
+    end
+    nothing
+end
+
+
+function pause_cb(widgetptr::Ptr,user_data::Tuple{Single_Channel})
+
+    sc, = user_data
+
+    widget = convert(ToggleButton, widgetptr)
+
+    if getproperty(widget,:active,Bool)
+        sc.pause=true
+        change_button_label(widget,"Resume")
+        for i=1:length(sc.buf.mask)
+            sc.buf.mask[i]=true
+        end
+    else
+        sc.pause=false
+        change_button_label(widget,"Pause")
+        sc.hold=false
+    end
+
+    nothing
+end
+
+function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Buffer,Single_Channel})
+
+    buf,sc = user_data
+    event = unsafe_load(param_tuple)
+
+    clus=buf.selected_clus
+
+    (x1,x2,y1,y2)=SpikeSorting.coordinate_transform(sc,event)
+
+    if event.button==1
+
+        if sc.pause_state == 1
+            #Waveforms selected with a left click rubberband in the paused display will be used to form a cluster template for the currently selected cluster.
+
+            if (clus==0) #do nothing if zeroth cluster
+            else
+
+                buf.selected=trues(buf.ind)
+                find_intersected_waveforms(buf.spikes,buf.selected,buf.ind,x1,y1,x2,y2)
+
+                buf.c_changed=true
+            end
+
+            if (clus>0)&((buf.count>0)&(sc.pause))
+                buf.replot=true
+            end
+        elseif sc.pause_state == 2
+            if sc.pause
+                buf.c_changed=true
+            end
+        end
+    elseif event.button==3
+
+        if sc.pause_state == 1
+            #Waveforms selected with right click in the paused display will be removed from display. If a cluster is selected, these waveforms will also be removed from that selected cluster
+
+            if sc.pause
+                find_intersected_waveforms(buf.spikes,buf.mask,buf.count,x1,y1,x2,y2)
+
+                if clus>0
+                    buf.selected=!(buf.clus.==clus)
+                    buf.c_changed=true
+                end
+                buf.replot=true
+            end
+        elseif sc.pause_state == 2
+            if sc.pause
+
+            end
+        end
+    end
+
+    nothing
+end
+
+function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Single_Channel})
+
+    sc, = user_data
+
+    ctx=Gtk.getgc(sc.c2)
+
+    if (height(ctx)!=sc.h2)|(width(ctx)!=sc.w2)
+
+        sc.ctx2=ctx
+        sc.ctx2s=copy(sc.ctx2)
+        sc.w2=width(sc.ctx2)
+        sc.h2=height(sc.ctx2)
+    end
 
     nothing
 end

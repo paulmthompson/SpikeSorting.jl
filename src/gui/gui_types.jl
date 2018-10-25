@@ -66,7 +66,7 @@ type SortView
     h::Float64
     w::Float64
 
-    buf::Buffer 
+    buf::Buffer
 end
 
 type Single_Channel
@@ -76,7 +76,7 @@ type Single_Channel
     ctx2s::Cairo.CairoContext
     rb_active::Bool
     rb::RubberBand
-    click_button::Int64 
+    click_button::Int64
     selected::Array{Bool,1}
     plotted::Array{Bool,1}
     hold::Bool
@@ -94,4 +94,8 @@ type Single_Channel
     buf::SpikeSorting.Buffer
     thres::Float64
     old_thres::Float64
+    temp::ClusterTemplate
+    total_clus::Int64
+    spike::Int64
+    sort_cb::Bool
 end

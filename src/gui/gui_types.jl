@@ -98,4 +98,7 @@ type Single_Channel
     total_clus::Int64
     spike::Int64
     sort_cb::Bool
+    sort_list::Gtk.GtkListStoreLeaf
+    sort_tv::Gtk.GtkTreeViewLeaf
+    adj_sort::Gtk.GtkAdjustmentLeaf
 end

@@ -411,51 +411,12 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     nothing
 end
 
-function clear_c3(c3,num)
-
-    ctx = Gtk.getgc(c3)
-
-    set_source_rgb(ctx,0.0,0.0,0.0)
-    paint(ctx)
-
-    nothing
-end
-
 function pause_state_cb(widgetptr::Ptr,user_data::Tuple{Single_Channel,Int64})
 
-    han, myid = user_data
+    sc, myid = user_data
 
-    han.pause_state = myid
+    sc.pause_state = myid
 
-    nothing
-end
-
-function draw_templates(sc::Single_Channel)
-
-    ctx = sc.ctx2s
-    mywidth=width(ctx)
-    myheight=height(ctx)
-
-    s=sc.s
-    o=sc.o
-
-    Cairo.translate(ctx,0.0,myheight/2)
-    Gtk.scale(ctx,mywidth/sc.wave_points,s)
-
-    for clus=1:sc.total_clus
-
-        move_to(ctx,1.0,(sc.temp.templates[1,clus])-o)
-
-        for i=2:size(sc.temp.sig_max,1)
-            y=sc.temp.templates[i,clus]-o
-            line_to(ctx,i,y)
-        end
-
-        select_color(ctx,clus+1)
-        set_line_width(ctx,3.0)
-        stroke(ctx)
-    end
-    identity_matrix(ctx)
     nothing
 end
 
@@ -500,7 +461,6 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Single_Channe
     nothing
 end
 
-
 function pause_cb(widgetptr::Ptr,user_data::Tuple{Single_Channel})
 
     sc, = user_data
@@ -517,6 +477,35 @@ function pause_cb(widgetptr::Ptr,user_data::Tuple{Single_Channel})
         sc.pause=false
         change_button_label(widget,"Pause")
         sc.hold=false
+    end
+
+    nothing
+end
+
+function clear_button_cb(widget::Ptr,user_data::Tuple{SpikeSorting.Single_Channel})
+
+    sc, = user_data
+    SpikeSorting.clear_c2(sc.c2,sc.spike)
+    sc.ctx2=Gtk.getgc(sc.c2)
+    sc.ctx2s=copy(sc.ctx2)
+    #Sort Button
+    if sc.sort_cb
+        SpikeSorting.draw_templates(sc)
+    end
+
+    nothing
+end
+
+function restore_button_cb(widget::Ptr,user_data::Tuple{SpikeSorting.Single_Channel})
+
+    sc, = user_data
+
+    if sc.pause
+        for i=1:sc.buf.ind
+            sc.buf.mask[i]=true
+        end
+
+        sc.buf.replot=true
     end
 
     nothing
@@ -562,7 +551,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Buffer
                 find_intersected_waveforms(buf.spikes,buf.mask,buf.count,x1,y1,x2,y2)
 
                 if clus>0
-                    buf.selected=!(buf.clus.==clus)
+                    buf.selected=.!(buf.clus.==clus)
                     buf.c_changed=true
                 end
                 buf.replot=true
@@ -592,4 +581,45 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Single_Channel})
     end
 
     nothing
+end
+
+#=
+Redraw all spikes shown in paused view
+=#
+function replot_all_spikes(sc::Single_Channel)
+
+    SpikeSorting.clear_c2(sc.c2,sc.spike)
+    sc.ctx2=Gtk.getgc(sc.c2)
+    sc.ctx2s=copy(sc.ctx2)
+
+    ctx=sc.ctx2s
+    s=sc.s
+    o=sc.o
+
+    Cairo.translate(ctx,0.0,sc.h2/2)
+    Cairo.scale(ctx,sc.w2/sc.wave_points,s)
+
+    for i=1:(sc.total_clus+1)
+        for j=1:sc.buf.ind
+            if (sc.buf.clus[j]==(i-1))&(sc.buf.mask[j])
+                move_to(ctx,1,(sc.buf.spikes[1,j]-o))
+                for jj=2:size(sc.buf.spikes,1)
+                    line_to(ctx,jj,sc.buf.spikes[jj,j]-o)
+                end
+            end
+        end
+        set_line_width(ctx,0.5)
+        select_color(ctx,i)
+        stroke(ctx)
+    end
+    identity_matrix(ctx)
+    set_source(sc.ctx2,ctx)
+    mask_surface(sc.ctx2,ctx,0.0,0.0)
+    fill(sc.ctx2)
+    reveal(sc.c2)
+    nothing
+end
+
+function mask_surface(ctx,s,x,y)
+    ccall((:cairo_mask_surface,Cairo._jl_libcairo),Void,(Ptr{Void},Ptr{Void},Float64,Float64),ctx.ptr,s.surface.ptr,x,y)
 end

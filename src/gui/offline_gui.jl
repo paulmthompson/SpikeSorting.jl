@@ -20,6 +20,12 @@ function make_offline_gui(s)
     add_button_label(gain_checkbox," x 10")
     vbox1_2_1[2,1]=gain_checkbox
 
+    button_gain = CheckButton()
+    add_button_label(button_gain,"All Channels")
+    setproperty!(button_gain,:active,false)
+    vbox1_2_1[1,2]=button_gain
+
+
     #THRESHOLD
     frame1_3=Frame("Threshold")
     vbox1_2[1,3]=frame1_3
@@ -174,10 +180,14 @@ function make_offline_gui(s)
 
     sleep(5.0)
 
+    thres_widgets=SpikeSorting.Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
+    gain_widgets=Gain_Widgets(sb2,gain_checkbox,button_gain)
+
     sc_widgets=Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),
     Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,
     1,(0.0,0.0),false,width(Gtk.getgc(c2)),height(Gtk.getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,
-    0.0,0.0,ClusterTemplate(convert(Int64,s[1].s.win)),0,1,false,sort_list,sort_tv,adj_thres)
+    0.0,0.0,ClusterTemplate(convert(Int64,s[1].s.win)),0,1,false,sort_list,sort_tv,adj_sort,adj_thres,thres_slider,false,
+    thres_widgets,gain_widgets)
 
     id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(sc_widgets,))
 
@@ -217,7 +227,19 @@ function make_offline_gui(s)
     =#
     id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(sc_widgets,))
 
+    #=
+    Threshold callbacks
+    =#
 
+    id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(sc_widgets,))
+    id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(sc_widgets,))
+
+    #=
+    Gain Callbacks
+    =#
+
+    id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(sc_widgets,))
+    id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(sc_widgets,))
 
     (win,sc_widgets,sortview_handles)
 end

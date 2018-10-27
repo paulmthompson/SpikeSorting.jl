@@ -578,6 +578,9 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Single_Channel})
         sc.ctx2s=copy(sc.ctx2)
         sc.w2=width(sc.ctx2)
         sc.h2=height(sc.ctx2)
+
+        setproperty!(sc.adj_thres,:upper,sc.h2/2)
+        setproperty!(sc.adj_thres,:lower,-sc.h2/2)
     end
 
     nothing

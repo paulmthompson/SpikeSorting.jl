@@ -69,6 +69,20 @@ type SortView
     buf::Buffer
 end
 
+type Thres_Widgets
+    sb::Gtk.GtkLabelLeaf
+    slider::Gtk.GtkScaleLeaf
+    adj::Gtk.GtkAdjustmentLeaf
+    all::Gtk.GtkCheckButtonLeaf
+    show::Gtk.GtkCheckButtonLeaf
+end
+
+type Gain_Widgets
+    gainbox::Gtk.GtkSpinButtonLeaf
+    multiply::Gtk.GtkCheckButtonLeaf
+    all::Gtk.GtkCheckButtonLeaf
+end
+
 type Single_Channel
     c2::Gtk.GtkCanvasLeaf
     c3::Gtk.GtkCanvasLeaf
@@ -95,10 +109,17 @@ type Single_Channel
     thres::Float64
     old_thres::Float64
     temp::ClusterTemplate
+
     total_clus::Int64
     spike::Int64
     sort_cb::Bool
     sort_list::Gtk.GtkListStoreLeaf
     sort_tv::Gtk.GtkTreeViewLeaf
     adj_sort::Gtk.GtkAdjustmentLeaf
+
+    adj_thres::Gtk.GtkAdjustmentLeaf
+    thres_slider::Gtk.GtkScaleLeaf
+    thres_changed::Bool
+    thres_widgets::Thres_Widgets
+    gain_widgets::Gain_Widgets
 end

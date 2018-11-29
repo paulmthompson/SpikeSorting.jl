@@ -283,7 +283,9 @@ function offline_loop(win,sc,sorting,buf,nums,sortview_widgets)
             end
             sc.buf.replot=false
         end
-
+        if sc.thres_changed
+            offline_thres_changed(sc,sorting)
+        end
         if sc.show_thres
             SpikeSorting.plot_thres(sc)
         end
@@ -297,4 +299,23 @@ function offline_loop(win,sc,sorting,buf,nums,sortview_widgets)
         sleep(0.01)
     end
 
+end
+
+function offline_thres_changed(sc,s)
+
+    mythres=getproperty(sc.adj_thres,:value,Int)
+    sc.thres=mythres
+
+    #update sorting
+    if (getproperty(sc.thres_widgets.all,:active,Bool))|(getproperty(sc.gain_widgets.all,:active,Bool))
+        for i=1:length(s)
+            s[i].thres=-1*sc.thres/sc.s #This isn't right, need a scale thing
+        end
+    else
+        s[sc.spike].thres = -1 * sc.thres / sc.s
+    end
+
+    sc.thres_changed=false
+
+    nothing
 end

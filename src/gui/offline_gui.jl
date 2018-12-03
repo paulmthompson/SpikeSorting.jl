@@ -1,6 +1,22 @@
 
 export make_offline_gui
 
+type Analog_Viewer
+    c::Gtk.GtkCanvasLeaf
+    slider::Gtk.GtkScaleLeaf
+    adj::Gtk.GtkAdjustmentLeaf
+    pos::Int64
+    changed::Bool
+end
+
+type Offline_GUI
+    win::Gtk.GtkWindowLeaf
+    sc::Single_Channel
+    sortview::SortView
+    v::Array{Int16,1} #Should be anything
+    av::Analog_Viewer
+end
+
 function make_offline_gui(s)
 
     grid = Grid()
@@ -145,15 +161,12 @@ function make_offline_gui(s)
     push!(vbox_slider,thres_slider)
     push!(vbox_slider,c_thres)
 
-
-
-
     c_grid=Grid()
 
     c2 = Canvas()
     @guarded draw(c2) do widget
         ctx = Gtk.getgc(c2)
-        SpikeSorting.clear_c2(c2,1)
+        clear_c2(c2,1)
     end
 
     show(c2)
@@ -174,13 +187,22 @@ function make_offline_gui(s)
     grid[3,2]=vbox_slider
     grid[4,2]=c_grid
 
+    c_analog=Canvas(-1,200)
+    grid[4,3]=c_analog
+    analog_slider = Scale(false, 1,30000,1)
+    adj_analog = Adjustment(analog_slider)
+    setproperty!(adj_analog,:value,1)
+    grid[4,4]=analog_slider
+
+    analog_handles = Analog_Viewer(c_analog,analog_slider,adj_analog,1,false)
+
     sortview_handles = SpikeSorting.sort_gui(s[1].s.win+1)
 
     win = Window(grid,"SpikeSorting.jl") |> showall
 
     sleep(5.0)
 
-    thres_widgets=SpikeSorting.Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
+    thres_widgets=Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
     gain_widgets=Gain_Widgets(sb2,gain_checkbox,button_gain)
 
     sc_widgets=Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),
@@ -241,60 +263,74 @@ function make_offline_gui(s)
     id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(sc_widgets,))
     id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(sc_widgets,))
 
-    (win,sc_widgets,sortview_handles)
+    v=round.(Int16,100.*rand(60000)-50.0)
+
+    myoffline = Offline_GUI(win,sc_widgets,sortview_handles,v,analog_handles)
+
+    #=
+    Analog Callbacks
+    =#
+
+    id = signal_connect(analog_slider_cb,analog_slider,"value-changed",Void,(),false,(myoffline,))
+    id = signal_connect(analog_gain_cb, sb2, "value-changed",Void,(),false,(myoffline,))
+
+    myoffline
 end
 
-function offline_loop(win,sc,sorting,buf,nums,sortview_widgets)
+function offline_loop(han,sorting,buf,nums)
 
     while true
 
-        if sc.buf.c_changed
+        if han.sc.buf.c_changed
 
-            clus = sc.buf.selected_clus
+            clus = han.sc.buf.selected_clus
 
             if clus>0
 
                 #Find Cluster characteristics from selected waveforms
-                (mymean,mystd)=make_cluster(sc.buf.spikes,sc.buf.mask,sc.buf.ind,.!sc.buf.selected)
+                (mymean,mystd)=make_cluster(han.sc.buf.spikes,han.sc.buf.mask,han.sc.buf.ind,.!han.sc.buf.selected)
 
                 #Apply cluster characteristics to handles cluster
-                change_cluster(sc.temp,mymean,mystd,clus)
-                setproperty!(sc.adj_sort, :value, 1.0)
+                change_cluster(han.sc.temp,mymean,mystd,clus)
+                setproperty!(han.sc.adj_sort, :value, 1.0)
 
-                if (sc.buf.count>0)&(sc.pause)
-                    template_cluster(sc,clus,mymean,mystd[:,2],mystd[:,1],1.0)
+                if (han.sc.buf.count>0)&(han.sc.pause)
+                    template_cluster(han.sc,clus,mymean,mystd[:,2],mystd[:,1],1.0)
                 end
 
             end
 
             #Send cluster information to sorting
-            send_clus(sorting,sc)
-            sc.buf.c_changed=false
+            send_clus(sorting,han.sc)
+            han.sc.buf.c_changed=false
         end
-        if sc.buf.replot
-            replot_all_spikes(sc)
-            if visible(sortview_widgets.win)
-                if !sc.pause
+        if han.sc.buf.replot
+            replot_all_spikes(han.sc)
+            if visible(han.sortview.win)
+                if !han.sc.pause
 
                 else
                     #Refresh Screen
-                    SpikeSorting.replot_sort(sortview_widgets)
+                    SpikeSorting.replot_sort(han.sortview)
                 end
             end
-            sc.buf.replot=false
+            han.sc.buf.replot=false
         end
-        if sc.thres_changed
-            offline_thres_changed(sc,sorting)
+        if han.sc.thres_changed
+            offline_thres_changed(han.sc,sorting)
         end
-        if sc.show_thres
-            SpikeSorting.plot_thres(sc)
+        if han.sc.show_thres
+            SpikeSorting.plot_thres(han.sc)
         end
-        if sc.rb_active
-            SpikeSorting.draw_rb(sc)
+        if han.sc.rb_active
+            SpikeSorting.draw_rb(han.sc)
+        end
+        if han.av.changed
+            replot_analog(han)
         end
 
-        reveal(sc.c2)
-        reveal(sc.c3)
+        reveal(han.sc.c2)
+        reveal(han.sc.c3)
 
         sleep(0.01)
     end
@@ -317,5 +353,49 @@ function offline_thres_changed(sc,s)
 
     sc.thres_changed=false
 
+    nothing
+end
+
+function analog_slider_cb(widget::Ptr,user_data::Tuple{Offline_GUI})
+
+    han, = user_data
+
+    han.av.pos = getproperty(han.av.adj,:value,Int)
+
+    han.av.changed = true
+
+    nothing
+end
+
+function analog_gain_cb(widget::Ptr,user_data::Tuple{Offline_GUI})
+
+    han, = user_data
+
+    han.av.changed = true
+
+    nothing
+end
+
+function replot_analog(han)
+    ctx = Gtk.getgc(han.av.c)
+
+    set_source_rgb(ctx,0.0,0.0,0.0)
+    paint(ctx)
+
+    h=height(ctx)
+    w=width(ctx)
+
+    gain = han.sc.s
+
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    move_to(ctx,1.0,h/2+han.v[han.av.pos]*gain)
+    for i=2:round(Int64,w)
+        line_to(ctx,i,h/2+han.v[han.av.pos+i-1]*gain)
+    end
+    stroke(ctx)
+
+    reveal(han.av.c)
+
+    han.av.changed = false
     nothing
 end

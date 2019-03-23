@@ -16,9 +16,9 @@ end
 #=
 No Dimensionality Reduction
 =#
-type ReductionNone <: Reduction
+mutable struct ReductionNone <: Reduction
 end
-    
+
 #=
 Maximum Difference
 
@@ -65,14 +65,14 @@ function reductionprepare(r::ReductionMD,sort::Sorting)
     for i in max3ind
         for j=1:length(sort.r.Dc)
             if sort.r.maximum_difference[i]>sort.r.Dc[j]
-                if i != sort.dims[j]                
+                if i != sort.dims[j]
                     sort.dims[j]=i
                 end
                 sort.r.Dc[j]=sort.r.maximum_difference[i]
                 break
             end
         end
-    end   
+    end
     nothing
 end
 =#

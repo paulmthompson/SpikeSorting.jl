@@ -1,7 +1,7 @@
 
 export make_offline_gui
 
-type Analog_Viewer
+mutable struct Analog_Viewer
     c::Gtk.GtkCanvasLeaf
     slider::Gtk.GtkScaleLeaf
     adj::Gtk.GtkAdjustmentLeaf
@@ -9,7 +9,7 @@ type Analog_Viewer
     changed::Bool
 end
 
-type Offline_GUI
+mutable struct Offline_GUI
     win::Gtk.GtkWindowLeaf
     sc::Single_Channel
     sortview::SortView

@@ -15,7 +15,7 @@ featureprepare(f::Feature,sort::Sorting)=nothing
 Temporal Waveform
 =#
 
-type FeatureTime <: Feature 
+mutable struct FeatureTime <: Feature
 end
 
 FeatureTime(M::Int64,N::Int64)=FeatureTime()
@@ -107,7 +107,7 @@ FeatureIT()=FeatureIT(0,0,0.0,0,0,0)
 FeatureIT(M::Int64,N::Int64)=FeatureIT()
 
 function feature(f::FeatureIT,sort::Sorting)
-    
+
     sort.features[:]=zeros(Float64,length(sort.features))
     for i=sort.f.talpha:(sort.f.talpha+sort.f.N1)
         sort.features[1]+=sort.waveforms[i,sort.numSpikes]
@@ -118,7 +118,7 @@ function feature(f::FeatureIT,sort::Sorting)
         sort.features[2]+=sort.waveforms[i,sort.numSpikes]
     end
     sort.features[2]=sort.features[2]/sort.f.N2
-    
+
     nothing
 end
 
@@ -137,7 +137,7 @@ function featureprepare(f::FeatureIT,sort::Sorting)
     talphat=0
     tbeta=0
     tbetat=0
-    
+
     for i=1:size(sort.waveforms,1)
 
         thisval=sign(sort.waveforms[i,sort.numSpikes]-sort.f.wavemean)
@@ -154,7 +154,7 @@ function featureprepare(f::FeatureIT,sort::Sorting)
                     N1=tempN1
                     talpha=talphat
                 end
-            end  
+            end
         else
             if thisval==1
                 tempN2=1
@@ -162,7 +162,7 @@ function featureprepare(f::FeatureIT,sort::Sorting)
             else
                 tempN1=1
                 talphat=i
-            end            
+            end
         end
         lastval=thisval
     end
@@ -185,12 +185,12 @@ function featureprepare(f::FeatureIT,sort::Sorting)
     if sort.f.N2+sort.f.tbeta>size(sort.waveforms,1)
         sort.f.N2=size(sort.waveforms,1)-sort.f.tbeta-1
     end
-    
+
 
     sort.f.itr+=1
-    
+
     nothing
-    
+
 end
 =#
 #=
@@ -208,7 +208,7 @@ FeatureDD(M::Int64,N::Int64)=FeatureDD(ones(Int64,N,2))
 function feature(f::FeatureDD,sort::Sorting)
     for i=1:length(sort.dims)
         sort.features[i]=sort.waveform[sort.f.inds[i,2]]-sort.waveform[sort.f.inds[i,2]-sort.f.inds[i,1]]
-    end     
+    end
     nothing
 end
 
@@ -236,7 +236,7 @@ function featureprepare(f::FeatureDD,sort::Sorting)
     end
 
     sort.features[:]=sort.fullfeature[sort.dims]
-    nothing      
+    nothing
 end
 =#
 #=
@@ -258,7 +258,7 @@ function feature(f::FeatureCurv,sort::Sorting)
         V2=sort.waveform[i+1]-2*sort.waveform[i]+sort.waveform[i-1]
         sort.feature[i-1]=V2/(1+V1^2)^1.5
     end
-    
+
     nothing
 end
 
@@ -273,7 +273,7 @@ function featureprepare(f::FeatureCurv,sort::Sorting)
         V2=sort.waveform[i+1]-2*sort.waveform[i]+sort.waveform[i-1]
         sort.fullfeature[i-1]=V2/(1+V1^2)^1.5
     end
-    
+
     nothing
 end
 =#

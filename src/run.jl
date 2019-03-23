@@ -20,7 +20,7 @@ function cal!(sort::Sorting,v,spikes,ns,firstrun=0)
         end
         threscal(sort,v,spikes,ns,sort.s.s_end+1)
     end
-    
+
     nothing
 end
 
@@ -46,7 +46,7 @@ end
 
 #Single channel
 function onlinesort!(sort::Sorting,v,spikes,ns)
-    main(sort,v,spikes,ns)    
+    main(sort,v,spikes,ns)
     nothing
 end
 
@@ -77,10 +77,10 @@ function main(sort::Sorting,v,spikes,ns)
     for i=1:size(v,1)
 
         p=detect(sort.d,sort,i,v)
-        
+
         #continue collecting spike information if there was a recent spike
         if sort.index>0
-            
+
             @inbounds sort.p_temp[sort.index]=v[i,sort.id]
             sort.index+=1
 
@@ -90,19 +90,19 @@ function main(sort::Sorting,v,spikes,ns)
                 align(sort.a,sort)
 
                 #overlap detection? (probably need to do this in the time domain)
-                
+
                 feature(sort.f,sort)
 
                 id=cluster(sort.c,sort)
 
                 #Spike time stamp
-                @inbounds ns[sort.id]+=1    
+                @inbounds ns[sort.id]+=1
                 @inbounds spikes[ns[sort.id],sort.id]=Spike((sort.cent+i-(sort.s.s_end+sort.s.win)):(sort.cent+i-sort.s.s_end),id)
-                sort.index=0               
+                sort.index=0
             end
 
         elseif p
-            
+
             if i<=sort.s.win
                 @inbounds for j=1:(sort.s.win-i+1)
                     sort.p_temp[j]=sort.sigend[sort.s.s_end-(sort.s.win-i)+j-1]
@@ -127,7 +127,7 @@ function main(sort::Sorting,v,spikes,ns)
         sort.sigend[j]=v[size(v,1)-sort.s.s_end+j,sort.id]
     end
 
-    nothing  
+    nothing
 end
 
 #=
@@ -141,10 +141,10 @@ function maincal(sort::Sorting,v,spikes,ns,start=1)
         p=detect(sort.d,sort,i,v)
 
         @inbounds clusterprepare(sort.c,sort,v[i,sort.id])
-        
+
         #continue collecting spike information if there was a recent spike
         if sort.index>0
-            
+
             @inbounds sort.p_temp[sort.index]=v[i,sort.id]
             sort.index+=1
 
@@ -154,15 +154,15 @@ function maincal(sort::Sorting,v,spikes,ns,start=1)
                 align(sort.a,sort)
 
                 featureprepare(sort.f,sort)
-                
+
                 reductionprepare(sort.r,sort)
 
                 sort.index=0
-                           
+
             end
 
         elseif p
-            
+
             if i<=sort.s.win
                 @inbounds for j=1:(sort.s.win-i+1)
                     sort.p_temp[j]=sort.sigend[sort.s.s_end-(sort.s.win-i)+j-1]
@@ -182,7 +182,7 @@ function maincal(sort::Sorting,v,spikes,ns,start=1)
             sort.index=sort.s.win+2
         end
     end
-                   
+
     @inbounds for j=1:sort.s.s_end
         sort.sigend[j]=v[size(v,1)-sort.s.s_end+j,sort.id]
     end
@@ -197,9 +197,9 @@ Threshold calibration loop
 function threscal(sort::Sorting,v,spikes,ns,start=1)
 
     for i=start:size(v,1)
-        threshold(sort.t,sort,v,i)            
+        threshold(sort.t,sort,v,i)
     end
-                   
+
     @inbounds for j=1:sort.s.s_end
         sort.sigend[j]=v[size(v,1)-sort.s.s_end+j,sort.id]
     end

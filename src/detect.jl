@@ -28,9 +28,9 @@ end
 DetectPower()=DetectPower(0,0,0)
 
 function detect{V}(d::DetectPower,sort::Sorting, i::Int64,v::V)
-    
+
     @inbounds sort.d.a += v[i,sort.id] - sort.d.c
-    @inbounds sort.d.b += v[i,sort.id]^2 - sort.d.c^2   
+    @inbounds sort.d.b += v[i,sort.id]^2 - sort.d.c^2
 
     if i>=power_win
         @inbounds sort.d.c=v[i-power_win0,sort.id]
@@ -39,14 +39,14 @@ function detect{V}(d::DetectPower,sort::Sorting, i::Int64,v::V)
     end
 
     # equivalent to p = sqrt(1/n * sum( (f(t-i) - f_bar(t))^2))
-    sort.thres < sqrt((sort.d.b - (sort.d.a^2/power_win))/power_win)  
+    sort.thres < sqrt((sort.d.b - (sort.d.a^2/power_win))/power_win)
 end
 
 function detectprepare{V}(d::DetectPower,sort::Sorting,v::V)
-    
+
     sort.d.a=0
     sort.d.b=0
-    
+
     for i=1:power_win
         sort.d.a += v[i,sort.id]
         sort.d.b += v[i,sort.id]^2
@@ -69,18 +69,18 @@ Absolute Value
 Quiroga et al 2004
 =#
 
-type DetectAbs <: Detect
+mutable struct DetectAbs <: Detect
 end
 
 function detect(d::DetectAbs,sort::Sorting,i::Int64,v)
-    @inbounds return sort.thres < abs(v[i,sort.id])   
+    @inbounds return sort.thres < abs(v[i,sort.id])
 end
 
 #=
 Negative Value
 =#
 
-type DetectNeg <: Detect
+mutable struct DetectNeg <: Detect
 end
 
 function detect(d::DetectNeg,sort::Sorting,i::Int64,v)
@@ -116,7 +116,7 @@ function detect(d::DetectNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2})
         end
     end
 
-    psi   
+    psi
 end
 =#
 #=
@@ -152,7 +152,7 @@ function detect(d::DetectSNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2}
         #Will do spike detection next iteration due to edging
         psi=0
     elseif i>20
-        
+
     elseif i>1
         psi=sort.rawSignal[i]^2 - sort.rawSignal[i+1] * sort.rawSignal[i-1]
     else
@@ -168,7 +168,7 @@ function detect(d::DetectSNEO, sort::Sorting,i::Int64, v::AbstractArray{Int64,2}
         end
     end
 
-    psi   
+    psi
 end
 =#
 
@@ -191,18 +191,18 @@ end
 function detect(d::DetectMCWC, sort::Sorting, i::Int64, v::AbstractArray{Int64,2})
 
     p=0.0
-    
+
     #calculate wavelet coefficients
     if i<=bigJ
-        sort.d.Tx[:]=coiflets_scaled*[sort.sigend[(end-bigJ+i+1):end];sort.rawSignal[1:i]]    
-    else        
+        sort.d.Tx[:]=coiflets_scaled*[sort.sigend[(end-bigJ+i+1):end];sort.rawSignal[1:i]]
+    else
         sort.d.Tx[:]=coiflets_scaled*sort.rawSignal[(i-bigJ+1):i]
     end
-    
+
     for j=1:11
         sort.d.Tx[j] *= onesquarea[j]
     end
-   
+
     #Correlation of wavelet coefficients
     for j=1:10
         sort.d.rs[j] = sort.d.Tx[j]*sort.d.Tx[j+1]
@@ -220,14 +220,12 @@ function detect(d::DetectMCWC, sort::Sorting, i::Int64, v::AbstractArray{Int64,2
     for j=1:11
         sort.d.Tx[j]=0.0
     end
-        
+
     p
-    
+
 end
 
 =#
 #=
 
 =#
-
-

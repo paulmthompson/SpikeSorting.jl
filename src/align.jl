@@ -8,10 +8,10 @@ Alignment methods. Each method needs
 
 export AlignMax, AlignMin, AlignMinMax, AlignCOM, AlignProm
 
-#= 
+#=
 Maximum signal
 =#
-type AlignMax <: Align
+mutable struct AlignMax <: Align
 end
 
 function align(a::AlignMax, sort::Sorting)
@@ -31,7 +31,7 @@ mysize(align::AlignMax,win)=win
 #=
 Minimum signal
 =#
-type AlignMin <: Align
+mutable struct AlignMin <: Align
     shift::Int64
 end
 
@@ -55,7 +55,7 @@ mysize(align::AlignMin,win)=win
 #=
 Middle of Minimum and Max
 =#
-type AlignMinMax <: Align
+mutable struct AlignMinMax <: Align
     shift::Int64
 end
 
@@ -86,7 +86,7 @@ mysize(align::AlignMinMax,win)=win
 Center of Mass Alignment
 =#
 
-type AlignCOM <: Align
+mutable struct AlignCOM <: Align
     shift::Int64
 end
 
@@ -96,7 +96,7 @@ function align(a::AlignCOM,sort::Sorting)
 
     com=0.0
     mysum=0.0
-    
+
     for i=(sort.s.win2+1):sort.s.s_end
         com += i*abs(sort.p_temp[i])
         mysum += abs(sort.p_temp[i])
@@ -112,7 +112,7 @@ mysize(align::AlignCOM,win)=win
 Prominence Alignment
 =#
 
-type AlignProm <: Align
+mutable struct AlignProm <: Align
     shift::Int64
 end
 
@@ -129,7 +129,7 @@ function align(a::AlignProm,sort::Sorting)
         test += (sort.p_temp[i]-sort.p_temp[i-1])
         test += (sort.p_temp[i]-sort.p_temp[i+1])
         test += (sort.p_temp[i+1]-sort.p_temp[i+2])
-        
+
         if abs(test) > prom
             prom=abs(test)
             indprom=i
@@ -158,29 +158,29 @@ type AlignFFT <: Align
 end
 
 function AlignFFT(M::Int64)
-    
+
     AlignFFT(M,zeros(Complex{Float64},M*2*window),
              zeros(Complex{Float64},2*window),zeros(Float64,M*2*window),
              (window_half*M+1):((window+window_half)*M))
-    
+
 end
 
 function align(a::AlignFFT, sort::Sorting)
-    
+
     sort.a.fout[:]=fft(sort.p_temp)
-    
+
     sort.a.x_int[1:window]=sort.a.fout[1:window]
     sort.a.x_int[window+1]=sort.a.fout[window+1]/2
     sort.a.x_int[(window+2):(sort.a.M*2*window-window)]=zeros(Complex{Float64},2*sort.a.M*window-2*window-1)
-    sort.a.x_int[sort.a.M*2*window-window+1]=sort.a.fout[window+1]/2    
+    sort.a.x_int[sort.a.M*2*window-window+1]=sort.a.fout[window+1]/2
     sort.a.x_int[(sort.a.M*2*window-window+2):end]=sort.a.fout[(window+2):end]
-    
+
     ifft!(sort.a.x_int)
     sort.a.upsamp[:]=sort.a.M.*real(sort.a.x_int)
-    
+
     j=indmax(sort.a.upsamp[sort.a.align_range])+sort.a.M*window_half
     sort.waveform=view(sort.a.upsamp,j-sort.a.M*window_half:j+sort.a.M*window_half-1)
-    
+
     return j-window_half:j+window_half-1
 end
 

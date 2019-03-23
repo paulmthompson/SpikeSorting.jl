@@ -99,7 +99,7 @@ function findmerge!(sort::Sorting,id::Int64)
             if i==id
                 dist[i]=1.0e20
             else
-                dist[i]=norm(sub(sort.c.clusters,:,id)-sub(sort.c.clusters,:,i))^2
+                dist[i]=norm(sort.c.clusters[:,id]-sort.c.clusters[:,i])^2
             end
         end
 

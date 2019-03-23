@@ -2,10 +2,10 @@
 
 
 
-function benchmark{D}(dataset::D,truth::Array{Array{Int64,1},1},s::Sorting,cal_length=15.0, sample_rate=20000)
+function benchmark(dataset::D,truth::Array{Array{Int64,1},1},s::Sorting,cal_length=15.0, sample_rate=20000) where D
 
     (buf,nums)=output_buffer(1)
-    
+
     #Calibrate
 
     cal_samples=round(Int,sample_rate*cal_length)
@@ -23,7 +23,7 @@ function benchmark{D}(dataset::D,truth::Array{Array{Int64,1},1},s::Sorting,cal_l
     spikes=Array(Array{Int64,1},0)
     v=zeros(eltype(dataset),iter,1)
     num_clusters=0
-  
+
     for i=cal_samples+1:iter:(round(Int64,length(dataset)/sample_rate)*sample_rate-sample_rate)
 
         v[:,1]=dataset[i:(i+iter-1),1]
@@ -57,17 +57,17 @@ function benchmark_all(dataset::Array{Int64,2},newstep::Algorithm)
 
     steps=subtypes(Algorithm)
 
-    for i=1:length(masterlist)        
+    for i=1:length(masterlist)
         if steps[i]!=super(newstep)
             masterlist[i]=subtypes(mystep)
         else
             masterlist[i]=newstep
-        end                  
-    end 
+        end
+    end
 end
 =#
 
-function accuracy_bench{D}(dataset::D,spikes::Array{Array{Int64,1},1},truth::Array{Array{Int64,1},1},cal_length::Float64, sample_rate::Int64)
+function accuracy_bench(dataset::D,spikes::Array{Array{Int64,1},1},truth::Array{Array{Int64,1},1},cal_length::Float64, sample_rate::Int64) where D
 
     #first go through detected spikes to classify as false positives or true positives
     #then go through ground truth to look for false negatives
@@ -89,7 +89,7 @@ function accuracy_bench{D}(dataset::D,spikes::Array{Array{Int64,1},1},truth::Arr
                 end
             end
         end
-        
+
         for j=1:length(truth)
             data_t[:]=0
             spike_num=0
@@ -152,7 +152,7 @@ function accuracy_bench{D}(dataset::D,spikes::Array{Array{Int64,1},1},truth::Arr
             end
         end
     end
-    
+
     if length(truth)>=length(spikes) #fewer neurons (or equal) detected than actually exist
         while count <= length(spikes)
             myinds=ind2sub(size(corrmat),indmax(corrmat))
@@ -164,7 +164,7 @@ function accuracy_bench{D}(dataset::D,spikes::Array{Array{Int64,1},1},truth::Arr
             corrmat[myinds[1],:]=0.0
             corrmat[:,myinds[2]]=0.0
         end
-  
+
     else #more neurons detected than actually exist
         while count <= length(truth)
             myinds=ind2sub(size(corrmat),indmax(corrmat))
@@ -189,7 +189,7 @@ function accuracy_bench{D}(dataset::D,spikes::Array{Array{Int64,1},1},truth::Arr
     tol=10
 
     missed=[zeros(Int64,0) for i=1:length(truth)]
-    
+
     for i=1:length(spikes)
         if assignedd[i]==0
             FP_C+=sum(spikes[i].>cal_samples)
@@ -250,7 +250,7 @@ function accuracy_bench{D}(dataset::D,spikes::Array{Array{Int64,1},1},truth::Arr
         end
     end
 
-    for i=1:length(missed)         
+    for i=1:length(missed)
         for j=1:length(missed[i])
             ov=false
             for k=(missed[i][j]-tol):(missed[i][j]+tol)

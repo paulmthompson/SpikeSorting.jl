@@ -25,7 +25,7 @@ function cal!(sort::Sorting,v,spikes,ns,firstrun=0)
 end
 
 #Multi-channel - Single Core
-function cal!{T<:Sorting}(s::Array{T,1},v,spikes,ns,firstrun=0)
+function cal!(s::Array{T,1},v,spikes,ns,firstrun=0) where T<:Sorting
 
     for i=1:length(s)
         cal!(s[i],v,spikes,ns,firstrun)
@@ -34,7 +34,7 @@ function cal!{T<:Sorting}(s::Array{T,1},v,spikes,ns,firstrun=0)
 end
 
 #Multi-channel - Multi-Core
-function cal!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v,spikes,ns,firstrun=0)
+function cal!(s::DArray{T,1,Array{T,1}},v,spikes,ns,firstrun=0) where T<:Sorting
 
     @sync begin
         for p in procs(s)
@@ -51,7 +51,7 @@ function onlinesort!(sort::Sorting,v,spikes,ns)
 end
 
 #Multi-channel - Single Core
-function onlinesort!{T<:Sorting}(s::Array{T,1},v,spikes,ns)
+function onlinesort!(s::Array{T,1},v,spikes,ns) where T<:Sorting
     @inbounds for i=1:length(s)
         onlinesort!(s[i],v,spikes,ns)
     end
@@ -59,7 +59,7 @@ function onlinesort!{T<:Sorting}(s::Array{T,1},v,spikes,ns)
 end
 
 #Multi-channel - multi-core
-function onlinesort!{T<:Sorting}(s::DArray{T,1,Array{T,1}},v,spikes,ns)
+function onlinesort!(s::DArray{T,1,Array{T,1}},v,spikes,ns) where T<:Sorting
     @sync begin
         for p in procs(s)
             @async remotecall_wait((ss)->onlinesort!(localpart(ss),v,spikes,ns),p,s)

@@ -10,7 +10,7 @@ A method may also need a "detectprepare" function to use in its first iteration 
 
 export DetectAbs, DetectNeg
 
-function detectprepare{V}(d::Detect,sort::Sorting,v::V)
+function detectprepare(d::Detect,sort::Sorting,v::V) where V
 end
 
 #=

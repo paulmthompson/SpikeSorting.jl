@@ -226,7 +226,7 @@ Calculates the mean and bounds for a collection of spikes that
 
 examples of this condition could be whether the spikes are contained within a rubberband, or if they are part of a certain cluster already
 =#
-function make_cluster{T}(input::Array{T,2},mask,count,condition)
+function make_cluster(input::Array{T,2},mask,count,condition) where T
 
     hits=0
     mymean=zeros(Float64,size(input,1)-1)
@@ -301,12 +301,12 @@ function template_cluster(sc::Single_Channel,clus,mymean::Array{Float64,1},mymin
     nothing
 end
 
-function send_clus{T<:Sorting}(s::Array{T,1},sc::Single_Channel)
+function send_clus(s::Array{T,1},sc::Single_Channel) where T<:Sorting
     s[sc.spike].c=deepcopy(sc.temp)
     nothing
 end
 
-function send_clus{T<:Sorting}(s::DArray{T,1,Array{T,1}},sc::Single_Channel)
+function send_clus(s::DArray{T,1,Array{T,1}},sc::Single_Channel) where T<:Sorting
     (nn,mycore)=get_thres_id(s,sc.spike)
     remotecall_wait(((x,tt,num)->localpart(x)[num].c=tt),mycore,s,sc.temp,nn)
     nothing

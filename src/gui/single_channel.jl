@@ -256,7 +256,7 @@ end
 #=
 Find waveforms that cross line defined by (x1,y1),(x2,y2)
 =#
-function find_intersected_waveforms{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
+function find_intersected_waveforms(input::Array{T,2},mask,count,x1,y1,x2,y2) where T
 
     #Bounds check
     x1 = x1 < 2 ? 2 : x1
@@ -277,7 +277,7 @@ end
 #=
 Find which of the intersected waveforms are in a different cluster and if that difference has already been plotted
 =#
-function get_selected_waveforms{T<:Real}(sc::Single_Channel,input::Array{T,2})
+function get_selected_waveforms(sc::Single_Channel,input::Array{T,2}) where T<:Real
 
     (x1,x2,y1,y2)=coordinate_transform(sc,sc.rb.pos0.x,sc.rb.pos0.y,sc.rb.pos2.x,sc.rb.pos2.y)
 
@@ -305,7 +305,7 @@ Plot waveforms in incremental way
 Selected - true if waveform is captured by incremental capture
 Plotted - true if waveform has been replotted in new color since start of incremental capture
 =#
-function plot_selected_waveforms{T<:Real}(sc::Single_Channel,input::Array{T,2},mycolor)
+function plot_selected_waveforms(sc::Single_Channel,input::Array{T,2},mycolor) where T<:Real
 
     ctx=sc.ctx2
     s=sc.s

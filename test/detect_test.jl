@@ -1,7 +1,13 @@
 
 module Detect_test
 
-using SpikeSorting, FactCheck
+using SpikeSorting
+
+if VERSION > v"0.7-"
+    using Test
+else
+    using Base.Test
+end
 
 cluster=ClusterOSort();
 align=AlignMax();

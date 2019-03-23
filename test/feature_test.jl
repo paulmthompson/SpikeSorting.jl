@@ -1,6 +1,13 @@
 module Feature_Test
 
-using FactCheck,SpikeSorting
+using SpikeSorting
+
+if VERSION > v"0.7-"
+    using Test
+else
+    using Base.Test
+end
+
 
 d=DetectNeg()
 cluster=ClusterOSort();

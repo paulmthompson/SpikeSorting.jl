@@ -1,6 +1,12 @@
 module Compatibility_test
 
-using SpikeSorting, FactCheck
+using SpikeSorting
+
+if VERSION > v"0.7-"
+    using Test
+else
+    using Base.Test
+end
 
 num_channels=1;
 
@@ -30,7 +36,7 @@ for d in detects
             for r in reduces
                 for c in clusters
                     for t in thresholds
-                        
+
                         s1=create_multi(d(),c(),a(),f(),r(),t(),num_channels)
 
                         cal!(s1,v,buf,nums,0)
@@ -39,9 +45,9 @@ for d in detects
                         onlinesort!(s1,v,buf,nums)
 
                         facts() do
-                            @fact s1[1].sigend --> v[end-74:end,1]
+                            @test s1[1].sigend == v[end-74:end,1]
                         end
-                        
+
                     end
                 end
             end

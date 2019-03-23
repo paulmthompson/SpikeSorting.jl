@@ -13,14 +13,14 @@ abstract type Threshold <:Algorithm end
 abstract type Sorting end
 
 #Data Structure to store range of a spike and cluster ID
-immutable Spike
+struct Spike
     inds::UnitRange{Int64}
     id::UInt8
 end
 
 Spike()=Spike(0:0,0)
 
-immutable s_sizes
+struct s_sizes
     win::Int16
     s_end::Int16
     win2::Int16
@@ -54,7 +54,7 @@ function gen_sorting(D::Detect,C::Cluster,A::Align,F::Feature,R::Reduction,T::Th
     f_type=feature_type(F,in_type)
 
     @eval begin
-        type $(Symbol("Sorting_$sorting_num")) <: Sorting
+        mutable struct $(Symbol("Sorting_$sorting_num")) <: Sorting
             d::($(typeof(D)))
             c::($(typeof(C)))
             a::($(typeof(A)))

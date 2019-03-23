@@ -1,5 +1,5 @@
 
-type FeaturePlot
+mutable struct FeaturePlot
     xmin::Float64
     ymin::Float64
     xscale::Float64
@@ -9,7 +9,7 @@ end
 
 FeaturePlot()=FeaturePlot(0.0,0.0,1.0,1.0,1.0)
 
-type Buffer
+mutable struct Buffer
     count::Int64
     ind::Int64
     spikes::Array{Int16,2}
@@ -28,7 +28,7 @@ immutable Vec2
     y::Float64
 end
 
-type RubberBand
+mutable struct RubberBand
     pos0::Vec2
     pos1::Vec2
     pos2::Vec2
@@ -37,7 +37,7 @@ type RubberBand
     minpixels::Int
 end
 
-type SortView
+mutable struct SortView
     win::Gtk.GtkWindowLeaf
 
     c::Gtk.GtkCanvasLeaf
@@ -69,7 +69,7 @@ type SortView
     buf::Buffer
 end
 
-type Thres_Widgets
+mutable struct Thres_Widgets
     sb::Gtk.GtkLabelLeaf
     slider::Gtk.GtkScaleLeaf
     adj::Gtk.GtkAdjustmentLeaf
@@ -77,13 +77,13 @@ type Thres_Widgets
     show::Gtk.GtkCheckButtonLeaf
 end
 
-type Gain_Widgets
+mutable struct Gain_Widgets
     gainbox::Gtk.GtkSpinButtonLeaf
     multiply::Gtk.GtkCheckButtonLeaf
     all::Gtk.GtkCheckButtonLeaf
 end
 
-type Single_Channel
+mutable struct Single_Channel
     c2::Gtk.GtkCanvasLeaf
     c3::Gtk.GtkCanvasLeaf
     ctx2::Cairo.CairoContext

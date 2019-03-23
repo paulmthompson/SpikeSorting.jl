@@ -263,7 +263,7 @@ function make_offline_gui(s)
     id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(sc_widgets,))
     id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(sc_widgets,))
 
-    v=round.(Int16,100.*rand(60000)-50.0)
+    v=round.(Int16,100 .* rand(60000)-50.0)
 
     myoffline = Offline_GUI(win,sc_widgets,sortview_handles,v,analog_handles)
 

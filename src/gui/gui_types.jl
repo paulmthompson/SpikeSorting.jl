@@ -23,7 +23,7 @@ end
 
 Buffer(wave_points)=Buffer(500,1,zeros(Int16,wave_points,500),zeros(UInt8,500),trues(500),1,false,falses(500),false)
 
-immutable Vec2
+struct Vec2
     x::Float64
     y::Float64
 end

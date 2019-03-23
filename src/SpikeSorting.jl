@@ -4,6 +4,7 @@ using Interpolations, DistributedArrays, Gtk.ShortNames, Cairo, MultivariateStat
 
 if VERSION > v"0.7-"
     using SharedArrays
+    const Void = Nothing
 end
 
 export Sorting,Spike,create_multi,output_buffer,benchmark, SortView

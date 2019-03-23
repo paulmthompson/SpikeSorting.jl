@@ -54,11 +54,11 @@ function cluster(c::ClusterOSort,sort::Sorting)
         if sort.c.clusterWeight[x]<20
             sort.c.clusterWeight[x]+=1
             for i=1:size(sort.c.clusters,1)
-                sort.c.clusters[i,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[i,x]+1/sort.c.clusterWeight[x].*sort.features[i]
+                sort.c.clusters[i,x]=(sort.c.clusterWeight[x]-1)/sort.c.clusterWeight[x]*sort.c.clusters[i,x]+1/sort.c.clusterWeight[x] .* sort.features[i]
             end
         else
             for i=1:size(sort.c.clusters,1)
-                sort.c.clusters[i,x]=.95.*sort.c.clusters[i,x]+.05.*sort.features[i]
+                sort.c.clusters[i,x]=.95 .* sort.c.clusters[i,x]+.05 .* sort.features[i]
             end
         end
         id=x
@@ -165,7 +165,7 @@ end
 Window Discrimination
 =#
 
-immutable mywin
+struct mywin
     x1::Int64
     x2::Int64
     y1::Float64

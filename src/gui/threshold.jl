@@ -48,7 +48,7 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Single_Channel})
     else
     end
 
-    sc.s = -1.*gainval/1000
+    sc.s = -1 .* gainval/1000
 
     sc.thres_changed=true
 

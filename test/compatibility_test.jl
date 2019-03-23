@@ -44,9 +44,9 @@ for d in detects
                         cal!(s1,v,buf,nums,2)
                         onlinesort!(s1,v,buf,nums)
 
-                        facts() do
+
                             @test s1[1].sigend == v[end-74:end,1]
-                        end
+                        
 
                     end
                 end

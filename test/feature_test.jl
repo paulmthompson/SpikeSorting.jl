@@ -39,9 +39,7 @@ cal!(s1,v,buf,nums,1)
 cal!(s1,v,buf,nums,2)
 onlinesort!(s1,v,buf,nums)
 
-facts() do
 
-end
 
 #=
 Discrete Derivatives
@@ -55,9 +53,7 @@ cal!(s1,v,buf,nums,1)
 cal!(s1,v,buf,nums,2)
 onlinesort!(s1,v,buf,nums)
 
-facts() do
 
-end
 =#
 #=
 Curvature

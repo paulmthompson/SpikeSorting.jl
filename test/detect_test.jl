@@ -33,11 +33,11 @@ cal!(s1,v,buf,nums,1)
 cal!(s1,v,buf,nums,2)
 onlinesort!(s1,v,buf,nums);
 
-facts() do
+
 
     @fact s1[1].d.a --> less_than(s1[1].d.b)
     @fact s1[1].d.a --> greater_than(s1[1].d.c)
-end
+
 =#
 
 #=

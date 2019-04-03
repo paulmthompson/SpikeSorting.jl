@@ -1,3 +1,4 @@
+__precompile__()
 module SpikeSorting
 
 using Interpolations, DistributedArrays, Gtk.ShortNames, Cairo, MultivariateStats

@@ -8,6 +8,8 @@ if VERSION > v"0.7-"
     const Void = Nothing
     const setproperty! = set_gtk_property!
     const getproperty = get_gtk_property
+    const linspace(x,y,z) = range(x,stop=y,length=z)
+    const indmin = argmin
 end
 
 export Sorting,Spike,create_multi,output_buffer,benchmark, SortView

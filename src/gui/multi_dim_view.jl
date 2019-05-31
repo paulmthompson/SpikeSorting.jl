@@ -5,7 +5,7 @@ function sort_gui(wave_points)
     grid = Grid()
 
     c_sort = Canvas(100,100)
-    
+
     @guarded draw(c_sort) do widget
         ctx = Gtk.getgc(c_sort)
         set_source_rgb(ctx,0.0,0.0,0.0)
@@ -18,7 +18,7 @@ function sort_gui(wave_points)
 
     panel_grid = Grid()
     grid[2,2] = panel_grid
-    
+
     b1 = Button("Plot")
 
     panel_grid[1,1]=b1
@@ -77,10 +77,10 @@ function sort_gui(wave_points)
     popup_area_y=MenuItem("Area")
     push!(popup_y_menu,popup_area_y)
 
-    showall(popup_axis)
+    Gtk.showall(popup_axis)
 
 
-    win = Window(grid,"Sort View") |> showall
+    win = Window(grid,"Sort View") |> Gtk.showall
 
     myfeatures=Dict{String,Array{Float64,1}}("PCA-1"=>zeros(Float64,0),"PCA-2"=>zeros(Float64,0),"PCA-3"=>zeros(Float64,0),"Peak"=>zeros(Float64,0),"Valley"=>zeros(Float64,0),"Peak-Valley"=>zeros(Float64,0),"Area"=>zeros(Float64,0))
 
@@ -108,7 +108,7 @@ function sort_gui(wave_points)
     signal_connect(popup_area_cb_y,popup_area_y,"activate",Void,(),false,(handles,))
 
     id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,))
-    
+
     handles
 end
 
@@ -151,11 +151,11 @@ function recalc_features(han::SortView)
         if han.axes_name[i,2]=="Non"
             han.axes_name[i,2]="Peak"
         end
-        
+
         scale_xaxis(han,i)
         scale_yaxis(han,i)
     end
-    
+
     nothing
 end
 
@@ -208,7 +208,7 @@ function pca_calc(han::SortView,num::Int64,myaxis::Int64)
     reset_pca(han,num)
     han.axes_name[han.selected_plot,myaxis]=string("PCA-",num)
     scale_axis(han,myaxis)
-   
+
     replot_sort(han)
     nothing
 end
@@ -226,7 +226,7 @@ function peak_calc(han::SortView,myaxis::Int64)
     reset_peak(han)
     han.axes_name[han.selected_plot,myaxis]=string("Peak")
     scale_axis(han,myaxis)
-    
+
     replot_sort(han)
 end
 
@@ -323,7 +323,7 @@ function canvas_press(widget::Ptr,param_tuple,user_data::Tuple{SortView})
     elseif event.button==3
         popup(han.popup_axis,event)
     end
-        
+
     nothing
 end
 
@@ -360,9 +360,9 @@ function replot_sort(han::SortView)
     prepare_plots(han)
 
     for jj=1:(han.n_col*han.n_row)
-        
+
         if han.axes[jj,1]&han.axes[jj,2]
-              
+
             xmin=han.plots[jj].xmin
             ymin=han.plots[jj].ymin
             xscale=han.plots[jj].xscale
@@ -370,38 +370,38 @@ function replot_sort(han::SortView)
 
             xdata = han.features[han.axes_name[jj,1]]
             ydata = han.features[han.axes_name[jj,2]]
-            
+
             Cairo.translate(ctx,50+han.w/(han.n_col)*(jj-1),1)
             Cairo.scale(ctx,(han.w/(han.n_col)-70)/xscale,(han.h/(han.n_row)-50)/yscale)
-            
+
             for ii=1:(maximum(han.buf.clus)+1)
                 for i=1:han.buf.ind
                     if (han.buf.clus[i]+1 == ii)&(han.buf.mask[i])
 
                         move_to(ctx,xdata[i]-xmin,ydata[i]-ymin)
-                        
+
                         line_to(ctx,xdata[i]-xmin+10.0,ydata[i]-ymin+10.0)
                     end
                 end
                 select_color(ctx,ii)
                 stroke(ctx)
             end
-            
+
             identity_matrix(ctx)
-            
+
             set_source_rgb(ctx,1.0,1.0,1.0)
             move_to(ctx,han.w/(han.n_col*2)+han.w/(han.n_col)*(jj-1),han.h-10.0)
             show_text(ctx,han.axes_name[jj,1])
-            
+
             move_to(ctx,10.0+han.w/han.n_col*(jj-1),han.h/2)
             rotate(ctx,-pi/2)
             show_text(ctx,han.axes_name[jj,2])
 
-            identity_matrix(ctx)  
+            identity_matrix(ctx)
         end
     end
     reveal(han.c)
-    
+
     nothing
 end
 
@@ -442,7 +442,7 @@ function select_color(ctx,clus,alpha=1.0)
     else
         set_source_rgba(ctx,1.0,1.0,0.0,alpha)
     end
-    
+
     nothing
 end
 
@@ -480,7 +480,7 @@ function rubberband_move(c::Canvas, rb::RubberBand, x, y, ctxcopy)
         #rb_erase(r, ctxcopy)
     end
     rb.moved = true
-    
+
     # Draw the new rubberband
     rb.pos2 = Vec2(x, y)
     push!(rb.polygon,rb.pos2)
@@ -507,7 +507,7 @@ function rubberband_stop(han::SortView, rb::RubberBand, x, y, ctxcopy)
     stroke(r)
 
     if han.buf.selected_clus>0
-        inside_polygon(rb.polygon,han)      
+        inside_polygon(rb.polygon,han)
     end
     replot_sort(han)
     reveal(han.c, false)
@@ -515,7 +515,7 @@ function rubberband_stop(han::SortView, rb::RubberBand, x, y, ctxcopy)
 end
 
 function canvas_to_feature(han,x1,y1,myplot)
-    
+
     xtrans=50+han.w/(han.n_col)*(myplot-1)
     ytrans=0
 
@@ -524,7 +524,7 @@ function canvas_to_feature(han,x1,y1,myplot)
 
     x1=(x1 - xtrans)/(xscale)+han.plots[myplot].xmin
     y1=(y1 - ytrans)/(yscale)+han.plots[myplot].ymin
-    
+
     (x1,y1)
 end
 
@@ -582,6 +582,6 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{SortView})
     han.w=width(ctx)
 
     replot_sort(han)
-    
+
     nothing
 end

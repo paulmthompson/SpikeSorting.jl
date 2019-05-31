@@ -111,7 +111,11 @@ function create_multi(d::Detect,c::Cluster,a::Align,f::Feature,r::Reduction,t::T
         gen_sorting(d,c,a,f,r,t,in_type)
     end
 
-    st=Array{typeof(Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type))}(num)
+    if VERSION > v"0.7-"
+        st=Array{typeof(Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type))}(undef, num)
+    else
+        st=Array{typeof(Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type))}(num)
+    end
 
     for i=1:num
         st[i]=Base.invokelatest(MakeSorting,d,c,a,f,r,t,window,in_type)

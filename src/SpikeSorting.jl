@@ -10,6 +10,7 @@ if VERSION > v"0.7-"
     const getproperty = get_gtk_property
     const linspace(x,y,z) = range(x,stop=y,length=z)
     const indmin = argmin
+    const method_exists = hasmethod
 end
 
 export Sorting,Spike,create_multi,output_buffer,benchmark, SortView

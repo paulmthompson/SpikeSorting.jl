@@ -7,6 +7,7 @@ if VERSION > v"0.7-"
     using SharedArrays
     const Void = Nothing
     const setproperty! = set_gtk_property!
+    const getproperty = get_gtk_property
 end
 
 export Sorting,Spike,create_multi,output_buffer,benchmark, SortView

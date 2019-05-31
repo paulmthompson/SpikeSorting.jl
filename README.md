@@ -2,7 +2,24 @@
 [![codecov.io](http://codecov.io/github/paulmthompson/SpikeSorting.jl/coverage.svg?branch=master)](http://codecov.io/github/paulmthompson/SpikeSorting.jl?branch=master)
 
 # SpikeSorting.jl
-Online spike sorting methods in Julia
+
+This is a collection of spike sorting methods in Julia that were made to be used with my online acquisition system Intan.jl https://github.com/paulmthompson/Intan.jl. Each component of the spike sorting process (detection, aligning, feature detection, dimensionality reduction, and clustering) is intended to work independently, so that you can mix and match different parts of different algorithms. 
+
+# How I actually use this
+
+Right now, I only use this with online electrophysiology as a component of Intan.jl. I do NOT actually use this stand alone for offline sorting (although I'd love to if it was put together enough for that). 
+
+# Partially implemented components
+
+1) Manual Offline Sorting
+I moved pretty much all of the GUI elements for visualization of spikes from Intan.jl to this package; consequently, it shouldn't be *too* much additional effort to put together a GUI for offline sorting. 
+
+2) Automatic Offline Sorting
+Any of the sorint pipelines could be applied to voltage traces, but I expect it wouldn't work very well compared to modern methods. I only do acute single channel recordings, so the methods I have developed are biased toward those types of recordings with one channel and high SNR (e.g. Template matching). I have NOT implemented any types of cross channel (e.g silicon probe or tetrode) sorting methods. Because I use this online, I have also not used any methods that look at all of the data from an experimental session to develop features. 
+
+3) Algorithm Profiling
+I coded in the benchmarking methods from https://www.ncbi.nlm.nih.gov/pubmed/21677152, but have never actually used them. 
+
 
 # Installation
 
@@ -12,67 +29,3 @@ Pkg.clone("https://github.com/paulmthompson/SpikeSorting.jl.git")
 
 http://spikesortingjl.readthedocs.org/en/latest/
 
-# Introduction
-
-This is a Julia implementation of various spike sorting methods. Our big picture goal is to have a system that can perform online sorting of data that is acquired via a Intan RHD2000 acquisition board:
-
-https://github.com/paulmthompson/Intan.jl
-
-In addition, we are trying to put many existing online algorithms, or potential online algorithms, into one place, and optimize them for speed.
-
-# Current Functionality and TODO
-
-## Calibration
-
-- [x] thresholds for power detection
-- [x] templates from rawsignal waveforms
-- [x] thresholds for raw signal detection
-- [x] threshold for NEO
-- [ ] power normalization for MCWC
-- [ ] Need to add a periodic "recalibration" where the thresholds are recalculated (probably at the end of each analysis block).
-
-## Detection
-
-- [x] Power Thresholding 
-- [x] Raw Signal Threshold (as in Quiroga 2004)
-- [x] Nonlinear Energy Operator (Choi et al 2006)
-- [ ] Continuous Wavelet Transform (Nenadic et al 2005)
-- [x] Multiscale Correlation of Wavelet Coefficients (Yang et al 2011)
-- [ ] Stationary Wavelet Transform (Brychta et 2007)
-
-## Alignment
-
-- [x] maximum index
-- [ ] alignment accounting for shape (as in OSort)
-- [x] Upsampling via fft 
-- [ ] upsampling via cubic splines
-- [ ] center of mass (as in Sahani 1999 dissertation)
-
-## Overlap
-
-- [ ] Continuous Basis Pursuit (Ekanadham et al 2014)
-- [ ] Sequential Bayesian inference (Haga et at 2013)
-
-## Feature Extraction:
-- [x] PCA
-- [ ] Wavelet packet decomposition (Hulata et al 2002)
-- [ ] Classification algorithm based on frequency domain features (Yang et al 2013)
-
-## Clustering:
-
-### Connectivity Models
-- [ ] BIRCH
-- [ ] CLASSIT
-
-### Centroid Models
-- [ ] Hierachical Adaptive Means (Paraskevopoulou et al 2014)
-- [x] OSort (Rutishauser et al 2006)
-
-### Distribution Models
-- [ ] Time varying Dirichlet process (Gasthaus et al 2009)
-
-### Density Models
-- [ ] DenStream
-
-Notes: 
-There are many different clustering methods. For a totally unsupervised, online implementation, the number of clusters needs to be determined automatically. The clusters should be able to adapt over time to compensate for things like electrode drift. Also, the clustering algorithm should have a sense of an "outlier." 

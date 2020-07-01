@@ -57,7 +57,7 @@ function update_treeview(sc::Single_Channel)
     end
 
     selmodel=Gtk.GAccessor.selection(sc.sort_tv)
-    select!(selmodel, Gtk.iter_from_index(sc.sort_list,1))
+    Gtk.select!(selmodel, Gtk.iter_from_index(sc.sort_list,1))
 
     nothing
 end

@@ -43,7 +43,7 @@ function check_c3_click(sc::Single_Channel,x,y)
     end
     if (inmulti)&(count<sc.total_clus+1)
         selmodel=Gtk.GAccessor.selection(sc.sort_tv)
-        select!(selmodel, Gtk.iter_from_index(sc.sort_list,count+1))
+        Gtk.select!(selmodel, Gtk.iter_from_index(sc.sort_list,count+1))
         select_unit(sc)
     end
     nothing

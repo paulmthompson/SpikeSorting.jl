@@ -73,7 +73,7 @@ end
 
 function getdist(sort::Sorting)
 
-    dist=Array(Float64,sort.c.numClusters)
+    dist=Array{Float64,1}(sort.c.numClusters)
     for i=1:sort.c.numClusters
         dist[i]=norm(sort.features-sort.c.clusters[:,i])^2
     end

@@ -9,19 +9,24 @@ else
 end
 
 num_channels=1;
-
 (buf,nums)=output_buffer(num_channels);
-v=rand(1:1000, 1000, num_channels);
 
-count=1.0
-for i=525:550
-    v[i,1]+=count
-    count+=10
+function make_voltage(num_channels)
+
+    v=rand(1:1000, 1000, num_channels);
+    count = 1
+    for i=525:550
+        v[i,1] = v[i,1] + count
+        count = count + 10
+    end
+    for i=551:775
+        v[i,1]+=1
+        count -= 10
+    end
+    v
 end
-for i=551:775
-    v[i,1]+=1
-    count-=10
-end
+
+v=make_voltage(num_channels)
 
 detects=subtypes(SpikeSorting.Detect)
 aligns=subtypes(SpikeSorting.Align)
@@ -46,7 +51,7 @@ for d in detects
 
 
                             @test s1[1].sigend == v[end-74:end,1]
-                        
+
 
                     end
                 end

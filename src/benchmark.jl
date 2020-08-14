@@ -20,7 +20,7 @@ function benchmark(dataset::D,truth::Array{Array{Int64,1},1},s::Sorting,cal_leng
     cal!(s,v,buf,nums,2)
 
     iter=div(sample_rate,20)
-    spikes=Array(Array{Int64,1},0)
+    spikes=[Array{Int64,1}() for i=0:0]
     v=zeros(eltype(dataset),iter,1)
     num_clusters=0
 

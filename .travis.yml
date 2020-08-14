@@ -4,8 +4,9 @@ language: julia
 os:
   - linux
   - osx
+arch:
+  - x64
 julia:
-  - 0.7
   - 1.0
 notifications:
   email: false

@@ -12,7 +12,7 @@ function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Single_Channel})
         sc.total_clus -= 1
         sc.buf.selected_clus = 0
         selmodel=Gtk.GAccessor.selection(sc.sort_tv)
-        select!(selmodel, Gtk.iter_from_index(sc.sort_list,1))
+        Gtk.select!(selmodel, Gtk.iter_from_index(sc.sort_list,1))
         sc.buf.c_changed=true
     end
     nothing
@@ -58,7 +58,7 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Single_Channel})
     push!(sc.sort_list,(sc.total_clus,))
 
     selmodel=Gtk.GAccessor.selection(sc.sort_tv)
-    select!(selmodel, Gtk.iter_from_index(sc.sort_list, sc.total_clus+1))
+    Gtk.select!(selmodel, Gtk.iter_from_index(sc.sort_list, sc.total_clus+1))
 
     nothing
 end

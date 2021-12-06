@@ -23,7 +23,8 @@ I coded in the benchmarking methods from https://www.ncbi.nlm.nih.gov/pubmed/216
 
 # Installation
 
-Pkg.clone("https://github.com/paulmthompson/SpikeSorting.jl.git")
+using Pkg
+Pkg.add(url="https://github.com/paulmthompson/SpikeSorting.jl.git")
 
 # Documentation
 
